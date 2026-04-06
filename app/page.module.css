@@ -1,0 +1,408 @@
+.page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(184, 115, 51, 0.14), transparent 35%),
+    radial-gradient(circle at bottom right, rgba(39, 82, 54, 0.18), transparent 40%),
+    linear-gradient(160deg, #f4ede1 0%, #f9f6ef 42%, #ebe2d2 100%);
+  color: #1e2421;
+}
+
+.shell {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 32px 0 56px;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+  gap: 24px;
+  align-items: stretch;
+  margin-bottom: 24px;
+}
+
+.heroCard,
+.panel,
+.resultCard,
+.listingCard {
+  border: 1px solid rgba(30, 36, 33, 0.1);
+  border-radius: 24px;
+  background: rgba(255, 252, 247, 0.82);
+  box-shadow: 0 18px 44px rgba(52, 44, 29, 0.08);
+  backdrop-filter: blur(14px);
+}
+
+.heroCard {
+  padding: 32px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #234a2e;
+  color: #f7f1e5;
+  font: 700 12px/1 "Plus Jakarta Sans", sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 18px 0 10px;
+  font: 600 clamp(42px, 6vw, 72px) / 0.95 "Cormorant Garamond", serif;
+  letter-spacing: -0.03em;
+}
+
+.lead {
+  max-width: 54ch;
+  margin: 0;
+  color: rgba(30, 36, 33, 0.78);
+  font: 500 16px/1.7 "Plus Jakarta Sans", sans-serif;
+}
+
+.heroStats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.stat {
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(35, 74, 46, 0.08);
+}
+
+.statLabel {
+  display: block;
+  color: rgba(30, 36, 33, 0.64);
+  font: 700 11px/1.4 "Plus Jakarta Sans", sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.statValue {
+  display: block;
+  margin-top: 6px;
+  font: 700 20px/1.2 "Plus Jakarta Sans", sans-serif;
+}
+
+.heroAside {
+  display: grid;
+  gap: 16px;
+}
+
+.asideCard {
+  padding: 24px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(28, 57, 37, 0.96), rgba(17, 32, 22, 0.96));
+  color: #f5ebd9;
+}
+
+.asideTitle {
+  margin: 0 0 12px;
+  font: 700 13px/1.3 "Plus Jakarta Sans", sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.asideList {
+  margin: 0;
+  padding-left: 18px;
+  color: rgba(245, 235, 217, 0.88);
+  font: 500 14px/1.8 "Plus Jakarta Sans", sans-serif;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: 24px;
+}
+
+.panel {
+  padding: 24px;
+}
+
+.sectionTitle {
+  margin: 0 0 8px;
+  font: 600 34px/1 "Cormorant Garamond", serif;
+}
+
+.sectionLead {
+  margin: 0 0 18px;
+  color: rgba(30, 36, 33, 0.7);
+  font: 500 14px/1.6 "Plus Jakarta Sans", sans-serif;
+}
+
+.uploadGrid {
+  display: grid;
+  gap: 14px;
+}
+
+
+.uploadLabel {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+  border: 1px dashed rgba(35, 74, 46, 0.28);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.labelTitle {
+  font: 700 14px/1.4 "Plus Jakarta Sans", sans-serif;
+}
+
+.labelHint {
+  color: rgba(30, 36, 33, 0.7);
+  font: 500 13px/1.5 "Plus Jakarta Sans", sans-serif;
+}
+
+.fileInput {
+  font: 500 13px/1.4 "Plus Jakarta Sans", sans-serif;
+}
+
+.previewGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.previewCard {
+  overflow: hidden;
+  border-radius: 16px;
+  background: #e9ded0;
+  min-height: 140px;
+}
+
+.previewCard img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.placeholder {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  padding: 18px;
+  color: rgba(30, 36, 33, 0.48);
+  text-align: center;
+  font: 600 12px/1.5 "Plus Jakarta Sans", sans-serif;
+}
+
+.submitRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.button {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 14px 20px;
+  background: #a95e2a;
+  color: #fff8ef;
+  cursor: pointer;
+  font: 700 14px/1 "Plus Jakarta Sans", sans-serif;
+  transition: transform 160ms ease, opacity 160ms ease;
+}
+
+.button:hover {
+  transform: translateY(-1px);
+}
+
+.button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+  transform: none;
+}
+
+.muted {
+  color: rgba(30, 36, 33, 0.62);
+  font: 500 13px/1.5 "Plus Jakarta Sans", sans-serif;
+}
+
+.error {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(156, 35, 35, 0.1);
+  color: #6e1717;
+  font: 600 13px/1.6 "Plus Jakarta Sans", sans-serif;
+}
+
+.resultStack {
+  display: grid;
+  gap: 18px;
+}
+
+.resultCard {
+  padding: 22px;
+}
+
+.badgeRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.badge {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(35, 74, 46, 0.08);
+  color: #234a2e;
+  font: 700 12px/1 "Plus Jakarta Sans", sans-serif;
+}
+
+.idTitle {
+  margin: 0;
+  font: 700 28px/1.1 "Cormorant Garamond", serif;
+}
+
+.idMeta {
+  margin: 8px 0 0;
+  color: rgba(30, 36, 33, 0.76);
+  font: 500 14px/1.6 "Plus Jakarta Sans", sans-serif;
+}
+
+.priceGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.priceTile {
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(35, 74, 46, 0.07);
+}
+
+.priceTile strong {
+  display: block;
+  margin-top: 6px;
+  font: 700 26px/1 "Plus Jakarta Sans", sans-serif;
+}
+
+.formula {
+  margin: 0;
+  color: rgba(30, 36, 33, 0.7);
+  font: 500 13px/1.6 "Plus Jakarta Sans", sans-serif;
+}
+
+.warningList {
+  margin: 14px 0 0;
+  padding-left: 18px;
+  color: #7c471a;
+  font: 600 13px/1.7 "Plus Jakarta Sans", sans-serif;
+}
+
+.listingGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.listingCard {
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr);
+  gap: 14px;
+  padding: 14px;
+}
+
+.listingThumb {
+  overflow: hidden;
+  border-radius: 16px;
+  background: #eee1cf;
+  aspect-ratio: 1 / 1;
+}
+
+.listingThumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.listingTitle {
+  margin: 0 0 8px;
+  font: 700 17px/1.4 "Plus Jakarta Sans", sans-serif;
+}
+
+.listingMeta {
+  margin: 0;
+  color: rgba(30, 36, 33, 0.7);
+  font: 500 13px/1.7 "Plus Jakarta Sans", sans-serif;
+}
+
+.listingLink {
+  display: inline-flex;
+  margin-top: 10px;
+  color: #8e4d1f;
+  font: 700 13px/1 "Plus Jakarta Sans", sans-serif;
+  text-decoration: none;
+}
+
+.listingLink:hover {
+  text-decoration: underline;
+}
+
+.emptyCard {
+  display: grid;
+  place-items: center;
+  min-height: 420px;
+  padding: 28px;
+  text-align: center;
+  border-radius: 24px;
+  border: 1px dashed rgba(35, 74, 46, 0.2);
+  background: rgba(255, 251, 244, 0.76);
+}
+
+.emptyCard h2 {
+  margin: 0 0 8px;
+  font: 600 40px/1 "Cormorant Garamond", serif;
+}
+
+.emptyCard p {
+  max-width: 38ch;
+  margin: 0;
+  color: rgba(30, 36, 33, 0.68);
+  font: 500 14px/1.7 "Plus Jakarta Sans", sans-serif;
+}
+
+@media (max-width: 1024px) {
+  .hero,
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .shell {
+    width: min(100% - 20px, 1180px);
+    padding-top: 20px;
+  }
+
+  .heroCard,
+  .panel,
+  .resultCard {
+    padding: 20px;
+  }
+
+  .heroStats,
+  .priceGrid,
+  .previewGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .listingCard {
+    grid-template-columns: 1fr;
+  }
+}
