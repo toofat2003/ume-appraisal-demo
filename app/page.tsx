@@ -271,6 +271,30 @@ export default function HomePage() {
                       ))}
                     </ul>
                   ) : null}
+
+                  {result.debug ? (
+                    <div className={styles.debugPanel}>
+                      <h3 className={styles.debugTitle}>診断</h3>
+                      <p className={styles.debugText}>
+                        採用画像:{" "}
+                        {result.debug.selectedImageIndex !== null
+                          ? `${result.debug.selectedImageIndex + 1}枚目`
+                          : "なし"}
+                        {result.debug.queryStage
+                          ? ` | 品名検索: ${result.debug.queryStage.filteredListingCount}件`
+                          : ""}
+                      </p>
+                      <ul className={styles.debugList}>
+                        {result.debug.imageStages.map((stage) => (
+                          <li key={stage.imageIndex}>
+                            {stage.imageIndex + 1}枚目:
+                            raw {stage.rawListingCount}件 / used {stage.usedListingCount}件 / 採用{" "}
+                            {stage.selectedListingCount}件 / score {stage.score}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
                 </article>
 
                 <article className={styles.resultCard}>

@@ -1,0 +1,13 @@
+{
+  "generated_at": "2026-04-15T07:37:16Z",
+  "dataset_version": "ebay_identification_v1",
+  "sample_count": 180,
+  "counts_by_category": {
+    "brand_bag": 30,
+    "jewelry_precious_metals": 30,
+    "apparel": 30,
+    "watch": 30,
+    "coins": 30,
+    "antiques_art": 30
+  }
+}

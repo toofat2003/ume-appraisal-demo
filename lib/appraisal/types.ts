@@ -43,9 +43,41 @@ export type PricingSummary = {
   formula: string;
 };
 
+export type ImageSearchDebugStage = {
+  imageIndex: number;
+  latencyMs: number;
+  rawListingCount: number;
+  usedListingCount: number;
+  selectedListingCount: number;
+  accessoryFilteredCount: number;
+  selectedCategoryId: string | null;
+  categoryScoreShare: number;
+  isReliable: boolean;
+  score: number;
+  topTitles: string[];
+};
+
+export type QuerySearchDebugStage = {
+  query: string;
+  latencyMs: number;
+  rawListingCount: number;
+  filteredListingCount: number;
+  accessoryFilteredCount: number;
+  dominantCategoryId: string | null;
+  topTitles: string[];
+};
+
+export type AppraisalDebug = {
+  pipelineVersion: string;
+  selectedImageIndex: number | null;
+  imageStages: ImageSearchDebugStage[];
+  queryStage: QuerySearchDebugStage | null;
+};
+
 export type AppraisalResult = {
   identification: ProductIdentification;
   pricing: PricingSummary;
   listings: ListingSummary[];
   warnings: string[];
+  debug?: AppraisalDebug;
 };

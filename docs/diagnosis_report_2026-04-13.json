@@ -1,0 +1,326 @@
+{
+  "generatedAt": "2026-04-13T04:32:28Z",
+  "marketplace": "EBAY_US",
+  "reports": [
+    {
+      "case": "local_images",
+      "truthQuery": "Rolex Air-King 114210 34mm",
+      "ocr": [
+        {
+          "lines": [
+            {
+              "confidence": 0.5,
+              "text": "XII"
+            },
+            {
+              "confidence": 1,
+              "text": "ROLEX"
+            },
+            {
+              "confidence": 1,
+              "text": "OYSTER PERPETUAL"
+            },
+            {
+              "confidence": 0.3,
+              "text": "Air -King"
+            },
+            {
+              "confidence": 1,
+              "text": "PRECISION"
+            },
+            {
+              "confidence": 0.3,
+              "text": "/"
+            },
+            {
+              "confidence": 0.3,
+              "text": "IЛ"
+            }
+          ],
+          "path": "/Users/kosukenakajima/Desktop/buysell_technologies/ume-appraisal-demo/test_pictures/watch/S__35241987_0.jpg"
+        },
+        {
+          "lines": [
+            {
+              "confidence": 0.3,
+              "text": "5/9"
+            }
+          ],
+          "path": "/Users/kosukenakajima/Desktop/buysell_technologies/ume-appraisal-demo/test_pictures/watch/S__35241988_0.jpg"
+        },
+        {
+          "lines": [
+            {
+              "confidence": 0.3,
+              "text": "H7/9"
+            }
+          ],
+          "path": "/Users/kosukenakajima/Desktop/buysell_technologies/ume-appraisal-demo/test_pictures/watch/S__35241989_0.jpg"
+        }
+      ],
+      "perImage": [
+        {
+          "path": "/Users/kosukenakajima/Desktop/buysell_technologies/ume-appraisal-demo/test_pictures/watch/S__35241987_0.jpg",
+          "searchByImageLatencyMs": 1140,
+          "dominantCategoryId": null,
+          "topResults": [
+            {
+              "title": "Rolex Air King Mens Stainless Steel Watch White Dial Black Roman Oyster 14000M",
+              "price": "5414.98",
+              "categoryPath": "Wristwatches > Jewelry & Watches > Watches, Parts & Accessories",
+              "imageUrl": "https://i.ebayimg.com/images/g/EEcAAOSwV0Na~yWS/s-l225.jpg"
+            },
+            {
+              "title": "Rolex Air King 14000 Mens Stainless Steel Watch White & Black Roman Dial",
+              "price": "5034.98",
+              "categoryPath": "Wristwatches > Jewelry & Watches > Watches, Parts & Accessories",
+              "imageUrl": "https://i.ebayimg.com/images/g/2x4AAOSwwAda~yVv/s-l225.jpg"
+            },
+            {
+              "title": "Rolex Air-King 14000M Mens Stainless Steel Watch White Roman Dial",
+              "price": "5414.98",
+              "categoryPath": "Wristwatches > Jewelry & Watches > Watches, Parts & Accessories",
+              "imageUrl": "https://i.ebayimg.com/images/g/MqEAAOSwW2liK9wU/s-l225.jpg"
+            },
+            {
+              "title": "Rolex Air King Precision Men Stainless Steel Watch Oyster Band Silver Dial 14000",
+              "price": "4939.98",
+              "categoryPath": "Wristwatches > Jewelry & Watches > Watches, Parts & Accessories",
+              "imageUrl": "https://i.ebayimg.com/images/g/NMkAAOSwNNVa~yP0/s-l225.jpg"
+            },
+            {
+              "title": "Rolex Air King 14000 Mens Stainless Steel Watch Oyster Band White Roman Dial",
+              "price": "5034.98",
+              "categoryPath": "Wristwatches > Jewelry & Watches > Watches, Parts & Accessories",
+              "imageUrl": "https://i.ebayimg.com/images/g/Sp4AAOSwax1ij69l/s-l225.jpg"
+            }
+          ]
+        },
+        {
+          "path": "/Users/kosukenakajima/Desktop/buysell_technologies/ume-appraisal-demo/test_pictures/watch/S__35241988_0.jpg",
+          "searchByImageLatencyMs": 829,
+          "dominantCategoryId": null,
+          "topResults": [
+            {
+              "title": "Rolex Air-King 114210 34mm Steel Engine 2007 ROLEXWARRANTYCARD 2YRWARANTY #604-1",
+              "price": "6245.00",
+              "categoryPath": "Wristwatches > Jewelry & Watches > Watches, Parts & Accessories",
+              "imageUrl": "https://i.ebayimg.com/images/g/K-cAAeSwTyVpqINq/s-l225.jpg"
+            },
+            {
+              "title": "ROLEX Watch Oyster Perpetual 1501 Silver Stainless Steel Automatic Silver w/Box",
+              "price": "4518.82",
+              "categoryPath": "Mixed Lots > Consumer Electronics",
+              "imageUrl": "https://i.ebayimg.com/images/g/UTMAAeSw0lVp2awZ/s-l225.jpg"
+            },
+            {
+              "title": "Rolex Oyster Rivet Bracelet 7204 13mm Stainless Steel Big Crown Watch Band",
+              "price": "350.00",
+              "categoryPath": "Wristwatch Bands > Jewelry & Watches > Watches, Parts & Accessories",
+              "imageUrl": "https://i.ebayimg.com/images/g/alkAAeSwfeZog9Ic/s-l225.jpg"
+            },
+            {
+              "title": "Rolex Oyster Rivet Bracelet 7204 13mm Stainless Steel Big Crown Watch Band",
+              "price": "350.00",
+              "categoryPath": "Wristwatch Bands > Jewelry & Watches > Watches, Parts & Accessories",
+              "imageUrl": "https://i.ebayimg.com/images/g/Q6QAAeSwTIRogpYJ/s-l225.jpg"
+            },
+            {
+              "title": "Rolex Oyster Rivet Bracelet 6634 13mm Stainless Steel Spring Stretch Watch Band",
+              "price": "600.00",
+              "categoryPath": "Wristwatch Bands > Jewelry & Watches > Watches, Parts & Accessories",
+              "imageUrl": "https://i.ebayimg.com/images/g/QJkAAeSwrZZogThZ/s-l225.jpg"
+            }
+          ]
+        },
+        {
+          "path": "/Users/kosukenakajima/Desktop/buysell_technologies/ume-appraisal-demo/test_pictures/watch/S__35241989_0.jpg",
+          "searchByImageLatencyMs": 941,
+          "dominantCategoryId": null,
+          "topResults": [
+            {
+              "title": "VTG Pontiac Grand Prix, Le Mans, Bonneville, 1973, 1974, 15-inch Factory Hubcap",
+              "price": "29.99",
+              "categoryPath": "Wheel Hub Caps & Trim Rings > eBay Motors > Parts & Accessories",
+              "imageUrl": "https://i.ebayimg.com/images/g/rp0AAOSwESRnoS5c/s-l225.jpg"
+            },
+            {
+              "title": "Panther Rims Chrome  17  Inch 4 Pack Rims  Fits All Wheels.",
+              "price": "500.00",
+              "categoryPath": "Wheel & Tire Packages > eBay Motors > Parts & Accessories",
+              "imageUrl": "https://i.ebayimg.com/images/g/W7AAAeSwCXFojqDd/s-l225.jpg"
+            },
+            {
+              "title": "Pottery Barn Silver Beaded Oval Mirror",
+              "price": "144.95",
+              "categoryPath": "Mirrors > Home Décor > Home & Garden",
+              "imageUrl": "https://i.ebayimg.com/images/g/5~gAAeSwIJdoutdy/s-l225.jpg"
+            },
+            {
+              "title": "Stainless ",
+              "price": "15.00",
+              "categoryPath": "Other Dinnerware & Serveware > Home & Garden > Kitchen, Dining & Bar",
+              "imageUrl": "https://i.ebayimg.com/images/g/wtgAAeSwQ8doCRgC/s-l225.jpg"
+            },
+            {
+              "title": "Outer Pulley Cover 66 Tooth Chrome fits Harley Davidson 42-1014 Smooth",
+              "price": "20.00",
+              "categoryPath": "Drive Belt Pulleys & Tensioners > eBay Motors > Parts & Accessories",
+              "imageUrl": "https://i.ebayimg.com/images/g/YdwAAOSw4ytnU3TU/s-l225.jpg"
+            }
+          ]
+        }
+      ],
+      "truthQueryResults": [
+        {
+          "title": "LNOS 2008 Rolex Air King 34mm 114210 White Arabic Dial Full Set",
+          "price": "7100.00",
+          "categoryPath": "Wristwatches > Jewelry & Watches > Watches, Parts & Accessories",
+          "imageUrl": "https://i.ebayimg.com/images/g/vWwAAeSwoSJpwWV2/s-l225.jpg"
+        },
+        {
+          "title": "Rolex Air-King 34mm Custom Pink Lume Index Dial For 14000 14010 14200 114200",
+          "price": "395.00",
+          "categoryPath": "Dials > Jewelry & Watches > Parts, Tools & Guides",
+          "imageUrl": "https://i.ebayimg.com/images/g/B7sAAOSwOgNoF4N6/s-l225.jpg"
+        },
+        {
+          "title": "Rolex 34mm Oyster Perpetual Air King Blue Dial Steel Mens Watch 114210",
+          "price": "6499.00",
+          "categoryPath": "Wristwatches > Jewelry & Watches > Watches, Parts & Accessories",
+          "imageUrl": "https://i.ebayimg.com/images/g/mOYAAeSw6fVpH8aU/s-l225.jpg"
+        },
+        {
+          "title": "Rolex Air-King 34mm Custom Orange Diamond Dial For Ref 14000 14010 14200 114200",
+          "price": "400.00",
+          "categoryPath": "Dials > Jewelry & Watches > Parts, Tools & Guides",
+          "imageUrl": "https://i.ebayimg.com/images/g/wMUAAeSwFG9oXH4k/s-l225.jpg"
+        },
+        {
+          "title": "Rolex Air-King 114210 34mm Steel Engine 2007 ROLEXWARRANTYCARD 2YRWARANTY #604-1",
+          "price": "6245.00",
+          "categoryPath": "Wristwatches > Jewelry & Watches > Watches, Parts & Accessories",
+          "imageUrl": "https://i.ebayimg.com/images/g/K-cAAeSwTyVpqINq/s-l225.jpg"
+        }
+      ],
+      "truthQueryLatencyMs": 731
+    },
+    {
+      "case": "remote_seed",
+      "seedQuery": "Rolex Air King 14000",
+      "seedTitle": "Rolex Air-King 14000 No Holes Case",
+      "seedImageUrl": "https://i.ebayimg.com/images/g/hGIAAeSw9w5pyC8T/s-l225.jpg",
+      "searchByImageLatencyMs": 756,
+      "topResults": [
+        {
+          "title": "Rolex Oyster Perpetual 36 116000 OP36 RARE White Dial Box & RSC Card",
+          "price": "9494.00",
+          "categoryPath": "Wristwatches > Jewelry & Watches > Watches, Parts & Accessories",
+          "imageUrl": "https://i.ebayimg.com/images/g/kS4AAeSwA9Bot65o/s-l225.jpg"
+        },
+        {
+          "title": "Rolex Air-King 14000 No Holes Case",
+          "price": "4500.00",
+          "categoryPath": "Wristwatches > Jewelry & Watches > Watches, Parts & Accessories",
+          "imageUrl": "https://i.ebayimg.com/images/g/hGIAAeSw9w5pyC8T/s-l225.jpg"
+        },
+        {
+          "title": "Rolex 2011 Oyster Perpetual Steel Auto 31mm Ladies Watch Oyster Bracelet 177210",
+          "price": "5750.00",
+          "categoryPath": "Wristwatches > Jewelry & Watches > Watches, Parts & Accessories",
+          "imageUrl": "https://i.ebayimg.com/images/g/wCAAAOSw1ohlL~1y/s-l225.jpg"
+        },
+        {
+          "title": "ROLEX Oyster Perpetual 77080 Men's Watch From Japan G0217",
+          "price": "6005.25",
+          "categoryPath": "Wristwatches > Jewelry & Watches > Watches, Parts & Accessories",
+          "imageUrl": "https://i.ebayimg.com/images/g/6cgAAeSwiP9plAwB/s-l225.jpg"
+        },
+        {
+          "title": "Rolex Datejust 31 Silver Index Dial Stainless Steel Smooth Bezel Oyster Bracelet",
+          "price": "10995.00",
+          "categoryPath": "Wristwatches > Jewelry & Watches > Watches, Parts & Accessories",
+          "imageUrl": "https://i.ebayimg.com/images/g/py0AAOSwQzpm5MGV/s-l225.jpg"
+        }
+      ]
+    },
+    {
+      "case": "remote_seed",
+      "seedQuery": "Coach Tabby 26 bag",
+      "seedTitle": "COACH Soft Quilted Tabby Shoulder Bag 26- Ash ",
+      "seedImageUrl": "https://i.ebayimg.com/images/g/avwAAeSwi0Vp2-0u/s-l225.jpg",
+      "searchByImageLatencyMs": 752,
+      "topResults": [
+        {
+          "title": "COACH Soft Quilted Tabby Shoulder Bag 26- Ash ",
+          "price": "385.00",
+          "categoryPath": "Women's Bags & Handbags > Clothing, Shoes & Accessories > Women",
+          "imageUrl": "https://i.ebayimg.com/images/g/avwAAeSwi0Vp2-0u/s-l225.jpg"
+        },
+        {
+          "title": "Excellent Condition Coach Chain Bag 30a",
+          "price": "139.79",
+          "categoryPath": "Women's Bags & Handbags > Clothing, Shoes & Accessories > Women",
+          "imageUrl": "https://i.ebayimg.com/images/g/0n0AAeSw3GdpymZZ/s-l225.jpg"
+        },
+        {
+          "title": "COACH Tabby 26 Quilted Shoulder Bag Leather White/Gold CP150 New JP",
+          "price": "189.00",
+          "categoryPath": "Women's Bags & Handbags > Clothing, Shoes & Accessories > Women",
+          "imageUrl": "https://i.ebayimg.com/images/g/6moAAeSwh79plTPj/s-l225.jpg"
+        },
+        {
+          "title": "Coach Hayden Foldover Crossbody Clutch Bag",
+          "price": "139.99",
+          "categoryPath": "Women's Bags & Handbags > Clothing, Shoes & Accessories > Women",
+          "imageUrl": "https://i.ebayimg.com/images/g/D~4AAeSwRUtpnYTs/s-l225.jpg"
+        },
+        {
+          "title": "Coach Parker Quilted LeatherConvertible Shoulder bag",
+          "price": "300.00",
+          "categoryPath": "Women's Bags & Handbags > Clothing, Shoes & Accessories > Women",
+          "imageUrl": "https://i.ebayimg.com/images/g/5~sAAeSwwvtoFQv6/s-l225.jpg"
+        }
+      ]
+    },
+    {
+      "case": "remote_seed",
+      "seedQuery": "iPhone 13 Pro 128GB",
+      "seedTitle": "Apple iPhone 13 Pro 128GB Fully Unlocked Very Good Condition",
+      "seedImageUrl": "https://i.ebayimg.com/images/g/txwAAeSw93xpLg9M/s-l225.jpg",
+      "searchByImageLatencyMs": 571,
+      "topResults": [
+        {
+          "title": "Apple iPhone 13 Pro Max 128GB Unlocked Very Good Condition",
+          "price": "510.00",
+          "categoryPath": "Cell Phones & Smartphones > Cell Phones & Accessories",
+          "imageUrl": "https://i.ebayimg.com/images/g/ngoAAeSw~MRovRHL/s-l225.jpg"
+        },
+        {
+          "title": "iphone 13 promax 128gb ",
+          "price": "350.00",
+          "categoryPath": "Other Cell Phone Accessories > Cell Phone Accessories > Cell Phones & Accessories",
+          "imageUrl": "https://i.ebayimg.com/images/g/QKMAAOSwCDFl0LJY/s-l225.jpg"
+        },
+        {
+          "title": "iPhone 13 Pro Clean IMEI, Good For Carrier Trade-in Promotion",
+          "price": "295.00",
+          "categoryPath": "Cell Phones & Smartphones > Cell Phones & Accessories",
+          "imageUrl": "https://i.ebayimg.com/images/g/4Y4AAeSw2zNo51W0/s-l225.jpg"
+        },
+        {
+          "title": "iPhone 13 Pro Clean IMEI, Good For Carrier Trade-in Promotion.",
+          "price": "255.00",
+          "categoryPath": "Cell Phones & Smartphones > Cell Phones & Accessories",
+          "imageUrl": "https://i.ebayimg.com/images/g/4Y4AAeSw2zNo51W0/s-l225.jpg"
+        },
+        {
+          "title": "Apple iPhone 13 Pro 6.1\" 12MP 5G iOS Black Gold Silver Blue",
+          "price": "400.00",
+          "categoryPath": "Cell Phones & Smartphones > Cell Phones & Accessories",
+          "imageUrl": "https://i.ebayimg.com/images/g/ZOUAAeSwtj9pjNSS/s-l225.jpg"
+        }
+      ]
+    }
+  ]
+}
