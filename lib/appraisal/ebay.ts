@@ -1,4 +1,11 @@
-import { ListingSummary, PricePoint, ProductIdentification } from "@/lib/appraisal/types";
+import {
+  AppraisalDebug,
+  ImageSearchDebugStage,
+  ListingSummary,
+  PricePoint,
+  ProductIdentification,
+  QuerySearchDebugStage,
+} from "@/lib/appraisal/types";
 
 const DEFAULT_MARKETPLACE_ID = "EBAY_US";
 const OAUTH_SCOPE = "https://api.ebay.com/oauth/api_scope";
@@ -75,11 +82,101 @@ const WATCH_ACCESSORY_KEYWORDS = [
   "papers only",
 ];
 
+const WATCH_CATEGORY_KEYWORDS = [
+  "wristwatch",
+  "wristwatches",
+  "pocket watch",
+  "pocket watches",
+  "watch accessories",
+  "wristwatch bands",
+];
+
+const JEWELRY_CATEGORY_KEYWORDS = [
+  "ring",
+  "rings",
+  "necklace",
+  "necklaces",
+  "pendant",
+  "pendants",
+  "bracelets & charms",
+  "bracelet",
+  "bracelets",
+  "charms",
+  "earring",
+  "earrings",
+  "brooch",
+  "brooches",
+  "jewelry",
+  "jewellery",
+];
+
+const COIN_CATEGORY_KEYWORDS = [
+  "coin",
+  "coins",
+  "currency",
+  "banknote",
+  "banknotes",
+  "note",
+  "notes",
+  "paper money",
+  "numis",
+  "roman",
+  "dollar",
+  "dime",
+  "nickel",
+  "cent",
+  "quarter",
+  "mint",
+  "medal",
+  "token",
+  "historical currency",
+  "confederate currency",
+  "silver certificate",
+  "obsolete banknote",
+];
+
+const FASHION_CATEGORY_KEYWORDS = ["bag", "handbag", "wallet", "fashion"];
+
+const APPAREL_CATEGORY_KEYWORDS = [
+  "tops",
+  "shirts",
+  "t-shirts",
+  "t shirt",
+  "t-shirts",
+  "coats",
+  "jackets",
+  "vests",
+  "hoodies",
+  "sweaters",
+  "sweatshirts",
+  "pants",
+  "trousers",
+  "dress",
+  "dresses",
+  "skirts",
+  "outerwear",
+  "mens clothing",
+  "women's clothing",
+];
+
+const ANTIQUE_CATEGORY_KEYWORDS = [
+  "collect",
+  "antique",
+  "art",
+  "vase",
+  "pottery",
+  "figurine",
+  "painting",
+  "print",
+  "sculpture",
+];
+
 const TITLE_STOPWORDS = new Set([
   "a",
   "an",
   "and",
   "automatic",
+  "authentic",
   "auth",
   "black",
   "blue",
@@ -90,6 +187,7 @@ const TITLE_STOPWORDS = new Set([
   "for",
   "from",
   "full",
+  "genuine",
   "gold",
   "good",
   "gray",
@@ -99,6 +197,7 @@ const TITLE_STOPWORDS = new Set([
   "large",
   "ladies",
   "leather",
+  "lot",
   "mens",
   "men",
   "new",
@@ -116,10 +215,12 @@ const TITLE_STOPWORDS = new Set([
   "silver",
   "small",
   "stainless",
+  "solid",
   "steel",
   "the",
   "unworn",
   "used",
+  "vintage",
   "watch",
   "white",
   "with",
@@ -128,6 +229,7 @@ const TITLE_STOPWORDS = new Set([
 ]);
 
 let tokenCache: TokenCache | null = null;
+let tokenPromise: Promise<string> | null = null;
 
 function getEnvironment(): EbayEnvironment {
   return process.env.EBAY_ENV === "sandbox" ? "sandbox" : "production";
@@ -164,6 +266,21 @@ function containsAny(text: string, keywords: string[]): boolean {
   return keywords.some((keyword) => text.includes(keyword));
 }
 
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function containsTerm(text: string, term: string): boolean {
+  const pattern = new RegExp(
+    `(^|[^a-z0-9])${escapeRegex(term).replace(/\s+/g, "\\s+")}($|[^a-z0-9])`
+  );
+  return pattern.test(text);
+}
+
+function containsAnyTerm(text: string, keywords: string[]): boolean {
+  return keywords.some((keyword) => containsTerm(text, keyword));
+}
+
 function isWatchAccessoryCategoryPath(categoryPath: string[]): boolean {
   const normalized = normalizeTitle(categoryPath.join(" "));
   return normalized.includes("watch accessories") || normalized.includes("wristwatch bands");
@@ -185,31 +302,43 @@ async function getAccessToken(): Promise<string> {
     return tokenCache.accessToken;
   }
 
-  const env = getEnvironment();
-  const response = await fetch(`${getBaseUrl(env)}/identity/v1/oauth2/token`, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${createBasicAuth(clientId, clientSecret)}`,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({
-      grant_type: "client_credentials",
-      scope: OAUTH_SCOPE,
-    }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`eBay OAuth failed: ${response.status} ${errorText}`);
+  if (tokenPromise) {
+    return tokenPromise;
   }
 
-  const payload = await response.json();
-  tokenCache = {
-    accessToken: payload.access_token,
-    expiresAt: Date.now() + Math.max(60, Number(payload.expires_in || 7200) - 120) * 1000,
-  };
+  tokenPromise = (async () => {
+    const env = getEnvironment();
+    const response = await fetch(`${getBaseUrl(env)}/identity/v1/oauth2/token`, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${createBasicAuth(clientId, clientSecret)}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        grant_type: "client_credentials",
+        scope: OAUTH_SCOPE,
+      }),
+    });
 
-  return tokenCache.accessToken;
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`eBay OAuth failed: ${response.status} ${errorText}`);
+    }
+
+    const payload = await response.json();
+    tokenCache = {
+      accessToken: payload.access_token,
+      expiresAt: Date.now() + Math.max(60, Number(payload.expires_in || 7200) - 120) * 1000,
+    };
+
+    return tokenCache.accessToken;
+  })();
+
+  try {
+    return await tokenPromise;
+  } finally {
+    tokenPromise = null;
+  }
 }
 
 function parseMoney(amount: unknown, currency: unknown): PricePoint {
@@ -393,6 +522,55 @@ function inferModel(listings: ListingSummary[], brand: string): string {
   return bestToken ? toDisplayToken(bestToken) : "";
 }
 
+function inferReferenceToken(listings: ListingSummary[], brand: string, model: string): string {
+  const scores = new Map<string, number>();
+  const excluded = new Set(
+    [brand, model]
+      .flatMap((value) => titleTokens(value))
+      .filter(Boolean)
+  );
+
+  listings.slice(0, 10).forEach((listing, index) => {
+    const weight = Math.max(1, 10 - index);
+    const tokens = titleTokens(listing.title);
+
+    tokens.forEach((token) => {
+      if (excluded.has(token)) {
+        return;
+      }
+
+      if (/^[a-z]?\d{4,6}[a-z]?$/.test(token) || /^\d{2,4}mm$/.test(token)) {
+        scores.set(token, (scores.get(token) || 0) + weight);
+      }
+    });
+  });
+
+  let bestToken = "";
+  let bestScore = 0;
+
+  for (const [token, score] of scores.entries()) {
+    if (score > bestScore) {
+      bestToken = token;
+      bestScore = score;
+    }
+  }
+
+  return bestScore >= 8 ? toDisplayToken(bestToken) : "";
+}
+
+function buildSearchQueryFromListings(listings: ListingSummary[]): string {
+  const brand = inferBrand(listings);
+  const model = inferModel(listings, brand);
+  const referenceToken = inferReferenceToken(listings, brand, model);
+  const queryParts = [brand, model, referenceToken].filter(Boolean);
+
+  if (queryParts.length > 0) {
+    return normalizeWhitespace(queryParts.join(" "));
+  }
+
+  return listings[0]?.title || "";
+}
+
 function inferCategory(listings: ListingSummary[]): string {
   const scores = new Map<string, number>();
 
@@ -421,38 +599,41 @@ function inferCategoryGroup(category: string, listings: ListingSummary[]): strin
   const categoryText = normalizeTitle(
     [category, ...listings.slice(0, 5).flatMap((listing) => listing.categoryPath)].join(" ")
   );
+  const titleText = normalizeTitle(listings.slice(0, 5).map((listing) => listing.title).join(" "));
+  const combinedText = normalizeWhitespace(`${categoryText} ${titleText}`);
 
-  if (categoryText.includes("watch")) {
-    return "watch";
+  if (containsAnyTerm(combinedText, COIN_CATEGORY_KEYWORDS)) {
+    return "coins";
   }
-  if (categoryText.includes("jewelry")) {
+  if (containsAnyTerm(categoryText, JEWELRY_CATEGORY_KEYWORDS)) {
     return "jewelry";
   }
+  if (containsAnyTerm(categoryText, WATCH_CATEGORY_KEYWORDS) || inferWatchSearch(listings)) {
+    return "watch";
+  }
   if (
-    categoryText.includes("bag") ||
-    categoryText.includes("handbag") ||
-    categoryText.includes("wallet") ||
-    categoryText.includes("fashion")
+    containsAnyTerm(categoryText, FASHION_CATEGORY_KEYWORDS) ||
+    containsAnyTerm(categoryText, APPAREL_CATEGORY_KEYWORDS)
   ) {
     return "fashion";
   }
   if (
-    categoryText.includes("phone") ||
-    categoryText.includes("laptop") ||
-    categoryText.includes("electronics")
+    combinedText.includes("phone") ||
+    combinedText.includes("laptop") ||
+    combinedText.includes("electronics")
   ) {
     return "electronics";
   }
-  if (categoryText.includes("tool")) {
+  if (combinedText.includes("tool")) {
     return "tools";
   }
-  if (categoryText.includes("collect")) {
+  if (containsAnyTerm(categoryText, ANTIQUE_CATEGORY_KEYWORDS)) {
     return "collectible";
   }
-  if (categoryText.includes("appliance")) {
+  if (combinedText.includes("appliance")) {
     return "appliance";
   }
-  if (categoryText.includes("home")) {
+  if (combinedText.includes("home")) {
     return "home";
   }
   return "other";
@@ -471,11 +652,12 @@ type CategorySelection = {
   selectedCategoryId: string | null;
   listings: ListingSummary[];
   isReliable: boolean;
+  scoreShare: number;
 };
 
 function selectDominantCategoryForImage(listings: ListingSummary[]): CategorySelection {
   if (listings.length === 0) {
-    return { selectedCategoryId: null, listings: [], isReliable: false };
+    return { selectedCategoryId: null, listings: [], isReliable: false, scoreShare: 0 };
   }
 
   const categoryScores = new Map<
@@ -500,7 +682,7 @@ function selectDominantCategoryForImage(listings: ListingSummary[]): CategorySel
 
   const entries = [...categoryScores.entries()];
   if (entries.length === 0) {
-    return { selectedCategoryId: null, listings: [], isReliable: false };
+    return { selectedCategoryId: null, listings: [], isReliable: false, scoreShare: 0 };
   }
 
   const nonAccessoryEntries = entries.filter(([, entry]) => !entry.isAccessoryCategory);
@@ -516,7 +698,7 @@ function selectDominantCategoryForImage(listings: ListingSummary[]): CategorySel
   }
 
   if (!best) {
-    return { selectedCategoryId: null, listings: [], isReliable: false };
+    return { selectedCategoryId: null, listings: [], isReliable: false, scoreShare: 0 };
   }
 
   const scoreShare = totalScore > 0 ? best[1].score / totalScore : 0;
@@ -526,6 +708,7 @@ function selectDominantCategoryForImage(listings: ListingSummary[]): CategorySel
     selectedCategoryId: best[0],
     listings: best[1].listings,
     isReliable,
+    scoreShare,
   };
 }
 
@@ -600,12 +783,92 @@ function filterAccessoryOnlyListings(listings: ListingSummary[]): {
   };
 }
 
+type ImageStageEvaluation = {
+  imageIndex: number;
+  latencyMs: number;
+  rawListings: ListingSummary[];
+  usedListings: ListingSummary[];
+  selectedListings: ListingSummary[];
+  accessoryFilteredCount: number;
+  selectedCategoryId: string | null;
+  categoryScoreShare: number;
+  isReliable: boolean;
+  score: number;
+};
+
+function scoreImageStage(stage: {
+  listings: ListingSummary[];
+  isReliable: boolean;
+  categoryScoreShare: number;
+  accessoryFilteredCount: number;
+}): number {
+  if (stage.listings.length === 0) {
+    return 0;
+  }
+
+  const listingScore = Math.min(stage.listings.length, 8) * 10;
+  const reliabilityScore = stage.isReliable ? 25 : 0;
+  const categoryScore = Math.round(stage.categoryScoreShare * 60);
+  const accessoryPenalty = stage.accessoryFilteredCount * 6;
+
+  return Math.max(0, listingScore + reliabilityScore + categoryScore - accessoryPenalty);
+}
+
+function toImageDebugStage(stage: ImageStageEvaluation): ImageSearchDebugStage {
+  return {
+    imageIndex: stage.imageIndex,
+    latencyMs: stage.latencyMs,
+    rawListingCount: stage.rawListings.length,
+    usedListingCount: stage.usedListings.length,
+    selectedListingCount: stage.selectedListings.length,
+    accessoryFilteredCount: stage.accessoryFilteredCount,
+    selectedCategoryId: stage.selectedCategoryId,
+    categoryScoreShare: Number(stage.categoryScoreShare.toFixed(2)),
+    isReliable: stage.isReliable,
+    score: stage.score,
+    topTitles: stage.selectedListings.slice(0, 5).map((listing) => listing.title),
+  };
+}
+
+function pickBestImageStage(stages: ImageStageEvaluation[]): ImageStageEvaluation | null {
+  const ranked = stages
+    .filter((stage) => stage.selectedListings.length > 0)
+    .sort((left, right) => right.score - left.score);
+
+  return ranked[0] || null;
+}
+
+function filterTextSearchListings(
+  listings: ListingSummary[],
+  selectedCategoryId: string | null
+): { listings: ListingSummary[]; accessoryFilteredCount: number; dominantCategoryId: string | null } {
+  const usedListings = listings.filter((listing) => getConditionBucket(listing.condition) === "used");
+  const categoryFiltered =
+    selectedCategoryId !== null
+      ? usedListings.filter((listing) => listing.leafCategoryIds.includes(selectedCategoryId))
+      : usedListings;
+  const dominantCategoryFiltered = filterToDominantCategory(
+    categoryFiltered.length > 0 ? categoryFiltered : usedListings
+  );
+  const accessoryFiltered = filterAccessoryOnlyListings(dominantCategoryFiltered.listings);
+
+  return {
+    listings:
+      accessoryFiltered.listings.length > 0
+        ? accessoryFiltered.listings
+        : dominantCategoryFiltered.listings,
+    accessoryFilteredCount: accessoryFiltered.accessoryFilteredCount,
+    dominantCategoryId: dominantCategoryFiltered.dominantCategoryId,
+  };
+}
+
 async function searchRaw(query: string): Promise<ListingSummary[]> {
   const token = await getAccessToken();
   const env = getEnvironment();
   const url = new URL(`${getBaseUrl(env)}/buy/browse/v1/item_summary/search`);
   url.searchParams.set("q", query);
   url.searchParams.set("limit", "24");
+  url.searchParams.set("filter", "conditions:{USED},buyingOptions:{FIXED_PRICE}");
 
   const response = await fetch(url.toString(), {
     headers: {
@@ -699,29 +962,47 @@ function filterToDominantCategory(listings: ListingSummary[]): {
   };
 }
 
-async function searchListingsForSingleImage(imageBase64: string): Promise<ListingSummary[]> {
+async function searchListingsForSingleImage(
+  imageBase64: string,
+  imageIndex: number
+): Promise<ImageStageEvaluation> {
+  const startedAt = Date.now();
   const initial = await searchByImageRaw(imageBase64);
+  const usedListings = initial.listings.filter((listing) => getConditionBucket(listing.condition) === "used");
   const dominantCategoryId = initial.dominantCategoryId;
-  const categoryConstrained =
-    dominantCategoryId !== null
-      ? await searchByImageRaw(imageBase64, { categoryId: dominantCategoryId })
-      : initial;
-
-  const listings = categoryConstrained.listings;
-  const usedFiltered = listings.filter((listing) => getConditionBucket(listing.condition) === "used");
-  const sameCategoryListings =
+  const narrowedByCategory =
     dominantCategoryId === null
-      ? usedFiltered
-      : usedFiltered.filter((listing) => listing.leafCategoryIds.includes(dominantCategoryId));
-  const narrowedListings = sameCategoryListings.length > 0 ? sameCategoryListings : usedFiltered;
-  const selected = selectDominantCategoryForImage(narrowedListings);
+      ? usedListings
+      : usedListings.filter((listing) => listing.leafCategoryIds.includes(dominantCategoryId));
+  const selected = selectDominantCategoryForImage(
+    narrowedByCategory.length > 0 ? narrowedByCategory : usedListings
+  );
+  const accessoryFiltered = filterAccessoryOnlyListings(selected.listings);
+  const selectedListings =
+    accessoryFiltered.listings.length > 0 ? accessoryFiltered.listings : selected.listings;
+  const score = scoreImageStage({
+    listings: selectedListings,
+    isReliable: selected.isReliable,
+    categoryScoreShare: selected.scoreShare,
+    accessoryFilteredCount: accessoryFiltered.accessoryFilteredCount,
+  });
 
-  return selected.isReliable ? selected.listings : [];
+  return {
+    imageIndex,
+    latencyMs: Date.now() - startedAt,
+    rawListings: initial.listings,
+    usedListings,
+    selectedListings,
+    accessoryFilteredCount: accessoryFiltered.accessoryFilteredCount,
+    selectedCategoryId: selected.selectedCategoryId,
+    categoryScoreShare: selected.scoreShare,
+    isReliable: selected.isReliable,
+    score,
+  };
 }
 
 async function searchByImageRaw(
-  imageBase64: string,
-  options?: { categoryId?: string }
+  imageBase64: string
 ): Promise<{ listings: ListingSummary[]; dominantCategoryId: string | null }> {
   const token = await getAccessToken();
   const env = getEnvironment();
@@ -729,9 +1010,6 @@ async function searchByImageRaw(
   url.searchParams.set("limit", "24");
   url.searchParams.set("fieldgroups", "FULL");
   url.searchParams.set("filter", "conditions:{USED},buyingOptions:{FIXED_PRICE}");
-  if (options?.categoryId) {
-    url.searchParams.set("category_ids", options.categoryId);
-  }
 
   const response = await fetch(url.toString(), {
     method: "POST",
@@ -770,6 +1048,7 @@ function identifyFromListings(listings: ListingSummary[]): ProductIdentification
   const brand = inferBrand(listings);
   const model = inferModel(listings, brand);
   const category = inferCategory(listings);
+  const searchQuery = buildSearchQueryFromListings(listings);
   const title =
     brand && model
       ? `${brand} ${model}`
@@ -784,7 +1063,7 @@ function identifyFromListings(listings: ListingSummary[]): ProductIdentification
     categoryGroup: inferCategoryGroup(category, listings),
     conditionSummary: "eBay画像検索ベース",
     confidence,
-    searchQuery: title,
+    searchQuery,
     reasoning: "商品候補は eBay searchByImage の上位一致結果から合意抽出しています。",
   };
 }
@@ -795,44 +1074,79 @@ export async function searchListingsByImage(
   identification: ProductIdentification;
   listings: ListingSummary[];
   accessoryFilteredCount: number;
+  debug: AppraisalDebug;
 }> {
-  const perImageListings: ListingSummary[][] = [];
+  const imageStages = await Promise.all(
+    images.map((image, index) => searchListingsForSingleImage(image.data, index))
+  );
+  const bestImageStage = pickBestImageStage(imageStages);
+  const baseDebug: AppraisalDebug = {
+    pipelineVersion: "2026-04-13-stage-split-v1",
+    selectedImageIndex: bestImageStage?.imageIndex ?? null,
+    imageStages: imageStages.map((stage) => toImageDebugStage(stage)),
+    queryStage: null,
+  };
 
-  for (const image of images) {
-    const listings = await searchListingsForSingleImage(image.data);
-    if (listings.length > 0) {
-      perImageListings.push(listings);
-    }
+  if (!bestImageStage || bestImageStage.selectedListings.length === 0) {
+    return {
+      identification: {
+        itemName: "eBay画像検索結果なし",
+        brand: "",
+        model: "",
+        category: "eBay画像検索",
+        categoryGroup: "other",
+        conditionSummary: "一致結果なし",
+        confidence: 0,
+        searchQuery: "",
+        reasoning: "eBay searchByImage で一致結果を取得できませんでした。",
+      },
+      listings: [],
+      accessoryFilteredCount: 0,
+      debug: baseDebug,
+    };
   }
 
-  const combined = dedupeListings(perImageListings.flat());
+  const identification = identifyFromListings(bestImageStage.selectedListings);
+  const queryStartedAt = Date.now();
+  const textSearchRaw = identification.searchQuery ? await searchRaw(identification.searchQuery) : [];
+  const textSearchFiltered = filterTextSearchListings(
+    textSearchRaw,
+    bestImageStage.selectedCategoryId
+  );
+  const textSearchListings = dedupeListings(textSearchFiltered.listings);
+  const queryStage: QuerySearchDebugStage = {
+    query: identification.searchQuery,
+    latencyMs: Date.now() - queryStartedAt,
+    rawListingCount: textSearchRaw.length,
+    filteredListingCount: textSearchListings.length,
+    accessoryFilteredCount: textSearchFiltered.accessoryFilteredCount,
+    dominantCategoryId: textSearchFiltered.dominantCategoryId,
+    topTitles: textSearchListings.slice(0, 5).map((listing) => listing.title),
+  };
 
-  if (combined.length > 0) {
-    const categoryFiltered = filterToDominantCategory(combined);
-    const accessoryFiltered = filterAccessoryOnlyListings(categoryFiltered.listings);
-
-    if (accessoryFiltered.listings.length > 0) {
-      return {
-        identification: identifyFromListings(accessoryFiltered.listings),
-        listings: accessoryFiltered.listings,
-        accessoryFilteredCount: accessoryFiltered.accessoryFilteredCount,
-      };
-    }
-  }
+  const finalListings =
+    textSearchListings.length >= 3 ? textSearchListings : bestImageStage.selectedListings;
+  const finalAccessoryFilteredCount =
+    bestImageStage.accessoryFilteredCount +
+    (textSearchListings.length >= 3 ? textSearchFiltered.accessoryFilteredCount : 0);
+  const confidenceBase = scoreFromListings(bestImageStage.selectedListings);
+  const queryBonus = textSearchListings.length >= 6 ? 0.1 : textSearchListings.length >= 3 ? 0.05 : 0;
+  const confidence = Math.min(0.95, confidenceBase + queryBonus);
 
   return {
     identification: {
-      itemName: "eBay画像検索結果なし",
-      brand: "",
-      model: "",
-      category: "eBay画像検索",
-      categoryGroup: "other",
-      conditionSummary: "一致結果なし",
-      confidence: 0,
-      searchQuery: "",
-      reasoning: "eBay searchByImage で一致結果を取得できませんでした。",
+      ...identification,
+      confidence,
+      reasoning:
+        textSearchListings.length >= 3
+          ? "まず eBay searchByImage で最も一貫した画像から商品候補を作り、その検索語で eBay テキスト検索をかけて価格参照を集めています。"
+          : "まず eBay searchByImage で最も一貫した画像から商品候補を作っています。テキスト検索の一致件数が不足したため、画像検索結果を価格参照に使っています。",
     },
-    listings: [],
-    accessoryFilteredCount: 0,
+    listings: finalListings,
+    accessoryFilteredCount: finalAccessoryFilteredCount,
+    debug: {
+      ...baseDebug,
+      queryStage,
+    },
   };
 }

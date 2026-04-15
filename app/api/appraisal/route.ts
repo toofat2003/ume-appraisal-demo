@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { searchListingsByImage } from "@/lib/appraisal/ebay";
-import { AppraisalResult, ListingSummary } from "@/lib/appraisal/types";
+import { AppraisalDebug, AppraisalResult, ListingSummary } from "@/lib/appraisal/types";
 
 const MAX_IMAGE_COUNT = 3;
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
@@ -61,7 +61,8 @@ function getConfidenceAdjustment(confidence: number): number {
 function buildWarnings(
   listings: ListingSummary[],
   confidence: number,
-  accessoryFilteredCount: number
+  accessoryFilteredCount: number,
+  debug: AppraisalDebug
 ): string[] {
   const warnings: string[] = [];
 
@@ -80,6 +81,18 @@ function buildWarnings(
   if (accessoryFilteredCount > 0) {
     warnings.push(
       `付属品単体と判断した出品を ${accessoryFilteredCount} 件、価格計算から除外しました。`
+    );
+  }
+
+  if (debug.selectedImageIndex !== null && debug.selectedImageIndex > 0) {
+    warnings.push(
+      `${debug.selectedImageIndex + 1}枚目の画像のほうが商品特定に使いやすかったため、1枚目ではなくそちらを主に参照しています。`
+    );
+  }
+
+  if (debug.queryStage && debug.queryStage.filteredListingCount < 3) {
+    warnings.push(
+      "品名からのeBay検索で十分な一致件数を取れず、画像検索結果を価格参照に使っているためブレやすい状態です。"
     );
   }
 
@@ -116,7 +129,9 @@ export async function POST(request: Request) {
     }
 
     const images = await Promise.all(files.map((file) => fileToBase64(file)));
-    const { identification, listings, accessoryFilteredCount } = await searchListingsByImage(images);
+    const { identification, listings, accessoryFilteredCount, debug } = await searchListingsByImage(
+      images
+    );
 
     if (listings.length === 0) {
       return NextResponse.json(
@@ -154,7 +169,8 @@ export async function POST(request: Request) {
         formula: "出品総額のp25 × カテゴリ係数 × 確信度補正",
       },
       listings: listings.slice(0, 8),
-      warnings: buildWarnings(listings, identification.confidence, accessoryFilteredCount),
+      warnings: buildWarnings(listings, identification.confidence, accessoryFilteredCount, debug),
+      debug,
     };
 
     return NextResponse.json(result);
