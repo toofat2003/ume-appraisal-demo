@@ -1,0 +1,123 @@
+{
+  "generated_at": "2026-04-15T08:15:24Z",
+  "sample_count_total": 180,
+  "sample_count_success": 180,
+  "sample_count_error": 0,
+  "success_rate": 1.0,
+  "category_accuracy": 0.9667,
+  "brand_accuracy_labeled_only": 0.4468,
+  "item_name_token_f1_macro": 0.3585,
+  "item_name_token_f1_median": 0.375,
+  "reference_hit_rate_labeled_only": 0.4182,
+  "latency_ms_p50": 1226.0,
+  "latency_ms_p90": 1446,
+  "latency_ms_mean": 1266.2,
+  "per_category": {
+    "antiques_art": {
+      "total": 30,
+      "success": 30,
+      "success_rate": 1.0,
+      "category_accuracy": 0.8667,
+      "item_name_token_f1_macro": 0.3133,
+      "brand_accuracy_labeled_only": 0.1429,
+      "reference_hit_rate_labeled_only": 0
+    },
+    "apparel": {
+      "total": 30,
+      "success": 30,
+      "success_rate": 1.0,
+      "category_accuracy": 1.0,
+      "item_name_token_f1_macro": 0.3961,
+      "brand_accuracy_labeled_only": 0.2667,
+      "reference_hit_rate_labeled_only": 0
+    },
+    "brand_bag": {
+      "total": 30,
+      "success": 30,
+      "success_rate": 1.0,
+      "category_accuracy": 0.9667,
+      "item_name_token_f1_macro": 0.4273,
+      "brand_accuracy_labeled_only": 0.8,
+      "reference_hit_rate_labeled_only": 1
+    },
+    "coins": {
+      "total": 30,
+      "success": 30,
+      "success_rate": 1.0,
+      "category_accuracy": 0.9667,
+      "item_name_token_f1_macro": 0.2519,
+      "brand_accuracy_labeled_only": 0.1429,
+      "reference_hit_rate_labeled_only": 0
+    },
+    "jewelry_precious_metals": {
+      "total": 30,
+      "success": 30,
+      "success_rate": 1.0,
+      "category_accuracy": 1.0,
+      "item_name_token_f1_macro": 0.3376,
+      "brand_accuracy_labeled_only": 0.1,
+      "reference_hit_rate_labeled_only": 0
+    },
+    "watch": {
+      "total": 30,
+      "success": 30,
+      "success_rate": 1.0,
+      "category_accuracy": 1.0,
+      "item_name_token_f1_macro": 0.4246,
+      "brand_accuracy_labeled_only": 0.8333,
+      "reference_hit_rate_labeled_only": 1
+    }
+  },
+  "confusion_top": [
+    {
+      "truth": "apparel",
+      "predicted": "apparel",
+      "count": 30
+    },
+    {
+      "truth": "jewelry_precious_metals",
+      "predicted": "jewelry_precious_metals",
+      "count": 30
+    },
+    {
+      "truth": "watch",
+      "predicted": "watch",
+      "count": 30
+    },
+    {
+      "truth": "brand_bag",
+      "predicted": "brand_bag",
+      "count": 29
+    },
+    {
+      "truth": "coins",
+      "predicted": "coins",
+      "count": 29
+    },
+    {
+      "truth": "antiques_art",
+      "predicted": "antiques_art",
+      "count": 26
+    },
+    {
+      "truth": "antiques_art",
+      "predicted": "coins",
+      "count": 2
+    },
+    {
+      "truth": "antiques_art",
+      "predicted": "other",
+      "count": 2
+    },
+    {
+      "truth": "brand_bag",
+      "predicted": "other",
+      "count": 1
+    },
+    {
+      "truth": "coins",
+      "predicted": "other",
+      "count": 1
+    }
+  ]
+}

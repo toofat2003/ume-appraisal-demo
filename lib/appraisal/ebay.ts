@@ -82,11 +82,101 @@ const WATCH_ACCESSORY_KEYWORDS = [
   "papers only",
 ];
 
+const WATCH_CATEGORY_KEYWORDS = [
+  "wristwatch",
+  "wristwatches",
+  "pocket watch",
+  "pocket watches",
+  "watch accessories",
+  "wristwatch bands",
+];
+
+const JEWELRY_CATEGORY_KEYWORDS = [
+  "ring",
+  "rings",
+  "necklace",
+  "necklaces",
+  "pendant",
+  "pendants",
+  "bracelets & charms",
+  "bracelet",
+  "bracelets",
+  "charms",
+  "earring",
+  "earrings",
+  "brooch",
+  "brooches",
+  "jewelry",
+  "jewellery",
+];
+
+const COIN_CATEGORY_KEYWORDS = [
+  "coin",
+  "coins",
+  "currency",
+  "banknote",
+  "banknotes",
+  "note",
+  "notes",
+  "paper money",
+  "numis",
+  "roman",
+  "dollar",
+  "dime",
+  "nickel",
+  "cent",
+  "quarter",
+  "mint",
+  "medal",
+  "token",
+  "historical currency",
+  "confederate currency",
+  "silver certificate",
+  "obsolete banknote",
+];
+
+const FASHION_CATEGORY_KEYWORDS = ["bag", "handbag", "wallet", "fashion"];
+
+const APPAREL_CATEGORY_KEYWORDS = [
+  "tops",
+  "shirts",
+  "t-shirts",
+  "t shirt",
+  "t-shirts",
+  "coats",
+  "jackets",
+  "vests",
+  "hoodies",
+  "sweaters",
+  "sweatshirts",
+  "pants",
+  "trousers",
+  "dress",
+  "dresses",
+  "skirts",
+  "outerwear",
+  "mens clothing",
+  "women's clothing",
+];
+
+const ANTIQUE_CATEGORY_KEYWORDS = [
+  "collect",
+  "antique",
+  "art",
+  "vase",
+  "pottery",
+  "figurine",
+  "painting",
+  "print",
+  "sculpture",
+];
+
 const TITLE_STOPWORDS = new Set([
   "a",
   "an",
   "and",
   "automatic",
+  "authentic",
   "auth",
   "black",
   "blue",
@@ -97,6 +187,7 @@ const TITLE_STOPWORDS = new Set([
   "for",
   "from",
   "full",
+  "genuine",
   "gold",
   "good",
   "gray",
@@ -106,6 +197,7 @@ const TITLE_STOPWORDS = new Set([
   "large",
   "ladies",
   "leather",
+  "lot",
   "mens",
   "men",
   "new",
@@ -123,10 +215,12 @@ const TITLE_STOPWORDS = new Set([
   "silver",
   "small",
   "stainless",
+  "solid",
   "steel",
   "the",
   "unworn",
   "used",
+  "vintage",
   "watch",
   "white",
   "with",
@@ -170,6 +264,21 @@ function titleTokens(value: string): string[] {
 
 function containsAny(text: string, keywords: string[]): boolean {
   return keywords.some((keyword) => text.includes(keyword));
+}
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function containsTerm(text: string, term: string): boolean {
+  const pattern = new RegExp(
+    `(^|[^a-z0-9])${escapeRegex(term).replace(/\s+/g, "\\s+")}($|[^a-z0-9])`
+  );
+  return pattern.test(text);
+}
+
+function containsAnyTerm(text: string, keywords: string[]): boolean {
+  return keywords.some((keyword) => containsTerm(text, keyword));
 }
 
 function isWatchAccessoryCategoryPath(categoryPath: string[]): boolean {
@@ -490,38 +599,41 @@ function inferCategoryGroup(category: string, listings: ListingSummary[]): strin
   const categoryText = normalizeTitle(
     [category, ...listings.slice(0, 5).flatMap((listing) => listing.categoryPath)].join(" ")
   );
+  const titleText = normalizeTitle(listings.slice(0, 5).map((listing) => listing.title).join(" "));
+  const combinedText = normalizeWhitespace(`${categoryText} ${titleText}`);
 
-  if (categoryText.includes("watch")) {
-    return "watch";
+  if (containsAnyTerm(combinedText, COIN_CATEGORY_KEYWORDS)) {
+    return "coins";
   }
-  if (categoryText.includes("jewelry")) {
+  if (containsAnyTerm(categoryText, JEWELRY_CATEGORY_KEYWORDS)) {
     return "jewelry";
   }
+  if (containsAnyTerm(categoryText, WATCH_CATEGORY_KEYWORDS) || inferWatchSearch(listings)) {
+    return "watch";
+  }
   if (
-    categoryText.includes("bag") ||
-    categoryText.includes("handbag") ||
-    categoryText.includes("wallet") ||
-    categoryText.includes("fashion")
+    containsAnyTerm(categoryText, FASHION_CATEGORY_KEYWORDS) ||
+    containsAnyTerm(categoryText, APPAREL_CATEGORY_KEYWORDS)
   ) {
     return "fashion";
   }
   if (
-    categoryText.includes("phone") ||
-    categoryText.includes("laptop") ||
-    categoryText.includes("electronics")
+    combinedText.includes("phone") ||
+    combinedText.includes("laptop") ||
+    combinedText.includes("electronics")
   ) {
     return "electronics";
   }
-  if (categoryText.includes("tool")) {
+  if (combinedText.includes("tool")) {
     return "tools";
   }
-  if (categoryText.includes("collect")) {
+  if (containsAnyTerm(categoryText, ANTIQUE_CATEGORY_KEYWORDS)) {
     return "collectible";
   }
-  if (categoryText.includes("appliance")) {
+  if (combinedText.includes("appliance")) {
     return "appliance";
   }
-  if (categoryText.includes("home")) {
+  if (combinedText.includes("home")) {
     return "home";
   }
   return "other";

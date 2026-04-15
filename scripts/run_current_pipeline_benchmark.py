@@ -88,14 +88,17 @@ def map_prediction_category(payload: dict[str, Any]) -> str:
     if category_group == "watch" or "wristwatch" in combined or "watch" in combined:
         return "watch"
 
-    if category_group == "jewelry":
-        return "jewelry_precious_metals"
+    if category_group == "coins":
+        return "coins"
 
-    if any(keyword in combined for keyword in ["ring", "necklace", "bracelet", "earring", "pearl", "diamond", "gold", "silver"]):
+    if category_group == "jewelry":
         return "jewelry_precious_metals"
 
     if any(keyword in combined for keyword in ["coin", "currency", "banknote", "note", "dollar", "cent", "nickel", "dime", "quarter"]):
         return "coins"
+
+    if any(keyword in combined for keyword in ["ring", "necklace", "bracelet", "earring", "pearl", "diamond", "gold", "silver"]):
+        return "jewelry_precious_metals"
 
     if any(keyword in combined for keyword in ["vase", "painting", "print", "sculpture", "art", "antique", "bronze", "pottery", "woodblock", "plate", "figurine"]):
         return "antiques_art"
