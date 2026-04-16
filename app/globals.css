@@ -1,9 +1,43 @@
+:root {
+  --bg-deep: #09090b;
+  --bg-surface: #131316;
+  --bg-card: #1a1a1f;
+  --bg-elevated: #222228;
+
+  --text-primary: #f0f0f2;
+  --text-secondary: #87878f;
+  --text-muted: #55555d;
+
+  --accent: #d4943a;
+  --accent-dim: rgba(212, 148, 58, 0.12);
+
+  --danger: #e5564a;
+  --danger-dim: rgba(229, 86, 74, 0.12);
+  --warning-dim: rgba(212, 148, 58, 0.10);
+
+  --border: rgba(255, 255, 255, 0.07);
+  --border-accent: rgba(212, 148, 58, 0.25);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 999px;
+
+  --font-body: "Sora", system-ui, -apple-system, sans-serif;
+  --font-mono: "Space Mono", "Courier New", monospace;
+}
+
 html {
-  background: #f4ede1;
+  background: var(--bg-deep);
+  color: var(--text-primary);
 }
 
 body {
   margin: 0;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 * {
@@ -15,4 +49,18 @@ input,
 textarea,
 select {
   font: inherit;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
 }
