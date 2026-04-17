@@ -12,9 +12,24 @@ type PreviewState = {
 const EMPTY_SLOT: PreviewState = { file: null, url: null };
 
 const PHOTO_SLOTS = [
-  { id: "overview", label: "全体" },
-  { id: "label", label: "型番" },
-  { id: "damage", label: "ダメージ" },
+  {
+    id: "overview",
+    label: "全体",
+    tag: "まず1枚",
+    guidance: "商品全体が分かる正面寄りの写真",
+  },
+  {
+    id: "label",
+    label: "識別情報",
+    tag: "任意",
+    guidance: "ロゴ・型番・刻印・タグをアップで",
+  },
+  {
+    id: "damage",
+    label: "状態情報",
+    tag: "任意",
+    guidance: "傷・角スレ・汚れ・破損をアップで",
+  },
 ] as const;
 
 function formatCurrency(amount: number): string {
@@ -148,6 +163,15 @@ export default function HomePage() {
         {/* Capture panel */}
         <div className={styles.capture}>
           <form className={styles.captureForm} onSubmit={handleSubmit}>
+            <div className={styles.captureGuide}>
+              <p className={styles.captureLead}>
+                写真は1枚でも査定できます。2枚目・3枚目は任意です。
+              </p>
+              <p className={styles.captureSublead}>
+                精度を上げたい場合だけ、識別情報やダメージ写真を追加してください。
+              </p>
+            </div>
+
             <div className={styles.photoGrid}>
               {PHOTO_SLOTS.map((slot, index) => (
                 <div key={slot.id} className={styles.photoSlotWrap}>
@@ -161,7 +185,7 @@ export default function HomePage() {
                         inputRefs.current[index] = el;
                       }}
                       type="file"
-                      accept="image/png,image/jpeg,image/webp"
+                      accept="image/*"
                       capture="environment"
                       className={styles.fileInput}
                       onChange={(e) => handleFileChange(index, e)}
@@ -210,7 +234,19 @@ export default function HomePage() {
                       </svg>
                     </button>
                   )}
-                  <span className={styles.slotLabel}>{slot.label}</span>
+                  <div className={styles.slotMeta}>
+                    <div className={styles.slotMetaHeader}>
+                      <span className={styles.slotLabel}>{slot.label}</span>
+                      <span
+                        className={`${styles.slotTag} ${
+                          index === 0 ? styles.slotTagPrimary : styles.slotTagOptional
+                        }`}
+                      >
+                        {slot.tag}
+                      </span>
+                    </div>
+                    <span className={styles.slotGuidance}>{slot.guidance}</span>
+                  </div>
                 </div>
               ))}
             </div>

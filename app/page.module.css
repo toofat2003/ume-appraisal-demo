@@ -110,6 +110,24 @@
   gap: 16px;
 }
 
+.captureGuide {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.captureLead {
+  margin: 0;
+  font: 600 14px/1.45 var(--font-body);
+  color: var(--text-primary);
+}
+
+.captureSublead {
+  margin: 0;
+  font: 400 12px/1.5 var(--font-body);
+  color: var(--text-muted);
+}
+
 /* === Photo Grid === */
 
 .photoGrid {
@@ -212,6 +230,47 @@
   font: 500 11px/1 var(--font-body);
   color: var(--text-muted);
   letter-spacing: 0.02em;
+}
+
+.slotMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.slotMetaHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.slotTag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 7px;
+  border-radius: var(--radius-full);
+  font: 600 10px/1 var(--font-body);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.slotTagPrimary {
+  background: rgba(212, 148, 58, 0.16);
+  color: var(--accent);
+}
+
+.slotTagOptional {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+}
+
+.slotGuidance {
+  font: 400 11px/1.4 var(--font-body);
+  color: var(--text-muted);
 }
 
 /* === Action Buttons === */
@@ -737,6 +796,14 @@
   .main {
     flex: 1;
     min-width: 0;
+  }
+
+  .captureLead {
+    font-size: 15px;
+  }
+
+  .captureSublead {
+    font-size: 12px;
   }
 
   .priceValue {
