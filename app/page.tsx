@@ -2,7 +2,7 @@
 
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import styles from "./page.module.css";
-import type { AppraisalResult } from "@/lib/appraisal/types";
+import type { AppraisalHistoryItem, AppraisalResult } from "@/lib/appraisal/types";
 
 type PreviewState = {
   file: File | null;
@@ -40,6 +40,15 @@ function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
+function formatDateTime(value: string): string {
+  return new Intl.DateTimeFormat("ja-JP", {
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
 export default function HomePage() {
   const [previews, setPreviews] = useState<PreviewState[]>([
     EMPTY_SLOT,
@@ -49,6 +58,10 @@ export default function HomePage() {
   const [result, setResult] = useState<AppraisalResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
+  const [historyItems, setHistoryItems] = useState<AppraisalHistoryItem[]>([]);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(true);
+  const [historyEnabled, setHistoryEnabled] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([null, null, null]);
   const resultsRef = useRef<HTMLElement>(null);
 
@@ -59,6 +72,31 @@ export default function HomePage() {
       resultsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [result]);
+
+  useEffect(() => {
+    void loadHistory();
+  }, []);
+
+  async function loadHistory() {
+    try {
+      setHistoryError(null);
+      const response = await fetch("/api/history", { cache: "no-store" });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error || "査定履歴の取得に失敗しました");
+      }
+
+      setHistoryItems(Array.isArray(payload.items) ? payload.items : []);
+      setHistoryEnabled(Boolean(payload.enabled));
+    } catch (err) {
+      setHistoryError(
+        err instanceof Error ? err.message : "査定履歴の取得に失敗しました"
+      );
+    } finally {
+      setIsHistoryLoading(false);
+    }
+  }
 
   function updatePreview(index: number, file: File | null) {
     setPreviews((current) =>
@@ -100,11 +138,13 @@ export default function HomePage() {
     setError(null);
     setResult(null);
 
-    const files = previews
-      .map((p) => p.file)
-      .filter((f): f is File => f !== null);
+    const selectedPhotos = previews.flatMap((preview, index) =>
+      preview.file
+        ? [{ file: preview.file, slotLabel: PHOTO_SLOTS[index].label as string }]
+        : []
+    );
 
-    if (files.length === 0) {
+    if (selectedPhotos.length === 0) {
       setError("写真を1枚以上追加してください");
       return;
     }
@@ -114,7 +154,10 @@ export default function HomePage() {
     void (async () => {
       try {
         const formData = new FormData();
-        for (const file of files) formData.append("images", file);
+        for (const photo of selectedPhotos) {
+          formData.append("images", photo.file);
+          formData.append("imageSlotLabels", photo.slotLabel);
+        }
 
         const response = await fetch("/api/appraisal", {
           method: "POST",
@@ -127,6 +170,7 @@ export default function HomePage() {
         }
 
         setResult(payload as AppraisalResult);
+        await loadHistory();
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "予期しないエラーが発生しました"
@@ -300,7 +344,9 @@ export default function HomePage() {
             </div>
           )}
 
-          <p className={styles.privacyNote}>画像はサーバーに保存されません</p>
+          <p className={styles.privacyNote}>
+            査定に成功した写真と価格は履歴として保存されます
+          </p>
         </div>
 
         {/* Results panel */}
@@ -415,6 +461,12 @@ export default function HomePage() {
                     {result.identification.conditionSummary}
                   </p>
                 )}
+
+                {result.savedHistoryAt && (
+                  <p className={styles.savedNote}>
+                    この査定は履歴に保存済みです · {formatDateTime(result.savedHistoryAt)}
+                  </p>
+                )}
               </div>
 
               {/* Similar listings */}
@@ -526,6 +578,81 @@ export default function HomePage() {
               </p>
             </div>
           )}
+
+          <div className={styles.historySection}>
+            <div className={styles.historyHeader}>
+              <h3 className={styles.sectionHeading}>査定履歴</h3>
+              {historyEnabled && historyItems.length > 0 && (
+                <span className={styles.historyCount}>{historyItems.length}件</span>
+              )}
+            </div>
+
+            {historyError ? (
+              <p className={styles.historyStatus}>{historyError}</p>
+            ) : !historyEnabled ? (
+              <p className={styles.historyStatus}>
+                履歴保存ストレージが未設定のため、まだ一覧は表示されません。
+              </p>
+            ) : isHistoryLoading ? (
+              <p className={styles.historyStatus}>履歴を読み込んでいます...</p>
+            ) : historyItems.length === 0 ? (
+              <p className={styles.historyStatus}>まだ保存された査定はありません。</p>
+            ) : (
+              <div className={styles.historyGrid}>
+                {historyItems.map((item) => (
+                  <article key={item.id} className={styles.historyCard}>
+                    <div className={styles.historyImages}>
+                      {item.images.map((image) => (
+                        <a
+                          key={image.pathname}
+                          href={image.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={styles.historyImageLink}
+                        >
+                          <img
+                            src={image.url}
+                            alt={image.slotLabel}
+                            className={styles.historyImage}
+                          />
+                          <span className={styles.historyImageBadge}>
+                            {image.slotLabel}
+                          </span>
+                        </a>
+                      ))}
+                    </div>
+
+                    <div className={styles.historyBody}>
+                      <div className={styles.historyCardTop}>
+                        <h4 className={styles.historyItemName}>
+                          {item.identification.itemName}
+                        </h4>
+                        <span className={styles.historyItemPrice}>
+                          {formatCurrency(item.pricing.suggestedMaxPrice)}
+                        </span>
+                      </div>
+
+                      <p className={styles.historyMeta}>
+                        {formatDateTime(item.createdAt)}
+                        {" · "}
+                        {item.identification.brand || item.identification.category}
+                      </p>
+
+                      <div className={styles.historyPriceRow}>
+                        <span>
+                          買取目安{" "}
+                          {formatCurrency(item.pricing.buyPriceRangeLow)}
+                          {" – "}
+                          {formatCurrency(item.pricing.buyPriceRangeHigh)}
+                        </span>
+                        <span>{item.pricing.listingCount}件参照</span>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
         </section>
       </div>
     </div>

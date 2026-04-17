@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { searchListingsByImage } from "@/lib/appraisal/ebay";
 import { AppraisalDebug, AppraisalResult, ListingSummary } from "@/lib/appraisal/types";
+import { saveAppraisalHistory } from "@/lib/history/blob";
 
 const MAX_IMAGE_COUNT = 3;
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
+const DEFAULT_SLOT_LABELS = ["全体", "識別情報", "状態情報"] as const;
 
 function roundCurrency(value: number): number {
   return Math.round(value);
@@ -114,6 +116,10 @@ export async function POST(request: Request) {
       .getAll("images")
       .filter((entry): entry is File => entry instanceof File && entry.size > 0)
       .slice(0, MAX_IMAGE_COUNT);
+    const slotLabels = formData
+      .getAll("imageSlotLabels")
+      .filter((entry): entry is string => typeof entry === "string")
+      .slice(0, MAX_IMAGE_COUNT);
 
     if (files.length === 0) {
       return NextResponse.json({ error: "少なくとも1枚の画像が必要です。" }, { status: 400 });
@@ -172,6 +178,28 @@ export async function POST(request: Request) {
       warnings: buildWarnings(listings, identification.confidence, accessoryFilteredCount, debug),
       debug,
     };
+
+    try {
+      const savedHistory = await saveAppraisalHistory({
+        identification: result.identification,
+        pricing: result.pricing,
+        images: files.map((file, index) => ({
+          file,
+          slotLabel: slotLabels[index] || DEFAULT_SLOT_LABELS[index] || `写真${index + 1}`,
+        })),
+      });
+
+      result.savedHistoryId = savedHistory?.id ?? null;
+      result.savedHistoryAt = savedHistory?.createdAt ?? null;
+    } catch (historyError) {
+      console.error("History save error:", historyError);
+      result.savedHistoryId = null;
+      result.savedHistoryAt = null;
+      result.warnings = [
+        ...result.warnings,
+        "査定結果は表示できていますが、履歴保存には失敗しました。",
+      ];
+    }
 
     return NextResponse.json(result);
   } catch (error) {

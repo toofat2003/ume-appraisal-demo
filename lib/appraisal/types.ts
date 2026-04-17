@@ -43,6 +43,30 @@ export type PricingSummary = {
   formula: string;
 };
 
+export type AppraisalHistoryImage = {
+  url: string;
+  pathname: string;
+  slotLabel: string;
+};
+
+export type AppraisalHistoryPricing = {
+  suggestedMaxPrice: number;
+  buyPriceRangeLow: number;
+  buyPriceRangeHigh: number;
+  low: number;
+  median: number;
+  high: number;
+  listingCount: number;
+};
+
+export type AppraisalHistoryItem = {
+  id: string;
+  createdAt: string;
+  images: AppraisalHistoryImage[];
+  identification: ProductIdentification;
+  pricing: AppraisalHistoryPricing;
+};
+
 export type ImageSearchDebugStage = {
   imageIndex: number;
   latencyMs: number;
@@ -80,4 +104,6 @@ export type AppraisalResult = {
   listings: ListingSummary[];
   warnings: string[];
   debug?: AppraisalDebug;
+  savedHistoryId?: string | null;
+  savedHistoryAt?: string | null;
 };
