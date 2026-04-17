@@ -106,4 +106,5 @@ export type AppraisalResult = {
   debug?: AppraisalDebug;
   savedHistoryId?: string | null;
   savedHistoryAt?: string | null;
+  savedHistoryItem?: AppraisalHistoryItem | null;
 };

@@ -77,8 +77,11 @@ export default function HomePage() {
     void loadHistory();
   }, []);
 
-  async function loadHistory() {
+  async function loadHistory(options?: { silent?: boolean }) {
     try {
+      if (!options?.silent) {
+        setIsHistoryLoading(true);
+      }
       setHistoryError(null);
       const response = await fetch("/api/history", { cache: "no-store" });
       const payload = await response.json();
@@ -169,8 +172,19 @@ export default function HomePage() {
           throw new Error(payload.error || "査定に失敗しました");
         }
 
-        setResult(payload as AppraisalResult);
-        await loadHistory();
+        const nextResult = payload as AppraisalResult;
+        setResult(nextResult);
+
+        if (nextResult.savedHistoryItem) {
+          const savedHistoryItem = nextResult.savedHistoryItem;
+          setHistoryEnabled(true);
+          setHistoryItems((current) => {
+            const deduped = current.filter((item) => item.id !== savedHistoryItem.id);
+            return [savedHistoryItem, ...deduped].slice(0, 12);
+          });
+        }
+
+        void loadHistory({ silent: true });
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "予期しないエラーが発生しました"

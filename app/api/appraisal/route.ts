@@ -191,10 +191,12 @@ export async function POST(request: Request) {
 
       result.savedHistoryId = savedHistory?.id ?? null;
       result.savedHistoryAt = savedHistory?.createdAt ?? null;
+      result.savedHistoryItem = savedHistory;
     } catch (historyError) {
       console.error("History save error:", historyError);
       result.savedHistoryId = null;
       result.savedHistoryAt = null;
+      result.savedHistoryItem = null;
       result.warnings = [
         ...result.warnings,
         "査定結果は表示できていますが、履歴保存には失敗しました。",
