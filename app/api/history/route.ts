@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { isHistoryStorageEnabled, listAppraisalHistory } from "@/lib/history/blob";
+import {
+  getHistoryBackendName,
+  isHistoryStorageEnabled,
+  listAppraisalHistory,
+} from "@/lib/history";
 
 export const dynamic = "force-dynamic";
 
@@ -9,6 +13,7 @@ export async function GET() {
 
     return NextResponse.json({
       enabled: isHistoryStorageEnabled(),
+      backend: getHistoryBackendName(),
       items,
     });
   } catch (error) {

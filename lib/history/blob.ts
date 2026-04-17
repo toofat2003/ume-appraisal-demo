@@ -1,23 +1,12 @@
 import { list, put } from "@vercel/blob";
+import { AppraisalHistoryImage, AppraisalHistoryItem } from "@/lib/appraisal/types";
 import {
-  AppraisalHistoryImage,
-  AppraisalHistoryItem,
-  PricingSummary,
-  ProductIdentification,
-} from "@/lib/appraisal/types";
-
-const DEFAULT_HISTORY_LIMIT = 12;
-
-type HistoryImageInput = {
-  file: File;
-  slotLabel: string;
-};
-
-type SaveAppraisalHistoryInput = {
-  identification: ProductIdentification;
-  pricing: PricingSummary;
-  images: HistoryImageInput[];
-};
+  DEFAULT_HISTORY_LIMIT,
+  getExtension,
+  mapPricing,
+  SaveAppraisalHistoryInput,
+  sanitizeSegment,
+} from "@/lib/history/shared";
 
 function isBlobConfigured(): boolean {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
@@ -37,48 +26,6 @@ function getHistoryRecordPrefix(): string {
 
 function getHistoryImagePrefix(): string {
   return `${getHistoryNamespace()}/history-images/`;
-}
-
-function sanitizeSegment(value: string): string {
-  return value
-    .toLowerCase()
-    .replace(/[^a-z0-9.-]+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "") || "file";
-}
-
-function getExtension(file: File): string {
-  const nameParts = file.name.split(".");
-  const fileExtension = nameParts.length > 1 ? sanitizeSegment(nameParts.at(-1) || "") : "";
-
-  if (fileExtension) {
-    return fileExtension;
-  }
-
-  switch (file.type) {
-    case "image/png":
-      return "png";
-    case "image/webp":
-      return "webp";
-    case "image/heic":
-      return "heic";
-    case "image/heif":
-      return "heif";
-    default:
-      return "jpg";
-  }
-}
-
-function mapPricing(pricing: PricingSummary) {
-  return {
-    suggestedMaxPrice: pricing.suggestedMaxPrice,
-    buyPriceRangeLow: pricing.buyPriceRangeLow,
-    buyPriceRangeHigh: pricing.buyPriceRangeHigh,
-    low: pricing.low,
-    median: pricing.median,
-    high: pricing.high,
-    listingCount: pricing.listingCount,
-  };
 }
 
 function isAppraisalHistoryItem(value: unknown): value is AppraisalHistoryItem {

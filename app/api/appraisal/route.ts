@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { searchListingsByImage } from "@/lib/appraisal/ebay";
 import { AppraisalDebug, AppraisalResult, ListingSummary } from "@/lib/appraisal/types";
-import { saveAppraisalHistory } from "@/lib/history/blob";
+import { saveAppraisalHistory } from "@/lib/history";
 
 const MAX_IMAGE_COUNT = 3;
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
@@ -187,6 +187,13 @@ export async function POST(request: Request) {
           file,
           slotLabel: slotLabels[index] || DEFAULT_SLOT_LABELS[index] || `写真${index + 1}`,
         })),
+        rawResult: {
+          identification: result.identification,
+          pricing: result.pricing,
+          listings: result.listings,
+          warnings: result.warnings,
+          debug: result.debug,
+        },
       });
 
       result.savedHistoryId = savedHistory?.id ?? null;
