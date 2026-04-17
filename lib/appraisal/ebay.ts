@@ -602,14 +602,11 @@ function inferCategoryGroup(category: string, listings: ListingSummary[]): strin
   const titleText = normalizeTitle(listings.slice(0, 5).map((listing) => listing.title).join(" "));
   const combinedText = normalizeWhitespace(`${categoryText} ${titleText}`);
 
-  if (containsAnyTerm(combinedText, COIN_CATEGORY_KEYWORDS)) {
-    return "coins";
+  if (containsAnyTerm(categoryText, WATCH_CATEGORY_KEYWORDS) || inferWatchSearch(listings)) {
+    return "watch";
   }
   if (containsAnyTerm(categoryText, JEWELRY_CATEGORY_KEYWORDS)) {
     return "jewelry";
-  }
-  if (containsAnyTerm(categoryText, WATCH_CATEGORY_KEYWORDS) || inferWatchSearch(listings)) {
-    return "watch";
   }
   if (
     containsAnyTerm(categoryText, FASHION_CATEGORY_KEYWORDS) ||
@@ -626,6 +623,9 @@ function inferCategoryGroup(category: string, listings: ListingSummary[]): strin
   }
   if (combinedText.includes("tool")) {
     return "tools";
+  }
+  if (containsAnyTerm(combinedText, COIN_CATEGORY_KEYWORDS)) {
+    return "coins";
   }
   if (containsAnyTerm(categoryText, ANTIQUE_CATEGORY_KEYWORDS)) {
     return "collectible";
