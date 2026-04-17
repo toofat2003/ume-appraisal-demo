@@ -6,8 +6,6 @@ import {
   ProductIdentification,
 } from "@/lib/appraisal/types";
 
-const HISTORY_RECORD_PREFIX = "history-records/";
-const HISTORY_IMAGE_PREFIX = "history-images/";
 const DEFAULT_HISTORY_LIMIT = 12;
 
 type HistoryImageInput = {
@@ -23,6 +21,22 @@ type SaveAppraisalHistoryInput = {
 
 function isBlobConfigured(): boolean {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+}
+
+function getHistoryNamespace(): string {
+  if (process.env.NODE_ENV !== "production") {
+    return "local";
+  }
+
+  return process.env.VERCEL_ENV || "production";
+}
+
+function getHistoryRecordPrefix(): string {
+  return `${getHistoryNamespace()}/history-records/`;
+}
+
+function getHistoryImagePrefix(): string {
+  return `${getHistoryNamespace()}/history-images/`;
 }
 
 function sanitizeSegment(value: string): string {
@@ -106,7 +120,7 @@ export async function saveAppraisalHistory(
 
   const images: AppraisalHistoryImage[] = await Promise.all(
     input.images.map(async ({ file, slotLabel }, index) => {
-      const pathname = `${HISTORY_IMAGE_PREFIX}${id}/${String(index + 1).padStart(2, "0")}-${sanitizeSegment(
+      const pathname = `${getHistoryImagePrefix()}${id}/${String(index + 1).padStart(2, "0")}-${sanitizeSegment(
         slotLabel
       )}.${getExtension(file)}`;
       const blob = await put(pathname, file, {
@@ -131,7 +145,7 @@ export async function saveAppraisalHistory(
     pricing: mapPricing(input.pricing),
   };
 
-  const recordPathname = `${HISTORY_RECORD_PREFIX}${createdAt.replace(/[:.]/g, "-")}_${id}.json`;
+  const recordPathname = `${getHistoryRecordPrefix()}${createdAt.replace(/[:.]/g, "-")}_${id}.json`;
   await put(recordPathname, JSON.stringify(item, null, 2), {
     access: "public",
     addRandomSuffix: false,
@@ -150,7 +164,7 @@ export async function listAppraisalHistory(
   }
 
   const page = await list({
-    prefix: HISTORY_RECORD_PREFIX,
+    prefix: getHistoryRecordPrefix(),
     limit: Math.max(limit * 3, limit),
   });
 
