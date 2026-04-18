@@ -98,6 +98,13 @@ function buildWarnings(
     );
   }
 
+  const failedImages = debug.imageStages.filter((stage) => stage.errorMessage);
+  if (failedImages.length > 0) {
+    warnings.push(
+      `入力画像のうち ${failedImages.length} 枚は解析に使えなかったため、残りの写真だけで査定しています。`
+    );
+  }
+
   return warnings;
 }
 
@@ -140,13 +147,22 @@ export async function POST(request: Request) {
     );
 
     if (listings.length === 0) {
+      const failedImageMessages = Array.from(
+        new Set(
+          debug.imageStages
+            .map((stage) => stage.errorMessage)
+            .filter((message): message is string => Boolean(message))
+        )
+      );
+
       return NextResponse.json(
         {
           error:
+            failedImageMessages[0] ||
             "eBay searchByImage で一致する出品が見つかりませんでした。全体写真をより正面から撮るか、別角度の写真で再試行してください。",
           identification,
         },
-        { status: 404 }
+        { status: failedImageMessages.length > 0 ? 422 : 404 }
       );
     }
 

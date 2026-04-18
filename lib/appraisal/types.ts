@@ -79,6 +79,7 @@ export type ImageSearchDebugStage = {
   isReliable: boolean;
   score: number;
   topTitles: string[];
+  errorMessage?: string | null;
 };
 
 export type QuerySearchDebugStage = {

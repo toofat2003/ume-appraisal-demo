@@ -794,6 +794,7 @@ type ImageStageEvaluation = {
   categoryScoreShare: number;
   isReliable: boolean;
   score: number;
+  errorMessage?: string | null;
 };
 
 function scoreImageStage(stage: {
@@ -827,7 +828,23 @@ function toImageDebugStage(stage: ImageStageEvaluation): ImageSearchDebugStage {
     isReliable: stage.isReliable,
     score: stage.score,
     topTitles: stage.selectedListings.slice(0, 5).map((listing) => listing.title),
+    errorMessage: stage.errorMessage ?? null,
   };
+}
+
+function formatImageSearchError(error: unknown): string {
+  const message =
+    error instanceof Error ? error.message : "画像検索で予期しないエラーが発生しました。";
+
+  if (message.includes("The string did not match the expected pattern")) {
+    return "画像形式の解釈に失敗しました。別の写真に差し替えるか、JPEG/PNG で再撮影してください。";
+  }
+
+  if (message.includes("eBay searchByImage failed")) {
+    return "eBay の画像検索に失敗したため、この写真は参照から除外しました。";
+  }
+
+  return message;
 }
 
 function pickBestImageStage(stages: ImageStageEvaluation[]): ImageStageEvaluation | null {
@@ -1001,6 +1018,31 @@ async function searchListingsForSingleImage(
   };
 }
 
+async function searchListingsForSingleImageSafely(
+  imageBase64: string,
+  imageIndex: number
+): Promise<ImageStageEvaluation> {
+  const startedAt = Date.now();
+
+  try {
+    return await searchListingsForSingleImage(imageBase64, imageIndex);
+  } catch (error) {
+    return {
+      imageIndex,
+      latencyMs: Date.now() - startedAt,
+      rawListings: [],
+      usedListings: [],
+      selectedListings: [],
+      accessoryFilteredCount: 0,
+      selectedCategoryId: null,
+      categoryScoreShare: 0,
+      isReliable: false,
+      score: 0,
+      errorMessage: formatImageSearchError(error),
+    };
+  }
+}
+
 async function searchByImageRaw(
   imageBase64: string
 ): Promise<{ listings: ListingSummary[]; dominantCategoryId: string | null }> {
@@ -1077,7 +1119,7 @@ export async function searchListingsByImage(
   debug: AppraisalDebug;
 }> {
   const imageStages = await Promise.all(
-    images.map((image, index) => searchListingsForSingleImage(image.data, index))
+    images.map((image, index) => searchListingsForSingleImageSafely(image.data, index))
   );
   const bestImageStage = pickBestImageStage(imageStages);
   const baseDebug: AppraisalDebug = {
