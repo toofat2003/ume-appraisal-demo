@@ -3,6 +3,10 @@
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import styles from "./page.module.css";
 import type { AppraisalHistoryItem, AppraisalResult } from "@/lib/appraisal/types";
+import {
+  getOrCreateClientSessionId,
+  reportClientError,
+} from "@/lib/observability/client";
 
 type PreviewState = {
   file: File | null;
@@ -57,6 +61,7 @@ export default function HomePage() {
   ]);
   const [result, setResult] = useState<AppraisalResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [errorReference, setErrorReference] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [historyItems, setHistoryItems] = useState<AppraisalHistoryItem[]>([]);
   const [historyError, setHistoryError] = useState<string | null>(null);
@@ -64,6 +69,7 @@ export default function HomePage() {
   const [historyEnabled, setHistoryEnabled] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([null, null, null]);
   const resultsRef = useRef<HTMLElement>(null);
+  const clientSessionIdRef = useRef<string | null>(null);
 
   const hasPhotos = previews.some((p) => p.file !== null);
 
@@ -77,22 +83,45 @@ export default function HomePage() {
     void loadHistory();
   }, []);
 
+  useEffect(() => {
+    clientSessionIdRef.current = getOrCreateClientSessionId();
+  }, []);
+
   async function loadHistory(options?: { silent?: boolean }) {
     try {
       if (!options?.silent) {
         setIsHistoryLoading(true);
       }
       setHistoryError(null);
-      const response = await fetch("/api/history", { cache: "no-store" });
+      const clientSessionId =
+        clientSessionIdRef.current || getOrCreateClientSessionId();
+      clientSessionIdRef.current = clientSessionId;
+      const response = await fetch("/api/history", {
+        cache: "no-store",
+        headers: clientSessionId ? { "x-client-session-id": clientSessionId } : undefined,
+      });
       const payload = await response.json();
 
       if (!response.ok) {
-        throw new Error(payload.error || "査定履歴の取得に失敗しました");
+        const message = payload.error || "査定履歴の取得に失敗しました";
+        const nextMessage =
+          typeof payload.errorId === "string"
+            ? `${message} (エラーID: ${payload.errorId})`
+            : message;
+        throw new Error(nextMessage);
       }
 
       setHistoryItems(Array.isArray(payload.items) ? payload.items : []);
       setHistoryEnabled(Boolean(payload.enabled));
     } catch (err) {
+      if (err instanceof Error && !err.message.includes("エラーID:")) {
+        void reportClientError({
+          source: "history.load",
+          message: err.message,
+          errorName: err.name,
+          stack: err.stack || null,
+        });
+      }
       setHistoryError(
         err instanceof Error ? err.message : "査定履歴の取得に失敗しました"
       );
@@ -131,6 +160,7 @@ export default function HomePage() {
     setPreviews([EMPTY_SLOT, EMPTY_SLOT, EMPTY_SLOT]);
     setResult(null);
     setError(null);
+    setErrorReference(null);
     for (const input of inputRefs.current) {
       if (input) input.value = "";
     }
@@ -139,6 +169,7 @@ export default function HomePage() {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+    setErrorReference(null);
     setResult(null);
 
     const selectedPhotos = previews.flatMap((preview, index) =>
@@ -154,6 +185,7 @@ export default function HomePage() {
 
     setIsPending(true);
 
+    let serverErrorId: string | null = null;
     void (async () => {
       try {
         const formData = new FormData();
@@ -162,13 +194,23 @@ export default function HomePage() {
           formData.append("imageSlotLabels", photo.slotLabel);
         }
 
+        const clientSessionId =
+          clientSessionIdRef.current || getOrCreateClientSessionId();
+        clientSessionIdRef.current = clientSessionId;
         const response = await fetch("/api/appraisal", {
           method: "POST",
+          headers: clientSessionId
+            ? { "x-client-session-id": clientSessionId }
+            : undefined,
           body: formData,
         });
 
         const payload = await response.json();
         if (!response.ok) {
+          if (typeof payload.errorId === "string") {
+            serverErrorId = payload.errorId;
+            setErrorReference(payload.errorId);
+          }
           throw new Error(payload.error || "査定に失敗しました");
         }
 
@@ -186,6 +228,18 @@ export default function HomePage() {
 
         void loadHistory({ silent: true });
       } catch (err) {
+        if (err instanceof Error && !serverErrorId) {
+          void reportClientError({
+            source: "appraisal.submit",
+            message: err.message,
+            errorName: err.name,
+            stack: err.stack || null,
+            metadata: {
+              photoCount: selectedPhotos.length,
+              slotLabels: selectedPhotos.map((photo) => photo.slotLabel),
+            },
+          });
+        }
         setError(
           err instanceof Error ? err.message : "予期しないエラーが発生しました"
         );
@@ -356,6 +410,9 @@ export default function HomePage() {
               </svg>
               <span>{error}</span>
             </div>
+          )}
+          {error && errorReference && (
+            <p className={styles.privacyNote}>エラーID: {errorReference}</p>
           )}
 
           <p className={styles.privacyNote}>

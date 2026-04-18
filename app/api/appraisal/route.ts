@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import { searchListingsByImage } from "@/lib/appraisal/ebay";
 import { AppraisalDebug, AppraisalResult, ListingSummary } from "@/lib/appraisal/types";
 import { saveAppraisalHistory } from "@/lib/history";
+import {
+  getClientSessionIdFromRequest,
+  getUserAgentFromRequest,
+  logErrorEvent,
+} from "@/lib/observability/server";
 
 const MAX_IMAGE_COUNT = 3;
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
@@ -117,13 +122,17 @@ async function fileToBase64(file: File): Promise<{ contentType: string; data: st
 }
 
 export async function POST(request: Request) {
+  const requestId = crypto.randomUUID();
+  let files: File[] = [];
+  let slotLabels: string[] = [];
+
   try {
     const formData = await request.formData();
-    const files = formData
+    files = formData
       .getAll("images")
       .filter((entry): entry is File => entry instanceof File && entry.size > 0)
       .slice(0, MAX_IMAGE_COUNT);
-    const slotLabels = formData
+    slotLabels = formData
       .getAll("imageSlotLabels")
       .filter((entry): entry is string => typeof entry === "string")
       .slice(0, MAX_IMAGE_COUNT);
@@ -145,6 +154,13 @@ export async function POST(request: Request) {
     const { identification, listings, accessoryFilteredCount, debug } = await searchListingsByImage(
       images
     );
+    const requestMetadata = {
+      imageCount: files.length,
+      imageNames: files.map((file) => file.name),
+      imageTypes: files.map((file) => file.type || "unknown"),
+      imageSizes: files.map((file) => file.size),
+      imageSlotLabels: slotLabels,
+    };
 
     if (listings.length === 0) {
       const failedImageMessages = Array.from(
@@ -155,12 +171,32 @@ export async function POST(request: Request) {
         )
       );
 
+      const errorId =
+        failedImageMessages.length > 0
+          ? await logErrorEvent({
+              requestId,
+              source: "api.appraisal",
+              route: "/api/appraisal",
+              severity: "warning",
+              message: "All uploaded images failed before a valid appraisal result was produced.",
+              metadata: {
+                ...requestMetadata,
+                failedImageMessages,
+                debug,
+              },
+              userAgent: getUserAgentFromRequest(request),
+              clientSessionId: getClientSessionIdFromRequest(request),
+              url: request.url,
+            })
+          : null;
+
       return NextResponse.json(
         {
           error:
             failedImageMessages[0] ||
             "eBay searchByImage で一致する出品が見つかりませんでした。全体写真をより正面から撮るか、別角度の写真で再試行してください。",
           identification,
+          errorId,
         },
         { status: failedImageMessages.length > 0 ? 422 : 404 }
       );
@@ -195,6 +231,25 @@ export async function POST(request: Request) {
       debug,
     };
 
+    const failedImageStages = debug.imageStages.filter((stage) => stage.errorMessage);
+    if (failedImageStages.length > 0) {
+      await logErrorEvent({
+        requestId,
+        source: "api.appraisal",
+        route: "/api/appraisal",
+        severity: "warning",
+        message: "Partial image analysis failure during appraisal request.",
+        metadata: {
+          ...requestMetadata,
+          failedImageStages,
+          selectedImageIndex: debug.selectedImageIndex,
+        },
+        userAgent: getUserAgentFromRequest(request),
+        clientSessionId: getClientSessionIdFromRequest(request),
+        url: request.url,
+      });
+    }
+
     try {
       const savedHistory = await saveAppraisalHistory({
         identification: result.identification,
@@ -217,24 +272,65 @@ export async function POST(request: Request) {
       result.savedHistoryItem = savedHistory;
     } catch (historyError) {
       console.error("History save error:", historyError);
+      const historyErrorId = await logErrorEvent({
+        requestId,
+        source: "api.appraisal.history-save",
+        route: "/api/appraisal",
+        message:
+          historyError instanceof Error
+            ? historyError.message
+            : "査定結果の履歴保存に失敗しました。",
+        errorName: historyError instanceof Error ? historyError.name : null,
+        stack: historyError instanceof Error ? historyError.stack : null,
+        metadata: {
+          ...requestMetadata,
+          identification: result.identification,
+          pricing: result.pricing,
+        },
+        userAgent: getUserAgentFromRequest(request),
+        clientSessionId: getClientSessionIdFromRequest(request),
+        url: request.url,
+      });
       result.savedHistoryId = null;
       result.savedHistoryAt = null;
       result.savedHistoryItem = null;
       result.warnings = [
         ...result.warnings,
-        "査定結果は表示できていますが、履歴保存には失敗しました。",
+        `査定結果は表示できていますが、履歴保存には失敗しました。エラーID: ${historyErrorId}`,
       ];
     }
 
     return NextResponse.json(result);
   } catch (error) {
     console.error("Appraisal demo error:", error);
+    const errorId = await logErrorEvent({
+      requestId,
+      source: "api.appraisal",
+      route: "/api/appraisal",
+      message:
+        error instanceof Error
+          ? error.message
+          : "査定の生成中に予期しないエラーが発生しました。",
+      errorName: error instanceof Error ? error.name : null,
+      stack: error instanceof Error ? error.stack : null,
+      metadata: {
+        imageCount: files.length,
+        imageNames: files.map((file) => file.name),
+        imageTypes: files.map((file) => file.type || "unknown"),
+        imageSizes: files.map((file) => file.size),
+        imageSlotLabels: slotLabels,
+      },
+      userAgent: getUserAgentFromRequest(request),
+      clientSessionId: getClientSessionIdFromRequest(request),
+      url: request.url,
+    });
     return NextResponse.json(
       {
         error:
           error instanceof Error
             ? error.message
             : "査定の生成中に予期しないエラーが発生しました。",
+        errorId,
       },
       { status: 500 }
     );

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import ClientErrorReporter from "@/components/client-error-reporter";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -30,7 +31,10 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
-      <body>{children}</body>
+      <body>
+        <ClientErrorReporter />
+        {children}
+      </body>
     </html>
   );
 }
