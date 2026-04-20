@@ -16,6 +16,8 @@ let ensureBucketPromise: Promise<void> | null = null;
 type SessionRow = {
   id: string;
   created_at: string;
+  appointment_id: string | null;
+  appointment_label: string | null;
   item_name: string;
   brand: string;
   model: string;
@@ -112,6 +114,8 @@ function mapSessionRowToHistoryItem(row: SessionRow): AppraisalHistoryItem {
   return {
     id: row.id,
     createdAt: row.created_at,
+    appointmentId: row.appointment_id,
+    appointmentLabel: row.appointment_label,
     images: [...(row.appraisal_images || [])]
       .sort((a, b) => a.position - b.position)
       .map((image) => ({
@@ -190,6 +194,8 @@ export async function saveAppraisalHistoryToSupabase(
   const { error: sessionError } = await client.from("appraisal_sessions").insert({
     id: sessionId,
     created_at: createdAt,
+    appointment_id: input.appointmentId || null,
+    appointment_label: input.appointmentLabel || null,
     item_name: input.identification.itemName,
     brand: input.identification.brand,
     model: input.identification.model,
@@ -227,6 +233,8 @@ export async function saveAppraisalHistoryToSupabase(
   return {
     id: sessionId,
     createdAt,
+    appointmentId: input.appointmentId || null,
+    appointmentLabel: input.appointmentLabel || null,
     images: uploadedImages
       .sort((a, b) => a.position - b.position)
       .map((image) => ({
@@ -253,6 +261,8 @@ export async function listAppraisalHistoryFromSupabase(
       `
         id,
         created_at,
+        appointment_id,
+        appointment_label,
         item_name,
         brand,
         model,

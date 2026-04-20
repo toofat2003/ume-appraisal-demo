@@ -11,6 +11,7 @@ import {
 const MAX_IMAGE_COUNT = 3;
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 const DEFAULT_SLOT_LABELS = ["全体", "識別情報", "状態情報"] as const;
+const MAX_APPOINTMENT_LABEL_LENGTH = 120;
 
 function roundCurrency(value: number): number {
   return Math.round(value);
@@ -125,6 +126,8 @@ export async function POST(request: Request) {
   const requestId = crypto.randomUUID();
   let files: File[] = [];
   let slotLabels: string[] = [];
+  let appointmentId: string | null = null;
+  let appointmentLabel: string | null = null;
 
   try {
     const formData = await request.formData();
@@ -136,6 +139,18 @@ export async function POST(request: Request) {
       .getAll("imageSlotLabels")
       .filter((entry): entry is string => typeof entry === "string")
       .slice(0, MAX_IMAGE_COUNT);
+    appointmentId =
+      typeof formData.get("appointmentId") === "string"
+        ? ((formData.get("appointmentId") as string).trim() || null)
+        : null;
+    appointmentLabel =
+      typeof formData.get("appointmentLabel") === "string"
+        ? ((formData.get("appointmentLabel") as string).trim() || null)
+        : null;
+
+    if (appointmentLabel && appointmentLabel.length > MAX_APPOINTMENT_LABEL_LENGTH) {
+      appointmentLabel = appointmentLabel.slice(0, MAX_APPOINTMENT_LABEL_LENGTH);
+    }
 
     if (files.length === 0) {
       return NextResponse.json({ error: "少なくとも1枚の画像が必要です。" }, { status: 400 });
@@ -160,6 +175,8 @@ export async function POST(request: Request) {
       imageTypes: files.map((file) => file.type || "unknown"),
       imageSizes: files.map((file) => file.size),
       imageSlotLabels: slotLabels,
+      appointmentId,
+      appointmentLabel,
     };
 
     if (listings.length === 0) {
@@ -258,6 +275,8 @@ export async function POST(request: Request) {
           file,
           slotLabel: slotLabels[index] || DEFAULT_SLOT_LABELS[index] || `写真${index + 1}`,
         })),
+        appointmentId,
+        appointmentLabel,
         rawResult: {
           identification: result.identification,
           pricing: result.pricing,
@@ -319,6 +338,8 @@ export async function POST(request: Request) {
         imageTypes: files.map((file) => file.type || "unknown"),
         imageSizes: files.map((file) => file.size),
         imageSlotLabels: slotLabels,
+        appointmentId,
+        appointmentLabel,
       },
       userAgent: getUserAgentFromRequest(request),
       clientSessionId: getClientSessionIdFromRequest(request),

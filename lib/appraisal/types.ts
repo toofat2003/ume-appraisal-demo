@@ -62,9 +62,20 @@ export type AppraisalHistoryPricing = {
 export type AppraisalHistoryItem = {
   id: string;
   createdAt: string;
+  appointmentId: string | null;
+  appointmentLabel: string | null;
   images: AppraisalHistoryImage[];
   identification: ProductIdentification;
   pricing: AppraisalHistoryPricing;
+};
+
+export type AppraisalAppointmentGroup = {
+  appointmentId: string | null;
+  appointmentLabel: string;
+  latestAppraisalAt: string;
+  itemCount: number;
+  totalSuggestedMaxPrice: number;
+  items: AppraisalHistoryItem[];
 };
 
 export type ImageSearchDebugStage = {

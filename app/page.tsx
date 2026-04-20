@@ -2,7 +2,11 @@
 
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import styles from "./page.module.css";
-import type { AppraisalHistoryItem, AppraisalResult } from "@/lib/appraisal/types";
+import type {
+  AppraisalAppointmentGroup,
+  AppraisalHistoryItem,
+  AppraisalResult,
+} from "@/lib/appraisal/types";
 import {
   getOrCreateClientSessionId,
   reportClientError,
@@ -14,6 +18,13 @@ type PreviewState = {
 };
 
 const EMPTY_SLOT: PreviewState = { file: null, url: null };
+const ACTIVE_APPOINTMENT_STORAGE_KEY = "ume-active-appointment";
+const MAX_HISTORY_ITEMS = 60;
+
+type ActiveAppointment = {
+  id: string;
+  label: string;
+};
 
 const PHOTO_SLOTS = [
   {
@@ -53,6 +64,101 @@ function formatDateTime(value: string): string {
   }).format(new Date(value));
 }
 
+function readStoredAppointment(): ActiveAppointment | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(ACTIVE_APPOINTMENT_STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+
+    const parsed = JSON.parse(raw) as Partial<ActiveAppointment>;
+    if (typeof parsed.id !== "string" || typeof parsed.label !== "string") {
+      return null;
+    }
+
+    const id = parsed.id.trim();
+    const label = parsed.label.trim();
+
+    if (!id || !label) {
+      return null;
+    }
+
+    return { id, label };
+  } catch {
+    return null;
+  }
+}
+
+function persistActiveAppointment(appointment: ActiveAppointment | null) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    if (!appointment) {
+      window.localStorage.removeItem(ACTIVE_APPOINTMENT_STORAGE_KEY);
+      return;
+    }
+
+    window.localStorage.setItem(
+      ACTIVE_APPOINTMENT_STORAGE_KEY,
+      JSON.stringify(appointment)
+    );
+  } catch {
+    // Ignore localStorage failures.
+  }
+}
+
+function groupHistoryItems(items: AppraisalHistoryItem[]): AppraisalAppointmentGroup[] {
+  const groups = new Map<string, AppraisalAppointmentGroup>();
+
+  for (const item of items) {
+    const groupKey = item.appointmentId || "ungrouped";
+    const appointmentLabel = item.appointmentLabel?.trim() || "未分類";
+    const existing = groups.get(groupKey);
+
+    if (!existing) {
+      groups.set(groupKey, {
+        appointmentId: item.appointmentId,
+        appointmentLabel,
+        latestAppraisalAt: item.createdAt,
+        itemCount: 1,
+        totalSuggestedMaxPrice: item.pricing.suggestedMaxPrice,
+        items: [item],
+      });
+      continue;
+    }
+
+    existing.items.push(item);
+    existing.itemCount += 1;
+    existing.totalSuggestedMaxPrice += item.pricing.suggestedMaxPrice;
+    if (
+      new Date(item.createdAt).getTime() >
+      new Date(existing.latestAppraisalAt).getTime()
+    ) {
+      existing.latestAppraisalAt = item.createdAt;
+    }
+  }
+
+  return [...groups.values()]
+    .map((group) => ({
+      ...group,
+      items: [...group.items].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      ),
+    }))
+    .sort(
+      (a, b) =>
+        new Date(b.latestAppraisalAt).getTime() -
+        new Date(a.latestAppraisalAt).getTime()
+    );
+}
+
 export default function HomePage() {
   const [previews, setPreviews] = useState<PreviewState[]>([
     EMPTY_SLOT,
@@ -62,6 +168,9 @@ export default function HomePage() {
   const [result, setResult] = useState<AppraisalResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [errorReference, setErrorReference] = useState<string | null>(null);
+  const [activeAppointment, setActiveAppointment] = useState<ActiveAppointment | null>(null);
+  const [appointmentLabelInput, setAppointmentLabelInput] = useState("");
+  const [appointmentError, setAppointmentError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [historyItems, setHistoryItems] = useState<AppraisalHistoryItem[]>([]);
   const [historyError, setHistoryError] = useState<string | null>(null);
@@ -85,6 +194,7 @@ export default function HomePage() {
 
   useEffect(() => {
     clientSessionIdRef.current = getOrCreateClientSessionId();
+    setActiveAppointment(readStoredAppointment());
   }, []);
 
   async function loadHistory(options?: { silent?: boolean }) {
@@ -130,6 +240,79 @@ export default function HomePage() {
     }
   }
 
+  const appointmentGroups = groupHistoryItems(historyItems);
+  const appointmentOptions = [
+    ...appointmentGroups
+      .filter((group) => group.appointmentId)
+      .map((group) => ({
+        id: group.appointmentId as string,
+        label: group.appointmentLabel,
+        latestAppraisalAt: group.latestAppraisalAt,
+        itemCount: group.itemCount,
+      })),
+  ];
+
+  if (
+    activeAppointment &&
+    !appointmentOptions.some((option) => option.id === activeAppointment.id)
+  ) {
+    appointmentOptions.unshift({
+      id: activeAppointment.id,
+      label: activeAppointment.label,
+      latestAppraisalAt: new Date().toISOString(),
+      itemCount: 0,
+    });
+  }
+
+  function startAppointment() {
+    const nextLabel = appointmentLabelInput.trim();
+    if (!nextLabel) {
+      setAppointmentError("アポ名を入力してください");
+      return;
+    }
+
+    const nextAppointment = {
+      id: crypto.randomUUID(),
+      label: nextLabel,
+    };
+
+    setActiveAppointment(nextAppointment);
+    persistActiveAppointment(nextAppointment);
+    setAppointmentLabelInput("");
+    setAppointmentError(null);
+  }
+
+  function selectAppointmentById(appointmentId: string) {
+    if (!appointmentId) {
+      setActiveAppointment(null);
+      persistActiveAppointment(null);
+      setAppointmentLabelInput("");
+      return;
+    }
+
+    const selected = appointmentOptions.find((option) => option.id === appointmentId);
+    if (!selected) {
+      return;
+    }
+
+    const nextAppointment = {
+      id: selected.id,
+      label: selected.label,
+    };
+
+    setActiveAppointment(nextAppointment);
+    persistActiveAppointment(nextAppointment);
+    setAppointmentLabelInput("");
+    setAppointmentError(null);
+  }
+
+  function clearActiveAppointment() {
+    setActiveAppointment(null);
+    persistActiveAppointment(null);
+    setAppointmentLabelInput("");
+    setAppointmentError(null);
+  }
+
   function updatePreview(index: number, file: File | null) {
     setPreviews((current) =>
       current.map((preview, i) => {
@@ -171,6 +354,7 @@ export default function HomePage() {
     setError(null);
     setErrorReference(null);
     setResult(null);
+    setAppointmentError(null);
 
     const selectedPhotos = previews.flatMap((preview, index) =>
       preview.file
@@ -192,6 +376,10 @@ export default function HomePage() {
         for (const photo of selectedPhotos) {
           formData.append("images", photo.file);
           formData.append("imageSlotLabels", photo.slotLabel);
+        }
+        if (activeAppointment) {
+          formData.append("appointmentId", activeAppointment.id);
+          formData.append("appointmentLabel", activeAppointment.label);
         }
 
         const clientSessionId =
@@ -222,7 +410,7 @@ export default function HomePage() {
           setHistoryEnabled(true);
           setHistoryItems((current) => {
             const deduped = current.filter((item) => item.id !== savedHistoryItem.id);
-            return [savedHistoryItem, ...deduped].slice(0, 12);
+            return [savedHistoryItem, ...deduped].slice(0, MAX_HISTORY_ITEMS);
           });
         }
 
@@ -282,6 +470,68 @@ export default function HomePage() {
               <p className={styles.captureSublead}>
                 精度を上げたい場合だけ、識別情報やダメージ写真を追加してください。
               </p>
+            </div>
+
+            <div className={styles.appointmentPanel}>
+              <div className={styles.appointmentPanelHeader}>
+                <div>
+                  <p className={styles.appointmentPanelLabel}>現在のアポ</p>
+                  <p className={styles.appointmentPanelValue}>
+                    {activeAppointment?.label || "未選択"}
+                  </p>
+                </div>
+                {activeAppointment && (
+                  <button
+                    type="button"
+                    className={styles.appointmentClearBtn}
+                    onClick={clearActiveAppointment}
+                  >
+                    解除
+                  </button>
+                )}
+              </div>
+
+              <div className={styles.appointmentCreateRow}>
+                <input
+                  type="text"
+                  value={appointmentLabelInput}
+                  onChange={(event) => setAppointmentLabelInput(event.target.value)}
+                  className={styles.appointmentInput}
+                  placeholder="例: Aさん宅 4/20 午前"
+                />
+                <button
+                  type="button"
+                  className={styles.appointmentCreateBtn}
+                  onClick={startAppointment}
+                >
+                  新しいアポ開始
+                </button>
+              </div>
+
+              {appointmentOptions.length > 0 && (
+                <label className={styles.appointmentSelectWrap}>
+                  <span className={styles.appointmentSelectLabel}>既存アポを選択</span>
+                  <select
+                    className={styles.appointmentSelect}
+                    value={activeAppointment?.id || ""}
+                    onChange={(event) => selectAppointmentById(event.target.value)}
+                  >
+                    <option value="">未選択のまま</option>
+                    {appointmentOptions.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.label} · {option.itemCount}件
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+
+              <p className={styles.appointmentHint}>
+                アポを選んでから査定すると、その家の品物を後で一括で見返せます。
+              </p>
+              {appointmentError && (
+                <p className={styles.appointmentError}>{appointmentError}</p>
+              )}
             </div>
 
             <div className={styles.photoGrid}>
@@ -653,8 +903,10 @@ export default function HomePage() {
           <div className={styles.historySection}>
             <div className={styles.historyHeader}>
               <h3 className={styles.sectionHeading}>査定履歴</h3>
-              {historyEnabled && historyItems.length > 0 && (
-                <span className={styles.historyCount}>{historyItems.length}件</span>
+              {historyEnabled && appointmentGroups.length > 0 && (
+                <span className={styles.historyCount}>
+                  {appointmentGroups.length}アポ / {historyItems.length}件
+                </span>
               )}
             </div>
 
@@ -669,57 +921,87 @@ export default function HomePage() {
             ) : historyItems.length === 0 ? (
               <p className={styles.historyStatus}>まだ保存された査定はありません。</p>
             ) : (
-              <div className={styles.historyGrid}>
-                {historyItems.map((item) => (
-                  <article key={item.id} className={styles.historyCard}>
-                    <div className={styles.historyImages}>
-                      {item.images.map((image) => (
-                        <a
-                          key={image.pathname}
-                          href={image.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className={styles.historyImageLink}
-                        >
-                          <img
-                            src={image.url}
-                            alt={image.slotLabel}
-                            className={styles.historyImage}
-                          />
-                          <span className={styles.historyImageBadge}>
-                            {image.slotLabel}
-                          </span>
-                        </a>
+              <div className={styles.historyGroupList}>
+                {appointmentGroups.map((group) => (
+                  <section
+                    key={group.appointmentId || `ungrouped-${group.items[0]?.id || "empty"}`}
+                    className={styles.historyGroupSection}
+                  >
+                    <div className={styles.historyGroupHeader}>
+                      <div className={styles.historyGroupMeta}>
+                        <h4 className={styles.historyGroupTitle}>
+                          {group.appointmentLabel}
+                        </h4>
+                        <p className={styles.historyGroupCaption}>
+                          {formatDateTime(group.latestAppraisalAt)}
+                          {" · "}
+                          {group.itemCount}件
+                        </p>
+                      </div>
+                      <div className={styles.historyGroupSummary}>
+                        <span className={styles.historyGroupSummaryLabel}>
+                          推奨Max合計
+                        </span>
+                        <span className={styles.historyGroupSummaryValue}>
+                          {formatCurrency(group.totalSuggestedMaxPrice)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className={styles.historyGrid}>
+                      {group.items.map((item) => (
+                        <article key={item.id} className={styles.historyCard}>
+                          <div className={styles.historyImages}>
+                            {item.images.map((image) => (
+                              <a
+                                key={image.pathname}
+                                href={image.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className={styles.historyImageLink}
+                              >
+                                <img
+                                  src={image.url}
+                                  alt={image.slotLabel}
+                                  className={styles.historyImage}
+                                />
+                                <span className={styles.historyImageBadge}>
+                                  {image.slotLabel}
+                                </span>
+                              </a>
+                            ))}
+                          </div>
+
+                          <div className={styles.historyBody}>
+                            <div className={styles.historyCardTop}>
+                              <h4 className={styles.historyItemName}>
+                                {item.identification.itemName}
+                              </h4>
+                              <span className={styles.historyItemPrice}>
+                                {formatCurrency(item.pricing.suggestedMaxPrice)}
+                              </span>
+                            </div>
+
+                            <p className={styles.historyMeta}>
+                              {formatDateTime(item.createdAt)}
+                              {" · "}
+                              {item.identification.brand || item.identification.category}
+                            </p>
+
+                            <div className={styles.historyPriceRow}>
+                              <span>
+                                買取目安{" "}
+                                {formatCurrency(item.pricing.buyPriceRangeLow)}
+                                {" – "}
+                                {formatCurrency(item.pricing.buyPriceRangeHigh)}
+                              </span>
+                              <span>{item.pricing.listingCount}件参照</span>
+                            </div>
+                          </div>
+                        </article>
                       ))}
                     </div>
-
-                    <div className={styles.historyBody}>
-                      <div className={styles.historyCardTop}>
-                        <h4 className={styles.historyItemName}>
-                          {item.identification.itemName}
-                        </h4>
-                        <span className={styles.historyItemPrice}>
-                          {formatCurrency(item.pricing.suggestedMaxPrice)}
-                        </span>
-                      </div>
-
-                      <p className={styles.historyMeta}>
-                        {formatDateTime(item.createdAt)}
-                        {" · "}
-                        {item.identification.brand || item.identification.category}
-                      </p>
-
-                      <div className={styles.historyPriceRow}>
-                        <span>
-                          買取目安{" "}
-                          {formatCurrency(item.pricing.buyPriceRangeLow)}
-                          {" – "}
-                          {formatCurrency(item.pricing.buyPriceRangeHigh)}
-                        </span>
-                        <span>{item.pricing.listingCount}件参照</span>
-                      </div>
-                    </div>
-                  </article>
+                  </section>
                 ))}
               </div>
             )}

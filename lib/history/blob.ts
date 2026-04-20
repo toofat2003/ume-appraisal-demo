@@ -87,6 +87,8 @@ export async function saveAppraisalHistory(
   const item: AppraisalHistoryItem = {
     id,
     createdAt,
+    appointmentId: input.appointmentId || null,
+    appointmentLabel: input.appointmentLabel || null,
     images,
     identification: input.identification,
     pricing: mapPricing(input.pricing),

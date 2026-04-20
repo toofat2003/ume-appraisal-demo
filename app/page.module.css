@@ -128,6 +128,112 @@
   color: var(--text-muted);
 }
 
+.appointmentPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), var(--bg-card));
+}
+
+.appointmentPanelHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.appointmentPanelLabel {
+  margin: 0 0 4px;
+  font: 500 10px/1 var(--font-body);
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.appointmentPanelValue {
+  margin: 0;
+  font: 600 14px/1.35 var(--font-body);
+  color: var(--text-primary);
+}
+
+.appointmentCreateRow {
+  display: flex;
+  gap: 8px;
+}
+
+.appointmentInput {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font: 500 13px/1 var(--font-body);
+}
+
+.appointmentInput::placeholder {
+  color: var(--text-muted);
+}
+
+.appointmentCreateBtn {
+  flex-shrink: 0;
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(212, 148, 58, 0.28);
+  background: var(--accent-dim);
+  color: var(--accent);
+  font: 600 12px/1 var(--font-body);
+  cursor: pointer;
+}
+
+.appointmentClearBtn {
+  flex-shrink: 0;
+  padding: 9px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  font: 500 12px/1 var(--font-body);
+  cursor: pointer;
+}
+
+.appointmentSelectWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.appointmentSelectLabel {
+  font: 500 11px/1 var(--font-body);
+  color: var(--text-muted);
+}
+
+.appointmentSelect {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font: 500 13px/1 var(--font-body);
+}
+
+.appointmentHint {
+  margin: 0;
+  font: 400 11px/1.5 var(--font-body);
+  color: var(--text-muted);
+}
+
+.appointmentError {
+  margin: 0;
+  font: 500 12px/1.4 var(--font-body);
+  color: #f87171;
+}
+
 /* === Photo Grid === */
 
 .photoGrid {
@@ -761,6 +867,62 @@
 .historyGrid {
   display: grid;
   gap: 12px;
+}
+
+.historyGroupList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.historyGroupSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.historyGroupHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.historyGroupMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.historyGroupTitle {
+  margin: 0;
+  font: 600 15px/1.3 var(--font-body);
+  color: var(--text-primary);
+}
+
+.historyGroupCaption {
+  margin: 0;
+  font: 400 12px/1.5 var(--font-body);
+  color: var(--text-muted);
+}
+
+.historyGroupSummary {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+}
+
+.historyGroupSummaryLabel {
+  font: 500 10px/1 var(--font-body);
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+}
+
+.historyGroupSummaryValue {
+  font: 700 16px/1 var(--font-mono);
+  color: var(--accent);
 }
 
 .historyCard {

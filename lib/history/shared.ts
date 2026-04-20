@@ -1,6 +1,6 @@
 import { PricingSummary, ProductIdentification } from "@/lib/appraisal/types";
 
-export const DEFAULT_HISTORY_LIMIT = 12;
+export const DEFAULT_HISTORY_LIMIT = 60;
 
 export type HistoryImageInput = {
   file: File;
@@ -11,6 +11,8 @@ export type SaveAppraisalHistoryInput = {
   identification: ProductIdentification;
   pricing: PricingSummary;
   images: HistoryImageInput[];
+  appointmentId?: string | null;
+  appointmentLabel?: string | null;
   rawResult?: unknown;
 };
 
