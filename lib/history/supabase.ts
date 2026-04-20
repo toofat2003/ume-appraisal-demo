@@ -2,6 +2,8 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { AppraisalHistoryItem } from "@/lib/appraisal/types";
 import {
   DEFAULT_HISTORY_LIMIT,
+  ListAppraisalHistoryOptions,
+  RenameAppointmentResult,
   getExtension,
   mapPricing,
   SaveAppraisalHistoryInput,
@@ -248,14 +250,15 @@ export async function saveAppraisalHistoryToSupabase(
 }
 
 export async function listAppraisalHistoryFromSupabase(
-  limit = DEFAULT_HISTORY_LIMIT
+  options: ListAppraisalHistoryOptions = {}
 ): Promise<AppraisalHistoryItem[]> {
   if (!isSupabaseConfigured()) {
     return [];
   }
 
+  const limit = options.limit ?? DEFAULT_HISTORY_LIMIT;
   const client = getClient();
-  const { data, error } = await client
+  let query = client
     .from("appraisal_sessions")
     .select(
       `
@@ -290,11 +293,49 @@ export async function listAppraisalHistoryFromSupabase(
     .order("created_at", { ascending: false })
     .limit(limit);
 
+  if (options.appointmentId) {
+    query = query.eq("appointment_id", options.appointmentId);
+  }
+
+  const { data, error } = await query;
+
   if (error) {
     throw error;
   }
 
   return (data || []).map((row) => mapSessionRowToHistoryItem(row as SessionRow));
+}
+
+export async function renameAppointmentInSupabase(
+  appointmentId: string,
+  appointmentLabel: string
+): Promise<RenameAppointmentResult> {
+  if (!isSupabaseConfigured()) {
+    return {
+      appointmentId,
+      appointmentLabel,
+      updatedCount: 0,
+    };
+  }
+
+  const client = getClient();
+  const { data, error } = await client
+    .from("appraisal_sessions")
+    .update({
+      appointment_label: appointmentLabel,
+    })
+    .eq("appointment_id", appointmentId)
+    .select("id");
+
+  if (error) {
+    throw error;
+  }
+
+  return {
+    appointmentId,
+    appointmentLabel,
+    updatedCount: data?.length || 0,
+  };
 }
 
 export function isSupabaseHistoryStorageEnabled(): boolean {

@@ -145,6 +145,12 @@
   gap: 12px;
 }
 
+.appointmentPanelActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .appointmentPanelLabel {
   margin: 0 0 4px;
   font: 500 10px/1 var(--font-body);
@@ -199,6 +205,19 @@
   color: var(--text-secondary);
   font: 500 12px/1 var(--font-body);
   cursor: pointer;
+}
+
+.appointmentDetailLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(212, 148, 58, 0.28);
+  background: var(--accent-dim);
+  color: var(--accent);
+  font: 600 12px/1 var(--font-body);
+  text-decoration: none;
 }
 
 .appointmentSelectWrap {
@@ -904,6 +923,14 @@
   margin: 0;
   font: 400 12px/1.5 var(--font-body);
   color: var(--text-muted);
+}
+
+.historyGroupLink {
+  display: inline-flex;
+  width: fit-content;
+  font: 600 12px/1.2 var(--font-body);
+  color: var(--accent);
+  text-decoration: none;
 }
 
 .historyGroupSummary {

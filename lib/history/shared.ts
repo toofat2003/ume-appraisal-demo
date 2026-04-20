@@ -1,6 +1,7 @@
 import { PricingSummary, ProductIdentification } from "@/lib/appraisal/types";
 
 export const DEFAULT_HISTORY_LIMIT = 60;
+export const APPOINTMENT_HISTORY_LIMIT = 200;
 
 export type HistoryImageInput = {
   file: File;
@@ -14,6 +15,17 @@ export type SaveAppraisalHistoryInput = {
   appointmentId?: string | null;
   appointmentLabel?: string | null;
   rawResult?: unknown;
+};
+
+export type ListAppraisalHistoryOptions = {
+  limit?: number;
+  appointmentId?: string | null;
+};
+
+export type RenameAppointmentResult = {
+  appointmentId: string;
+  appointmentLabel: string;
+  updatedCount: number;
 };
 
 export function sanitizeSegment(value: string): string {

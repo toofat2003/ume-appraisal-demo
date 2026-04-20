@@ -1,14 +1,19 @@
 import {
   isHistoryStorageEnabled as isBlobHistoryStorageEnabled,
   listAppraisalHistory as listBlobHistory,
+  renameAppointmentInBlob,
   saveAppraisalHistory as saveBlobHistory,
 } from "@/lib/history/blob";
 import {
   isSupabaseHistoryStorageEnabled,
   listAppraisalHistoryFromSupabase,
+  renameAppointmentInSupabase,
   saveAppraisalHistoryToSupabase,
 } from "@/lib/history/supabase";
-import { SaveAppraisalHistoryInput } from "@/lib/history/shared";
+import {
+  ListAppraisalHistoryOptions,
+  SaveAppraisalHistoryInput,
+} from "@/lib/history/shared";
 
 export async function saveAppraisalHistory(input: SaveAppraisalHistoryInput) {
   if (isSupabaseHistoryStorageEnabled()) {
@@ -18,12 +23,23 @@ export async function saveAppraisalHistory(input: SaveAppraisalHistoryInput) {
   return saveBlobHistory(input);
 }
 
-export async function listAppraisalHistory(limit?: number) {
+export async function listAppraisalHistory(options?: ListAppraisalHistoryOptions) {
   if (isSupabaseHistoryStorageEnabled()) {
-    return listAppraisalHistoryFromSupabase(limit);
+    return listAppraisalHistoryFromSupabase(options);
   }
 
-  return listBlobHistory(limit);
+  return listBlobHistory(options);
+}
+
+export async function renameAppointment(
+  appointmentId: string,
+  appointmentLabel: string
+) {
+  if (isSupabaseHistoryStorageEnabled()) {
+    return renameAppointmentInSupabase(appointmentId, appointmentLabel);
+  }
+
+  return renameAppointmentInBlob(appointmentId, appointmentLabel);
 }
 
 export function isHistoryStorageEnabled(): boolean {

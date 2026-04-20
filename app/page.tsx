@@ -1,12 +1,26 @@
 "use client";
 
+import Link from "next/link";
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import styles from "./page.module.css";
 import type {
-  AppraisalAppointmentGroup,
   AppraisalHistoryItem,
   AppraisalResult,
 } from "@/lib/appraisal/types";
+import {
+  ActiveAppointment,
+  buildAppointmentOptions,
+  groupHistoryItems,
+  mergeStoredAppointmentsWithHistory,
+  StoredAppointment,
+  upsertStoredAppointment,
+} from "@/lib/appointments/shared";
+import {
+  persistActiveAppointment,
+  persistStoredAppointments,
+  readStoredAppointment,
+  readStoredAppointments,
+} from "@/lib/appointments/client";
 import {
   getOrCreateClientSessionId,
   reportClientError,
@@ -18,13 +32,7 @@ type PreviewState = {
 };
 
 const EMPTY_SLOT: PreviewState = { file: null, url: null };
-const ACTIVE_APPOINTMENT_STORAGE_KEY = "ume-active-appointment";
 const MAX_HISTORY_ITEMS = 60;
-
-type ActiveAppointment = {
-  id: string;
-  label: string;
-};
 
 const PHOTO_SLOTS = [
   {
@@ -64,101 +72,6 @@ function formatDateTime(value: string): string {
   }).format(new Date(value));
 }
 
-function readStoredAppointment(): ActiveAppointment | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  try {
-    const raw = window.localStorage.getItem(ACTIVE_APPOINTMENT_STORAGE_KEY);
-    if (!raw) {
-      return null;
-    }
-
-    const parsed = JSON.parse(raw) as Partial<ActiveAppointment>;
-    if (typeof parsed.id !== "string" || typeof parsed.label !== "string") {
-      return null;
-    }
-
-    const id = parsed.id.trim();
-    const label = parsed.label.trim();
-
-    if (!id || !label) {
-      return null;
-    }
-
-    return { id, label };
-  } catch {
-    return null;
-  }
-}
-
-function persistActiveAppointment(appointment: ActiveAppointment | null) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  try {
-    if (!appointment) {
-      window.localStorage.removeItem(ACTIVE_APPOINTMENT_STORAGE_KEY);
-      return;
-    }
-
-    window.localStorage.setItem(
-      ACTIVE_APPOINTMENT_STORAGE_KEY,
-      JSON.stringify(appointment)
-    );
-  } catch {
-    // Ignore localStorage failures.
-  }
-}
-
-function groupHistoryItems(items: AppraisalHistoryItem[]): AppraisalAppointmentGroup[] {
-  const groups = new Map<string, AppraisalAppointmentGroup>();
-
-  for (const item of items) {
-    const groupKey = item.appointmentId || "ungrouped";
-    const appointmentLabel = item.appointmentLabel?.trim() || "未分類";
-    const existing = groups.get(groupKey);
-
-    if (!existing) {
-      groups.set(groupKey, {
-        appointmentId: item.appointmentId,
-        appointmentLabel,
-        latestAppraisalAt: item.createdAt,
-        itemCount: 1,
-        totalSuggestedMaxPrice: item.pricing.suggestedMaxPrice,
-        items: [item],
-      });
-      continue;
-    }
-
-    existing.items.push(item);
-    existing.itemCount += 1;
-    existing.totalSuggestedMaxPrice += item.pricing.suggestedMaxPrice;
-    if (
-      new Date(item.createdAt).getTime() >
-      new Date(existing.latestAppraisalAt).getTime()
-    ) {
-      existing.latestAppraisalAt = item.createdAt;
-    }
-  }
-
-  return [...groups.values()]
-    .map((group) => ({
-      ...group,
-      items: [...group.items].sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      ),
-    }))
-    .sort(
-      (a, b) =>
-        new Date(b.latestAppraisalAt).getTime() -
-        new Date(a.latestAppraisalAt).getTime()
-    );
-}
-
 export default function HomePage() {
   const [previews, setPreviews] = useState<PreviewState[]>([
     EMPTY_SLOT,
@@ -169,6 +82,7 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const [errorReference, setErrorReference] = useState<string | null>(null);
   const [activeAppointment, setActiveAppointment] = useState<ActiveAppointment | null>(null);
+  const [storedAppointments, setStoredAppointments] = useState<StoredAppointment[]>([]);
   const [appointmentLabelInput, setAppointmentLabelInput] = useState("");
   const [appointmentError, setAppointmentError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
@@ -195,7 +109,26 @@ export default function HomePage() {
   useEffect(() => {
     clientSessionIdRef.current = getOrCreateClientSessionId();
     setActiveAppointment(readStoredAppointment());
+    setStoredAppointments(readStoredAppointments());
   }, []);
+
+  useEffect(() => {
+    if (!activeAppointment) {
+      return;
+    }
+
+    const matching = storedAppointments.find((item) => item.id === activeAppointment.id);
+    if (!matching || matching.label === activeAppointment.label) {
+      return;
+    }
+
+    const nextAppointment = {
+      id: matching.id,
+      label: matching.label,
+    };
+    setActiveAppointment(nextAppointment);
+    persistActiveAppointment(nextAppointment);
+  }, [activeAppointment, storedAppointments]);
 
   async function loadHistory(options?: { silent?: boolean }) {
     try {
@@ -221,8 +154,14 @@ export default function HomePage() {
         throw new Error(nextMessage);
       }
 
-      setHistoryItems(Array.isArray(payload.items) ? payload.items : []);
+      const items = Array.isArray(payload.items) ? payload.items : [];
+      setHistoryItems(items);
       setHistoryEnabled(Boolean(payload.enabled));
+      setStoredAppointments((current) => {
+        const next = mergeStoredAppointmentsWithHistory(current, items);
+        persistStoredAppointments(next);
+        return next;
+      });
     } catch (err) {
       if (err instanceof Error && !err.message.includes("エラーID:")) {
         void reportClientError({
@@ -241,28 +180,24 @@ export default function HomePage() {
   }
 
   const appointmentGroups = groupHistoryItems(historyItems);
-  const appointmentOptions = [
-    ...appointmentGroups
-      .filter((group) => group.appointmentId)
-      .map((group) => ({
-        id: group.appointmentId as string,
-        label: group.appointmentLabel,
-        latestAppraisalAt: group.latestAppraisalAt,
-        itemCount: group.itemCount,
-      })),
-  ];
-
-  if (
+  const appointmentOptions = buildAppointmentOptions(
+    storedAppointments,
+    appointmentGroups
+  );
+  const visibleAppointmentOptions =
     activeAppointment &&
     !appointmentOptions.some((option) => option.id === activeAppointment.id)
-  ) {
-    appointmentOptions.unshift({
-      id: activeAppointment.id,
-      label: activeAppointment.label,
-      latestAppraisalAt: new Date().toISOString(),
-      itemCount: 0,
-    });
-  }
+      ? [
+          {
+            id: activeAppointment.id,
+            label: activeAppointment.label,
+            itemCount: 0,
+            latestAt: new Date().toISOString(),
+            hasSavedItems: false,
+          },
+          ...appointmentOptions,
+        ]
+      : appointmentOptions;
 
   function startAppointment() {
     const nextLabel = appointmentLabelInput.trim();
@@ -278,6 +213,11 @@ export default function HomePage() {
 
     setActiveAppointment(nextAppointment);
     persistActiveAppointment(nextAppointment);
+    setStoredAppointments((current) => {
+      const next = upsertStoredAppointment(current, nextAppointment);
+      persistStoredAppointments(next);
+      return next;
+    });
     setAppointmentLabelInput("");
     setAppointmentError(null);
   }
@@ -290,7 +230,7 @@ export default function HomePage() {
       return;
     }
 
-    const selected = appointmentOptions.find((option) => option.id === appointmentId);
+    const selected = visibleAppointmentOptions.find((option) => option.id === appointmentId);
     if (!selected) {
       return;
     }
@@ -408,6 +348,17 @@ export default function HomePage() {
         if (nextResult.savedHistoryItem) {
           const savedHistoryItem = nextResult.savedHistoryItem;
           setHistoryEnabled(true);
+          if (activeAppointment) {
+            setStoredAppointments((current) => {
+              const next = upsertStoredAppointment(
+                current,
+                activeAppointment,
+                savedHistoryItem.createdAt
+              );
+              persistStoredAppointments(next);
+              return next;
+            });
+          }
           setHistoryItems((current) => {
             const deduped = current.filter((item) => item.id !== savedHistoryItem.id);
             return [savedHistoryItem, ...deduped].slice(0, MAX_HISTORY_ITEMS);
@@ -481,13 +432,21 @@ export default function HomePage() {
                   </p>
                 </div>
                 {activeAppointment && (
-                  <button
-                    type="button"
-                    className={styles.appointmentClearBtn}
-                    onClick={clearActiveAppointment}
-                  >
-                    解除
-                  </button>
+                  <div className={styles.appointmentPanelActions}>
+                    <Link
+                      href={`/appointments/${activeAppointment.id}`}
+                      className={styles.appointmentDetailLink}
+                    >
+                      詳細を見る
+                    </Link>
+                    <button
+                      type="button"
+                      className={styles.appointmentClearBtn}
+                      onClick={clearActiveAppointment}
+                    >
+                      解除
+                    </button>
+                  </div>
                 )}
               </div>
 
@@ -508,7 +467,7 @@ export default function HomePage() {
                 </button>
               </div>
 
-              {appointmentOptions.length > 0 && (
+              {visibleAppointmentOptions.length > 0 && (
                 <label className={styles.appointmentSelectWrap}>
                   <span className={styles.appointmentSelectLabel}>既存アポを選択</span>
                   <select
@@ -517,7 +476,7 @@ export default function HomePage() {
                     onChange={(event) => selectAppointmentById(event.target.value)}
                   >
                     <option value="">未選択のまま</option>
-                    {appointmentOptions.map((option) => (
+                    {visibleAppointmentOptions.map((option) => (
                       <option key={option.id} value={option.id}>
                         {option.label} · {option.itemCount}件
                       </option>
@@ -937,6 +896,14 @@ export default function HomePage() {
                           {" · "}
                           {group.itemCount}件
                         </p>
+                        {group.appointmentId && (
+                          <Link
+                            href={`/appointments/${group.appointmentId}`}
+                            className={styles.historyGroupLink}
+                          >
+                            アポ詳細を見る
+                          </Link>
+                        )}
                       </div>
                       <div className={styles.historyGroupSummary}>
                         <span className={styles.historyGroupSummaryLabel}>

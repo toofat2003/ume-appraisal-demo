@@ -2,6 +2,8 @@ import { list, put } from "@vercel/blob";
 import { AppraisalHistoryImage, AppraisalHistoryItem } from "@/lib/appraisal/types";
 import {
   DEFAULT_HISTORY_LIMIT,
+  ListAppraisalHistoryOptions,
+  RenameAppointmentResult,
   getExtension,
   mapPricing,
   SaveAppraisalHistoryInput,
@@ -26,6 +28,10 @@ function getHistoryRecordPrefix(): string {
 
 function getHistoryImagePrefix(): string {
   return `${getHistoryNamespace()}/history-images/`;
+}
+
+function getHistoryRecordPathname(item: AppraisalHistoryItem): string {
+  return `${getHistoryRecordPrefix()}${item.createdAt.replace(/[:.]/g, "-")}_${item.id}.json`;
 }
 
 function isAppraisalHistoryItem(value: unknown): value is AppraisalHistoryItem {
@@ -106,29 +112,88 @@ export async function saveAppraisalHistory(
 }
 
 export async function listAppraisalHistory(
-  limit = DEFAULT_HISTORY_LIMIT
+  options: ListAppraisalHistoryOptions = {}
 ): Promise<AppraisalHistoryItem[]> {
   if (!isBlobConfigured()) {
     return [];
   }
 
+  const limit = options.limit ?? DEFAULT_HISTORY_LIMIT;
+  const scanLimit = options.appointmentId
+    ? Math.max(limit * 10, 200)
+    : Math.max(limit * 3, limit);
+
   const page = await list({
     prefix: getHistoryRecordPrefix(),
-    limit: Math.max(limit * 3, limit),
+    limit: scanLimit,
   });
 
   const recordBlobs = [...page.blobs]
     .sort((a, b) => b.uploadedAt.getTime() - a.uploadedAt.getTime())
-    .slice(0, limit);
+    .slice(0, scanLimit);
 
   const items = await Promise.all(recordBlobs.map((blob) => fetchHistoryRecord(blob.url)));
 
   return items
     .filter((item): item is AppraisalHistoryItem => item !== null)
+    .filter((item) =>
+      options.appointmentId ? item.appointmentId === options.appointmentId : true
+    )
     .sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    )
+    .slice(0, limit);
+}
+
+export async function renameAppointmentInBlob(
+  appointmentId: string,
+  appointmentLabel: string
+): Promise<RenameAppointmentResult> {
+  if (!isBlobConfigured()) {
+    return {
+      appointmentId,
+      appointmentLabel,
+      updatedCount: 0,
+    };
+  }
+
+  const page = await list({
+    prefix: getHistoryRecordPrefix(),
+    limit: 500,
+  });
+
+  const recordBlobs = [...page.blobs].sort(
+    (a, b) => b.uploadedAt.getTime() - a.uploadedAt.getTime()
+  );
+
+  let updatedCount = 0;
+
+  for (const blob of recordBlobs) {
+    const item = await fetchHistoryRecord(blob.url);
+    if (!item || item.appointmentId !== appointmentId) {
+      continue;
+    }
+
+    const nextItem: AppraisalHistoryItem = {
+      ...item,
+      appointmentLabel,
+    };
+
+    await put(getHistoryRecordPathname(nextItem), JSON.stringify(nextItem, null, 2), {
+      access: "public",
+      addRandomSuffix: false,
+      contentType: "application/json; charset=utf-8",
+      cacheControlMaxAge: 60,
+    });
+    updatedCount += 1;
+  }
+
+  return {
+    appointmentId,
+    appointmentLabel,
+    updatedCount,
+  };
 }
 
 export function isHistoryStorageEnabled(): boolean {
