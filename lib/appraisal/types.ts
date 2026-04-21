@@ -103,10 +103,30 @@ export type QuerySearchDebugStage = {
   topTitles: string[];
 };
 
+export type VisionCandidateDebug = {
+  query: string;
+  score: number;
+  source: string;
+};
+
+export type VisionImageDebugStage = {
+  imageIndex: number;
+  provider: "google-vision";
+  latencyMs: number;
+  bestGuessLabels: string[];
+  webEntities: VisionCandidateDebug[];
+  logoDescriptions: string[];
+  textSnippets: string[];
+  candidateQueries: VisionCandidateDebug[];
+  errorMessage?: string | null;
+};
+
 export type AppraisalDebug = {
   pipelineVersion: string;
   selectedImageIndex: number | null;
   imageStages: ImageSearchDebugStage[];
+  visionStages?: VisionImageDebugStage[];
+  identificationProvider?: "google-vision-web-detection" | "ebay-search-by-image";
   queryStage: QuerySearchDebugStage | null;
 };
 

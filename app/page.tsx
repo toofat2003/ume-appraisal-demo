@@ -804,6 +804,11 @@ export default function HomePage() {
                     <summary>診断情報</summary>
                     <div className={styles.debugContent}>
                       <p>
+                        同定方式:{" "}
+                        {result.debug.identificationProvider === "google-vision-web-detection"
+                          ? "Google Vision → eBay検索"
+                          : "eBay画像検索"}
+                        {" | "}
                         採用画像:{" "}
                         {result.debug.selectedImageIndex !== null
                           ? `${result.debug.selectedImageIndex + 1}枚目`
@@ -812,16 +817,33 @@ export default function HomePage() {
                           ? ` | 品名検索: ${result.debug.queryStage.filteredListingCount}件`
                           : ""}
                       </p>
-                      <ul>
-                        {result.debug.imageStages.map((stage) => (
-                          <li key={stage.imageIndex}>
-                            {stage.imageIndex + 1}枚目: raw{" "}
-                            {stage.rawListingCount} / used{" "}
-                            {stage.usedListingCount} / 採用{" "}
-                            {stage.selectedListingCount} / score {stage.score}
-                          </li>
-                        ))}
-                      </ul>
+                      {result.debug.visionStages && result.debug.visionStages.length > 0 && (
+                        <ul>
+                          {result.debug.visionStages.map((stage) => (
+                            <li key={`vision-${stage.imageIndex}`}>
+                              {stage.imageIndex + 1}枚目 Vision:{" "}
+                              {stage.candidateQueries.length > 0
+                                ? stage.candidateQueries
+                                    .slice(0, 3)
+                                    .map((candidate) => candidate.query)
+                                    .join(" / ")
+                                : stage.errorMessage || "候補なし"}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {result.debug.imageStages.length > 0 && (
+                        <ul>
+                          {result.debug.imageStages.map((stage) => (
+                            <li key={stage.imageIndex}>
+                              {stage.imageIndex + 1}枚目 eBay画像検索: raw{" "}
+                              {stage.rawListingCount} / used{" "}
+                              {stage.usedListingCount} / 採用{" "}
+                              {stage.selectedListingCount} / score {stage.score}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
                   </details>
                 )}

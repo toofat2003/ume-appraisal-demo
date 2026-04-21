@@ -6,11 +6,24 @@ import {
   ProductIdentification,
   QuerySearchDebugStage,
 } from "@/lib/appraisal/types";
+import {
+  identifyWithGoogleVision,
+  isGoogleVisionConfigured,
+} from "@/lib/appraisal/googleVision";
+import type { GoogleVisionCandidate } from "@/lib/appraisal/googleVision";
 
 const DEFAULT_MARKETPLACE_ID = "EBAY_US";
 const OAUTH_SCOPE = "https://api.ebay.com/oauth/api_scope";
 
 type EbayEnvironment = "production" | "sandbox";
+type ImageIdentificationProvider = "auto" | "google-vision" | "ebay-image";
+
+type SearchListingsResult = {
+  identification: ProductIdentification;
+  listings: ListingSummary[];
+  accessoryFilteredCount: number;
+  debug: AppraisalDebug;
+};
 
 type TokenCache = {
   accessToken: string;
@@ -228,6 +241,8 @@ const TITLE_STOPWORDS = new Set([
   "w",
 ]);
 
+const MAX_GOOGLE_VISION_QUERY_CANDIDATES = 5;
+
 let tokenCache: TokenCache | null = null;
 let tokenPromise: Promise<string> | null = null;
 
@@ -241,6 +256,16 @@ function getBaseUrl(env: EbayEnvironment): string {
 
 function getMarketplaceId(): string {
   return process.env.EBAY_MARKETPLACE_ID || DEFAULT_MARKETPLACE_ID;
+}
+
+function getImageIdentificationProvider(): ImageIdentificationProvider {
+  const value = (process.env.APPRAISAL_IMAGE_PROVIDER || "auto").toLowerCase();
+
+  if (value === "google-vision" || value === "ebay-image" || value === "auto") {
+    return value;
+  }
+
+  return "auto";
 }
 
 function normalizeWhitespace(value: string): string {
@@ -1110,14 +1135,9 @@ function identifyFromListings(listings: ListingSummary[]): ProductIdentification
   };
 }
 
-export async function searchListingsByImage(
+async function searchListingsByEbayImage(
   images: { data: string }[]
-): Promise<{
-  identification: ProductIdentification;
-  listings: ListingSummary[];
-  accessoryFilteredCount: number;
-  debug: AppraisalDebug;
-}> {
+): Promise<SearchListingsResult> {
   const imageStages = await Promise.all(
     images.map((image, index) => searchListingsForSingleImageSafely(image.data, index))
   );
@@ -1126,6 +1146,7 @@ export async function searchListingsByImage(
     pipelineVersion: "2026-04-13-stage-split-v1",
     selectedImageIndex: bestImageStage?.imageIndex ?? null,
     imageStages: imageStages.map((stage) => toImageDebugStage(stage)),
+    identificationProvider: "ebay-search-by-image",
     queryStage: null,
   };
 
@@ -1191,4 +1212,206 @@ export async function searchListingsByImage(
       queryStage,
     },
   };
+}
+
+type GoogleVisionQuerySearch = {
+  candidate: GoogleVisionCandidate;
+  rawListings: ListingSummary[];
+  filteredListings: ListingSummary[];
+  accessoryFilteredCount: number;
+  dominantCategoryId: string | null;
+  latencyMs: number;
+  score: number;
+  errorMessage?: string | null;
+};
+
+function scoreGoogleVisionQuerySearch(search: Omit<GoogleVisionQuerySearch, "score">): number {
+  if (search.filteredListings.length === 0) {
+    return 0;
+  }
+
+  const listingScore = Math.min(search.filteredListings.length, 12) * 12;
+  const candidateScore = Math.min(45, search.candidate.score * 0.45);
+  const accessoryPenalty = search.accessoryFilteredCount * 7;
+  const candidateTokens = titleTokens(search.candidate.query).filter(
+    (token) => token.length >= 3 && !TITLE_STOPWORDS.has(token)
+  );
+  const topTitleText = normalizeTitle(
+    search.filteredListings
+      .slice(0, 8)
+      .map((listing) => listing.title)
+      .join(" ")
+  );
+  const matchedTokenCount = candidateTokens.filter((token) => topTitleText.includes(token)).length;
+  const queryFitScore =
+    candidateTokens.length > 0 ? (matchedTokenCount / candidateTokens.length) * 30 : 0;
+
+  return Math.max(0, listingScore + candidateScore + queryFitScore - accessoryPenalty);
+}
+
+async function searchGoogleVisionCandidateSafely(
+  candidate: GoogleVisionCandidate
+): Promise<GoogleVisionQuerySearch> {
+  const startedAt = Date.now();
+
+  try {
+    const rawListings = await searchRaw(candidate.query);
+    const filtered = filterTextSearchListings(rawListings, null);
+    const filteredListings = dedupeListings(filtered.listings);
+    const withoutScore = {
+      candidate,
+      rawListings,
+      filteredListings,
+      accessoryFilteredCount: filtered.accessoryFilteredCount,
+      dominantCategoryId: filtered.dominantCategoryId,
+      latencyMs: Date.now() - startedAt,
+      errorMessage: null,
+    };
+
+    return {
+      ...withoutScore,
+      score: scoreGoogleVisionQuerySearch(withoutScore),
+    };
+  } catch (error) {
+    return {
+      candidate,
+      rawListings: [],
+      filteredListings: [],
+      accessoryFilteredCount: 0,
+      dominantCategoryId: null,
+      latencyMs: Date.now() - startedAt,
+      score: 0,
+      errorMessage: error instanceof Error ? error.message : "eBayテキスト検索に失敗しました。",
+    };
+  }
+}
+
+function pickBestGoogleVisionQuerySearch(
+  searches: GoogleVisionQuerySearch[]
+): GoogleVisionQuerySearch | null {
+  const ranked = searches
+    .filter((search) => search.filteredListings.length > 0)
+    .sort((left, right) => {
+      const minimumListingPreference =
+        Number(right.filteredListings.length >= 3) - Number(left.filteredListings.length >= 3);
+
+      if (minimumListingPreference !== 0) {
+        return minimumListingPreference;
+      }
+
+      return right.score - left.score;
+    });
+
+  return ranked[0] || null;
+}
+
+function buildGoogleVisionQueryStage(search: GoogleVisionQuerySearch): QuerySearchDebugStage {
+  return {
+    query: search.candidate.query,
+    latencyMs: search.latencyMs,
+    rawListingCount: search.rawListings.length,
+    filteredListingCount: search.filteredListings.length,
+    accessoryFilteredCount: search.accessoryFilteredCount,
+    dominantCategoryId: search.dominantCategoryId,
+    topTitles: search.filteredListings.slice(0, 5).map((listing) => listing.title),
+  };
+}
+
+function buildEmptyGoogleVisionIdentification(
+  query: string,
+  reasoning: string
+): ProductIdentification {
+  return {
+    itemName: query || "Google Vision 品名候補なし",
+    brand: "",
+    model: "",
+    category: "Google Vision Web Detection",
+    categoryGroup: "other",
+    conditionSummary: "一致結果なし",
+    confidence: 0,
+    searchQuery: query,
+    reasoning,
+  };
+}
+
+async function searchListingsByGoogleVision(images: { data: string }[]): Promise<SearchListingsResult> {
+  const vision = await identifyWithGoogleVision(images);
+  const candidates = vision.candidates.slice(0, MAX_GOOGLE_VISION_QUERY_CANDIDATES);
+  const searches = await Promise.all(candidates.map(searchGoogleVisionCandidateSafely));
+  const bestSearch = pickBestGoogleVisionQuerySearch(searches);
+  const topCandidate = candidates[0] || null;
+  const baseDebug: AppraisalDebug = {
+    pipelineVersion: "2026-04-22-google-vision-web-detection-v1",
+    selectedImageIndex: bestSearch?.candidate.imageIndex ?? topCandidate?.imageIndex ?? null,
+    imageStages: [],
+    visionStages: vision.stages,
+    identificationProvider: "google-vision-web-detection",
+    queryStage: bestSearch ? buildGoogleVisionQueryStage(bestSearch) : null,
+  };
+
+  if (!bestSearch || bestSearch.filteredListings.length === 0) {
+    return {
+      identification: buildEmptyGoogleVisionIdentification(
+        topCandidate?.query || "",
+        topCandidate
+          ? "Google Cloud Vision Web Detection で品名候補は出ましたが、eBayテキスト検索で価格参照を取得できませんでした。"
+          : "Google Cloud Vision Web Detection で十分な品名候補を取得できませんでした。"
+      ),
+      listings: [],
+      accessoryFilteredCount: 0,
+      debug: baseDebug,
+    };
+  }
+
+  const identification = identifyFromListings(bestSearch.filteredListings);
+  const confidence = Math.min(
+    0.95,
+    scoreFromListings(bestSearch.filteredListings) + Math.min(0.15, bestSearch.candidate.score / 700)
+  );
+
+  return {
+    identification: {
+      ...identification,
+      conditionSummary: "Google Cloud Vision Web Detection ベース",
+      confidence,
+      searchQuery: bestSearch.candidate.query,
+      reasoning:
+        "Google Cloud Vision Web Detection で品名候補を作り、その検索語で eBay テキスト検索をかけて価格参照を集めています。",
+    },
+    listings: bestSearch.filteredListings,
+    accessoryFilteredCount: bestSearch.accessoryFilteredCount,
+    debug: baseDebug,
+  };
+}
+
+function attachGoogleVisionAttemptToFallback(
+  fallback: SearchListingsResult,
+  googleAttempt: SearchListingsResult
+): SearchListingsResult {
+  return {
+    ...fallback,
+    debug: {
+      ...fallback.debug,
+      pipelineVersion: "2026-04-22-google-vision-web-detection-v1-fallback-ebay-image",
+      visionStages: googleAttempt.debug.visionStages,
+      identificationProvider: "ebay-search-by-image",
+    },
+  };
+}
+
+export async function searchListingsByImage(images: { data: string }[]): Promise<SearchListingsResult> {
+  const provider = getImageIdentificationProvider();
+
+  if (provider === "ebay-image" || !isGoogleVisionConfigured()) {
+    return searchListingsByEbayImage(images);
+  }
+
+  const googleAttempt = await searchListingsByGoogleVision(images);
+
+  if (googleAttempt.listings.length > 0 || provider === "google-vision") {
+    return googleAttempt;
+  }
+
+  const fallback = await searchListingsByEbayImage(images);
+  return attachGoogleVisionAttemptToFallback(fallback, googleAttempt);
 }

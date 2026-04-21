@@ -100,14 +100,17 @@ function buildWarnings(
 
   if (debug.queryStage && debug.queryStage.filteredListingCount < 3) {
     warnings.push(
-      "品名からのeBay検索で十分な一致件数を取れず、画像検索結果を価格参照に使っているためブレやすい状態です。"
+      "品名からのeBay検索で十分な一致件数を取れず、価格参照がブレやすい状態です。"
     );
   }
 
-  const failedImages = debug.imageStages.filter((stage) => stage.errorMessage);
+  const failedImages = [
+    ...debug.imageStages.filter((stage) => stage.errorMessage),
+    ...(debug.visionStages || []).filter((stage) => stage.errorMessage),
+  ];
   if (failedImages.length > 0) {
     warnings.push(
-      `入力画像のうち ${failedImages.length} 枚は解析に使えなかったため、残りの写真だけで査定しています。`
+      `画像解析の一部で ${failedImages.length} 件のエラーがありました。成功した解析結果だけで査定しています。`
     );
   }
 
@@ -120,6 +123,17 @@ async function fileToBase64(file: File): Promise<{ contentType: string; data: st
     contentType: file.type || "image/jpeg",
     data: Buffer.from(arrayBuffer).toString("base64"),
   };
+}
+
+function getImageAnalysisErrors(debug: AppraisalDebug): string[] {
+  return Array.from(
+    new Set(
+      [
+        ...debug.imageStages.map((stage) => stage.errorMessage),
+        ...(debug.visionStages || []).map((stage) => stage.errorMessage),
+      ].filter((message): message is string => Boolean(message))
+    )
+  );
 }
 
 export async function POST(request: Request) {
@@ -180,13 +194,7 @@ export async function POST(request: Request) {
     };
 
     if (listings.length === 0) {
-      const failedImageMessages = Array.from(
-        new Set(
-          debug.imageStages
-            .map((stage) => stage.errorMessage)
-            .filter((message): message is string => Boolean(message))
-        )
-      );
+      const failedImageMessages = getImageAnalysisErrors(debug);
 
       const errorId =
         failedImageMessages.length > 0
@@ -211,7 +219,7 @@ export async function POST(request: Request) {
         {
           error:
             failedImageMessages[0] ||
-            "eBay searchByImage で一致する出品が見つかりませんでした。全体写真をより正面から撮るか、別角度の写真で再試行してください。",
+            "画像から十分な商品候補または価格参照を取得できませんでした。全体写真をより正面から撮るか、ロゴ・型番・刻印が読める写真を追加して再試行してください。",
           identification,
           errorId,
         },
@@ -248,7 +256,10 @@ export async function POST(request: Request) {
       debug,
     };
 
-    const failedImageStages = debug.imageStages.filter((stage) => stage.errorMessage);
+    const failedImageStages = [
+      ...debug.imageStages.filter((stage) => stage.errorMessage),
+      ...(debug.visionStages || []).filter((stage) => stage.errorMessage),
+    ];
     if (failedImageStages.length > 0) {
       await logErrorEvent({
         requestId,
