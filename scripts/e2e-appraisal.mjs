@@ -123,6 +123,15 @@ async function postAppraisal(baseUrl, imagePaths, label) {
 }
 
 async function main() {
+  if (process.env.E2E_BASE_URL) {
+    const baseUrl = process.env.E2E_BASE_URL.replace(/\/+$/, "");
+    log(`Using existing app: ${baseUrl}`);
+    await postAppraisal(baseUrl, [TEST_IMAGES[0]], "single-image");
+    await postAppraisal(baseUrl, TEST_IMAGES, "three-images");
+    log("E2E appraisal flow passed.");
+    return;
+  }
+
   const port = Number(process.env.E2E_PORT || 0) || await findOpenPort();
   const baseUrl = `http://${HOST}:${port}`;
   const child = spawn("npm", ["run", "dev", "--", "--hostname", HOST, "--port", String(port)], {
