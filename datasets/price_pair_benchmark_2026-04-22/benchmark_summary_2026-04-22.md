@@ -15,6 +15,8 @@
 - Google Vision product-only: `runs/2026-04-22T04-47-14-395Z.md`
 - Google Vision tag-assisted: `runs/2026-04-22T04-49-15-823Z.md`
 - eBay image product-only: `runs/2026-04-22T04-50-36-120Z.md`
+- Gemini 3 product-only: `runs/2026-04-22T05-18-52-373Z.md`
+- Gemini 3 product + price tag, with internal product-only vs all-images selection: `runs/2026-04-22T05-21-03-059Z.md`
 
 ## Overall Results
 
@@ -23,6 +25,8 @@
 | Google Vision | Product only | 1/8 | 1/5 | 1/8 | 72.0% |
 | Google Vision | Product + price tag | 3/8 | 2/5 | 3/8 | 59.1% |
 | eBay searchByImage | Product only | 2/8 | 2/5 | 2/8 | 44.5% |
+| Gemini 3 | Product only | 5/8 | 4/5 | 4/8 | 32.4% |
+| Gemini 3 | Product + price tag, selected | 5/8 | 4/5 | 5/8 | 30.8% |
 
 ## Product-Only Google Vision Details
 
@@ -45,10 +49,14 @@
 
 既存のeBay searchByImageはProduct-onlyでもGoogle Visionより平均誤差が小さかった。ただし2/8しか±30%に入っておらず、十分ではない。現状ではGoogle Visionへの単純置き換えは精度改善になっていない。
 
+Gemini 3は、同じデータセットではGoogle VisionとeBay searchByImageの両方を上回った。特に価格タグありでは、タグに写った品名を使ってBurberry、Prada、MCM Metallicなどの品名がより具体化された。一方で、商品写真に複数商品が写っているChanel/Gucci系のreview行では、Gemini 3でもターゲット商品の切り分けに失敗した。
+
+価格タグ画像を追加すると必ず良くなるわけではないため、アプリ側では2枚目以降がある場合に `1枚目のみ` と `全画像` のGemini同定を比較し、eBay検索結果の件数・検索語一致度・Gemini確信度から作るselection scoreで全画像側が明確に良い場合だけ採用する。これにより、任意の2枚目/3枚目を入れても、悪化しそうな時は1枚目のみへ戻せる。
+
 ## Next Actions
 
-1. Product-onlyのGoogle Visionを主経路にするのは一旦避ける。
-2. Google Visionは `OCR/ロゴ抽出` に限定し、検索語の品質が低いときはeBay画像検索を優先する。
-3. タグ・ロゴ・型番・ブランド名が写る画像を明示的に2枚目として回収する運用にすると改善余地がある。
-4. ベンチマーク指標は `median within ±30%` と `reference within IQR` を継続利用する。
-5. 次の改善では、Vision候補をそのままeBayに投げるのではなく、ブランドバッグ用の検索語生成ルールを追加する。
+1. 主経路はGemini 3 image understandingに切り替える。
+2. Google Vision product-onlyを主経路にするのは避け、必要ならOCR/ロゴ抽出の補助用途に限定する。
+3. 2枚目は価格タグ・ロゴ・型番・素材タグなど、品名特定に効く画像として任意入力にする。
+4. 複数商品が写る写真はまだ弱いため、1枚目は対象商品単体が大きく写る写真を必須ガイダンスにする。
+5. ベンチマーク指標は `median within ±30%` と `reference within IQR` を継続利用する。

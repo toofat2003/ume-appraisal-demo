@@ -72,6 +72,23 @@ function formatDateTime(value: string): string {
   }).format(new Date(value));
 }
 
+function formatIdentificationProvider(
+  provider: NonNullable<AppraisalResult["debug"]>["identificationProvider"]
+): string {
+  switch (provider) {
+    case "google-vision-web-detection":
+      return "Google Vision → eBay検索";
+    case "gemini-3-image-understanding":
+      return "Gemini 3 → eBay検索";
+    default:
+      return "eBay画像検索";
+  }
+}
+
+function formatGeminiMode(mode: "primary-only" | "all-images" | undefined): string {
+  return mode === "all-images" ? "全画像" : "1枚目のみ";
+}
+
 export default function HomePage() {
   const [previews, setPreviews] = useState<PreviewState[]>([
     EMPTY_SLOT,
@@ -805,9 +822,7 @@ export default function HomePage() {
                     <div className={styles.debugContent}>
                       <p>
                         同定方式:{" "}
-                        {result.debug.identificationProvider === "google-vision-web-detection"
-                          ? "Google Vision → eBay検索"
-                          : "eBay画像検索"}
+                        {formatIdentificationProvider(result.debug.identificationProvider)}
                         {" | "}
                         採用画像:{" "}
                         {result.debug.selectedImageIndex !== null
@@ -828,6 +843,26 @@ export default function HomePage() {
                                     .map((candidate) => candidate.query)
                                     .join(" / ")
                                 : stage.errorMessage || "候補なし"}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {result.debug.geminiStage && (
+                        <ul>
+                          <li>
+                            Gemini: {formatGeminiMode(result.debug.geminiStage.mode)} /{" "}
+                            {result.debug.geminiStage.itemName} /{" "}
+                            {result.debug.geminiStage.queryCandidates
+                              .slice(0, 3)
+                              .map((candidate) => candidate.query)
+                              .join(" / ")}
+                          </li>
+                          {result.debug.geminiStage.attempts?.map((attempt) => (
+                            <li key={`gemini-${attempt.mode}`}>
+                              {formatGeminiMode(attempt.mode)}:{" "}
+                              {attempt.selected ? "採用 / " : ""}
+                              score {attempt.selectionScore} / listings{" "}
+                              {attempt.listingCount} / {attempt.topQuery || "候補なし"}
                             </li>
                           ))}
                         </ul>

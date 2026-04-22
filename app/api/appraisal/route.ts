@@ -107,6 +107,7 @@ function buildWarnings(
   const failedImages = [
     ...debug.imageStages.filter((stage) => stage.errorMessage),
     ...(debug.visionStages || []).filter((stage) => stage.errorMessage),
+    ...(debug.geminiStage?.errorMessage ? [debug.geminiStage] : []),
   ];
   if (failedImages.length > 0) {
     warnings.push(
@@ -131,6 +132,7 @@ function getImageAnalysisErrors(debug: AppraisalDebug): string[] {
       [
         ...debug.imageStages.map((stage) => stage.errorMessage),
         ...(debug.visionStages || []).map((stage) => stage.errorMessage),
+        debug.geminiStage?.errorMessage,
       ].filter((message): message is string => Boolean(message))
     )
   );
@@ -259,6 +261,7 @@ export async function POST(request: Request) {
     const failedImageStages = [
       ...debug.imageStages.filter((stage) => stage.errorMessage),
       ...(debug.visionStages || []).filter((stage) => stage.errorMessage),
+      ...(debug.geminiStage?.errorMessage ? [debug.geminiStage] : []),
     ];
     if (failedImageStages.length > 0) {
       await logErrorEvent({

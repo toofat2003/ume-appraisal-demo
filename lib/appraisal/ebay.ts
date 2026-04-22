@@ -10,13 +10,26 @@ import {
   identifyWithGoogleVision,
   isGoogleVisionConfigured,
 } from "@/lib/appraisal/googleVision";
-import type { GoogleVisionCandidate } from "@/lib/appraisal/googleVision";
+import {
+  identifyWithGemini,
+  isGeminiConfigured,
+  type GeminiIdentification,
+} from "@/lib/appraisal/gemini";
 
 const DEFAULT_MARKETPLACE_ID = "EBAY_US";
 const OAUTH_SCOPE = "https://api.ebay.com/oauth/api_scope";
 
 type EbayEnvironment = "production" | "sandbox";
-type ImageIdentificationProvider = "auto" | "google-vision" | "ebay-image";
+type ImageIdentificationProvider = "auto" | "gemini" | "google-vision" | "ebay-image";
+
+type QueryCandidate = {
+  query: string;
+  score: number;
+  source: string;
+  imageIndex: number;
+};
+
+type GeminiAttemptMode = "primary-only" | "all-images";
 
 type SearchListingsResult = {
   identification: ProductIdentification;
@@ -242,6 +255,7 @@ const TITLE_STOPWORDS = new Set([
 ]);
 
 const MAX_GOOGLE_VISION_QUERY_CANDIDATES = 5;
+const GEMINI_ALL_IMAGES_SELECTION_MARGIN = 8;
 
 let tokenCache: TokenCache | null = null;
 let tokenPromise: Promise<string> | null = null;
@@ -261,7 +275,7 @@ function getMarketplaceId(): string {
 function getImageIdentificationProvider(): ImageIdentificationProvider {
   const value = (process.env.APPRAISAL_IMAGE_PROVIDER || "auto").toLowerCase();
 
-  if (value === "google-vision" || value === "ebay-image" || value === "auto") {
+  if (value === "gemini" || value === "google-vision" || value === "ebay-image" || value === "auto") {
     return value;
   }
 
@@ -1214,8 +1228,8 @@ async function searchListingsByEbayImage(
   };
 }
 
-type GoogleVisionQuerySearch = {
-  candidate: GoogleVisionCandidate;
+type QueryCandidateSearch = {
+  candidate: QueryCandidate;
   rawListings: ListingSummary[];
   filteredListings: ListingSummary[];
   accessoryFilteredCount: number;
@@ -1225,7 +1239,18 @@ type GoogleVisionQuerySearch = {
   errorMessage?: string | null;
 };
 
-function scoreGoogleVisionQuerySearch(search: Omit<GoogleVisionQuerySearch, "score">): number {
+type GeminiSearchAttempt = {
+  mode: GeminiAttemptMode;
+  inputImageCount: number;
+  gemini: GeminiIdentification | null;
+  candidates: QueryCandidate[];
+  searches: QueryCandidateSearch[];
+  bestSearch: QueryCandidateSearch | null;
+  selectionScore: number;
+  errorMessage?: string | null;
+};
+
+function scoreQueryCandidateSearch(search: Omit<QueryCandidateSearch, "score">): number {
   if (search.filteredListings.length === 0) {
     return 0;
   }
@@ -1249,9 +1274,9 @@ function scoreGoogleVisionQuerySearch(search: Omit<GoogleVisionQuerySearch, "sco
   return Math.max(0, listingScore + candidateScore + queryFitScore - accessoryPenalty);
 }
 
-async function searchGoogleVisionCandidateSafely(
-  candidate: GoogleVisionCandidate
-): Promise<GoogleVisionQuerySearch> {
+async function searchQueryCandidateSafely(
+  candidate: QueryCandidate
+): Promise<QueryCandidateSearch> {
   const startedAt = Date.now();
 
   try {
@@ -1270,7 +1295,7 @@ async function searchGoogleVisionCandidateSafely(
 
     return {
       ...withoutScore,
-      score: scoreGoogleVisionQuerySearch(withoutScore),
+      score: scoreQueryCandidateSearch(withoutScore),
     };
   } catch (error) {
     return {
@@ -1286,9 +1311,9 @@ async function searchGoogleVisionCandidateSafely(
   }
 }
 
-function pickBestGoogleVisionQuerySearch(
-  searches: GoogleVisionQuerySearch[]
-): GoogleVisionQuerySearch | null {
+function pickBestQueryCandidateSearch(
+  searches: QueryCandidateSearch[]
+): QueryCandidateSearch | null {
   const ranked = searches
     .filter((search) => search.filteredListings.length > 0)
     .sort((left, right) => {
@@ -1305,7 +1330,7 @@ function pickBestGoogleVisionQuerySearch(
   return ranked[0] || null;
 }
 
-function buildGoogleVisionQueryStage(search: GoogleVisionQuerySearch): QuerySearchDebugStage {
+function buildQueryCandidateStage(search: QueryCandidateSearch): QuerySearchDebugStage {
   return {
     query: search.candidate.query,
     latencyMs: search.latencyMs,
@@ -1315,6 +1340,75 @@ function buildGoogleVisionQueryStage(search: GoogleVisionQuerySearch): QuerySear
     dominantCategoryId: search.dominantCategoryId,
     topTitles: search.filteredListings.slice(0, 5).map((listing) => listing.title),
   };
+}
+
+function scoreGeminiSearchAttempt(attempt: {
+  gemini: GeminiIdentification;
+  bestSearch: QueryCandidateSearch | null;
+}): number {
+  if (!attempt.bestSearch || attempt.bestSearch.filteredListings.length === 0) {
+    return 0;
+  }
+
+  const geminiConfidenceScore = attempt.gemini.confidence * 35;
+  const exactnessScore = Math.min(20, attempt.bestSearch.candidate.score * 0.2);
+
+  return attempt.bestSearch.score + geminiConfidenceScore + exactnessScore;
+}
+
+async function runGeminiSearchAttempt(
+  mode: GeminiAttemptMode,
+  images: { data: string; contentType?: string }[]
+): Promise<GeminiSearchAttempt> {
+  try {
+    const gemini = await identifyWithGemini(images);
+    const candidates = gemini.candidates.slice(0, MAX_GOOGLE_VISION_QUERY_CANDIDATES);
+    const searches = await Promise.all(candidates.map(searchQueryCandidateSafely));
+    const bestSearch = pickBestQueryCandidateSearch(searches);
+
+    return {
+      mode,
+      inputImageCount: images.length,
+      gemini,
+      candidates,
+      searches,
+      bestSearch,
+      selectionScore: scoreGeminiSearchAttempt({ gemini, bestSearch }),
+      errorMessage: null,
+    };
+  } catch (error) {
+    return {
+      mode,
+      inputImageCount: images.length,
+      gemini: null,
+      candidates: [],
+      searches: [],
+      bestSearch: null,
+      selectionScore: 0,
+      errorMessage: error instanceof Error ? error.message : "Gemini 3 画像同定に失敗しました。",
+    };
+  }
+}
+
+function pickBestGeminiAttempt(attempts: GeminiSearchAttempt[]): GeminiSearchAttempt {
+  const primaryAttempt = attempts.find((attempt) => attempt.mode === "primary-only");
+  const allImagesAttempt = attempts.find((attempt) => attempt.mode === "all-images");
+
+  if (!primaryAttempt) {
+    return attempts[0];
+  }
+
+  if (
+    allImagesAttempt &&
+    allImagesAttempt.bestSearch &&
+    (!primaryAttempt.bestSearch ||
+      allImagesAttempt.selectionScore >=
+        primaryAttempt.selectionScore + GEMINI_ALL_IMAGES_SELECTION_MARGIN)
+  ) {
+    return allImagesAttempt;
+  }
+
+  return primaryAttempt;
 }
 
 function buildEmptyGoogleVisionIdentification(
@@ -1337,8 +1431,8 @@ function buildEmptyGoogleVisionIdentification(
 async function searchListingsByGoogleVision(images: { data: string }[]): Promise<SearchListingsResult> {
   const vision = await identifyWithGoogleVision(images);
   const candidates = vision.candidates.slice(0, MAX_GOOGLE_VISION_QUERY_CANDIDATES);
-  const searches = await Promise.all(candidates.map(searchGoogleVisionCandidateSafely));
-  const bestSearch = pickBestGoogleVisionQuerySearch(searches);
+  const searches = await Promise.all(candidates.map(searchQueryCandidateSafely));
+  const bestSearch = pickBestQueryCandidateSearch(searches);
   const topCandidate = candidates[0] || null;
   const baseDebug: AppraisalDebug = {
     pipelineVersion: "2026-04-22-google-vision-web-detection-v1",
@@ -1346,7 +1440,7 @@ async function searchListingsByGoogleVision(images: { data: string }[]): Promise
     imageStages: [],
     visionStages: vision.stages,
     identificationProvider: "google-vision-web-detection",
-    queryStage: bestSearch ? buildGoogleVisionQueryStage(bestSearch) : null,
+    queryStage: bestSearch ? buildQueryCandidateStage(bestSearch) : null,
   };
 
   if (!bestSearch || bestSearch.filteredListings.length === 0) {
@@ -1384,6 +1478,149 @@ async function searchListingsByGoogleVision(images: { data: string }[]): Promise
   };
 }
 
+function buildEmptyGeminiIdentification(
+  itemName: string,
+  query: string,
+  category: string,
+  categoryGroup: string,
+  reasoning: string
+): ProductIdentification {
+  return {
+    itemName: itemName || query || "Gemini 品名候補なし",
+    brand: "",
+    model: "",
+    category: category || "Gemini image understanding",
+    categoryGroup: categoryGroup || "other",
+    conditionSummary: "一致結果なし",
+    confidence: 0,
+    searchQuery: query,
+    reasoning,
+  };
+}
+
+async function searchListingsByGemini(
+  images: { data: string; contentType?: string }[]
+): Promise<SearchListingsResult> {
+  const attempts = await Promise.all([
+    runGeminiSearchAttempt("primary-only", [images[0]]),
+    ...(images.length > 1 ? [runGeminiSearchAttempt("all-images", images)] : []),
+  ]);
+  const selectedAttempt = pickBestGeminiAttempt(attempts);
+  const gemini = selectedAttempt.gemini;
+  const candidates = selectedAttempt.candidates;
+  const bestSearch = selectedAttempt.bestSearch;
+  const topCandidate = candidates[0] || null;
+  const attemptDebug = attempts.map((attempt) => ({
+    mode: attempt.mode,
+    usedImageCount: attempt.inputImageCount,
+    itemName: attempt.gemini?.itemName || "",
+    topQuery: attempt.candidates[0]?.query || "",
+    listingCount: attempt.bestSearch?.filteredListings.length || 0,
+    selectionScore: Number(attempt.selectionScore.toFixed(1)),
+    selected: attempt === selectedAttempt,
+    errorMessage: attempt.errorMessage || null,
+  }));
+  const selectedGeminiStage = gemini
+    ? {
+        ...gemini.stage,
+        mode: selectedAttempt.mode,
+        attempts: attemptDebug,
+        warning:
+          selectedAttempt.mode === "primary-only" && attempts.length > 1
+            ? "追加画像ありの同定結果も比較しましたが、1枚目のみの結果を採用しました。"
+            : gemini.stage.warning,
+      }
+    : {
+        provider: "gemini" as const,
+        model: process.env.GEMINI_MODEL || "gemini-3-pro-preview",
+        mode: selectedAttempt.mode,
+        latencyMs: 0,
+        itemName: "",
+        brand: "",
+        modelName: "",
+        category: "",
+        confidence: 0,
+        usedImageCount: selectedAttempt.inputImageCount,
+        queryCandidates: [],
+        evidence: [],
+        warning: null,
+        attempts: attemptDebug,
+        errorMessage:
+          selectedAttempt.errorMessage ||
+          attempts.find((attempt) => attempt.errorMessage)?.errorMessage ||
+          null,
+      };
+  const baseDebug: AppraisalDebug = {
+    pipelineVersion: "2026-04-22-gemini-3-image-understanding-v1",
+    selectedImageIndex: bestSearch?.candidate.imageIndex ?? topCandidate?.imageIndex ?? null,
+    imageStages: [],
+    geminiStage: selectedGeminiStage,
+    identificationProvider: "gemini-3-image-understanding",
+    queryStage: bestSearch ? buildQueryCandidateStage(bestSearch) : null,
+  };
+
+  if (!bestSearch || bestSearch.filteredListings.length === 0) {
+    return {
+      identification: buildEmptyGeminiIdentification(
+        gemini?.itemName || "",
+        topCandidate?.query || "",
+        gemini?.category || "",
+        gemini?.categoryGroup || "",
+        topCandidate
+          ? "Gemini 3 で品名候補は出ましたが、eBayテキスト検索で価格参照を取得できませんでした。"
+          : "Gemini 3 で十分な品名候補を取得できませんでした。"
+      ),
+      listings: [],
+      accessoryFilteredCount: 0,
+      debug: baseDebug,
+    };
+  }
+
+  if (!gemini) {
+    return {
+      identification: buildEmptyGeminiIdentification(
+        "",
+        "",
+        "",
+        "",
+        "Gemini 3 の画像同定に失敗しました。"
+      ),
+      listings: [],
+      accessoryFilteredCount: 0,
+      debug: baseDebug,
+    };
+  }
+
+  const identification = identifyFromListings(bestSearch.filteredListings);
+  const listingConfidence = scoreFromListings(bestSearch.filteredListings);
+  const queryConfidence = Math.min(0.15, bestSearch.candidate.score / 700);
+  const confidence = Math.min(
+    0.97,
+    Math.max(listingConfidence, gemini.confidence * 0.7 + listingConfidence * 0.25 + queryConfidence)
+  );
+
+  return {
+    identification: {
+      ...identification,
+      itemName: gemini.itemName || identification.itemName,
+      brand: gemini.brand || identification.brand,
+      model: gemini.model || identification.model,
+      category: gemini.category || identification.category,
+      categoryGroup: gemini.categoryGroup || identification.categoryGroup,
+      conditionSummary: "Gemini 3 画像同定ベース",
+      confidence,
+      searchQuery: bestSearch.candidate.query,
+      reasoning:
+        attempts.length > 1
+          ? `Gemini 3 で1枚目のみと全画像の品名候補を比較し、${selectedAttempt.mode === "all-images" ? "全画像" : "1枚目のみ"}の結果を採用して eBay テキスト検索で価格参照を集めています。`
+          : "Gemini 3 の画像入力で品名候補を作り、その検索語で eBay テキスト検索をかけて価格参照を集めています。",
+    },
+    listings: bestSearch.filteredListings,
+    accessoryFilteredCount: bestSearch.accessoryFilteredCount,
+    debug: baseDebug,
+  };
+}
+
 function attachGoogleVisionAttemptToFallback(
   fallback: SearchListingsResult,
   googleAttempt: SearchListingsResult
@@ -1402,16 +1639,28 @@ function attachGoogleVisionAttemptToFallback(
 export async function searchListingsByImage(images: { data: string }[]): Promise<SearchListingsResult> {
   const provider = getImageIdentificationProvider();
 
-  if (provider === "ebay-image" || !isGoogleVisionConfigured()) {
+  if (provider === "ebay-image") {
     return searchListingsByEbayImage(images);
   }
 
-  const googleAttempt = await searchListingsByGoogleVision(images);
+  if (provider === "gemini" || (provider === "auto" && isGeminiConfigured())) {
+    const geminiAttempt = await searchListingsByGemini(images);
 
-  if (googleAttempt.listings.length > 0 || provider === "google-vision") {
-    return googleAttempt;
+    if (geminiAttempt.listings.length > 0 || provider === "gemini") {
+      return geminiAttempt;
+    }
   }
 
-  const fallback = await searchListingsByEbayImage(images);
-  return attachGoogleVisionAttemptToFallback(fallback, googleAttempt);
+  if (provider === "google-vision" || (provider === "auto" && isGoogleVisionConfigured())) {
+    const googleAttempt = await searchListingsByGoogleVision(images);
+
+    if (googleAttempt.listings.length > 0 || provider === "google-vision") {
+      return googleAttempt;
+    }
+
+    const fallback = await searchListingsByEbayImage(images);
+    return attachGoogleVisionAttemptToFallback(fallback, googleAttempt);
+  }
+
+  return searchListingsByEbayImage(images);
 }

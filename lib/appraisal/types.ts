@@ -121,12 +121,51 @@ export type VisionImageDebugStage = {
   errorMessage?: string | null;
 };
 
+export type GeminiQueryCandidateDebug = {
+  query: string;
+  score: number;
+  reason: string;
+};
+
+export type GeminiAttemptDebug = {
+  mode: "primary-only" | "all-images";
+  usedImageCount: number;
+  itemName: string;
+  topQuery: string;
+  listingCount: number;
+  selectionScore: number;
+  selected: boolean;
+  errorMessage?: string | null;
+};
+
+export type GeminiIdentificationDebug = {
+  provider: "gemini";
+  model: string;
+  mode?: "primary-only" | "all-images";
+  latencyMs: number;
+  itemName: string;
+  brand: string;
+  modelName: string;
+  category: string;
+  confidence: number;
+  usedImageCount: number;
+  queryCandidates: GeminiQueryCandidateDebug[];
+  evidence: string[];
+  warning?: string | null;
+  attempts?: GeminiAttemptDebug[];
+  errorMessage?: string | null;
+};
+
 export type AppraisalDebug = {
   pipelineVersion: string;
   selectedImageIndex: number | null;
   imageStages: ImageSearchDebugStage[];
   visionStages?: VisionImageDebugStage[];
-  identificationProvider?: "google-vision-web-detection" | "ebay-search-by-image";
+  geminiStage?: GeminiIdentificationDebug;
+  identificationProvider?:
+    | "google-vision-web-detection"
+    | "gemini-3-image-understanding"
+    | "ebay-search-by-image";
   queryStage: QuerySearchDebugStage | null;
 };
 
