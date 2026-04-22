@@ -6,6 +6,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./page.module.css";
 import type { AppraisalHistoryItem } from "@/lib/appraisal/types";
 import {
+  getConditionRankLabel,
   getEffectiveMaxPrice,
   groupHistoryItems,
   mergeStoredAppointmentsWithHistory,
@@ -621,8 +622,17 @@ export default function AppointmentDetailPage() {
                         <span className={styles.itemPrice}>
                           {formatCurrency(getEffectiveMaxPrice(item))}
                         </span>
-                        {item.manualMaxPrice !== null && (
+                        {item.conditionRank ? (
+                          <span className={styles.itemPriceBadge}>
+                            {getConditionRankLabel(item.conditionRank)}
+                          </span>
+                        ) : item.manualMaxPrice !== null ? (
                           <span className={styles.itemPriceBadge}>手動Max</span>
+                        ) : null}
+                        {item.conditionRank && (
+                          <span className={styles.itemPriceSub}>
+                            自動Max {formatCurrency(item.pricing.suggestedMaxPrice)}
+                          </span>
                         )}
                       </div>
                     </div>
@@ -641,7 +651,7 @@ export default function AppointmentDetailPage() {
                           )} – ${formatCurrency(item.pricing.buyPriceRangeHigh)} · ${
                             item.pricing.listingCount
                           }件参照`}
-                      {item.manualMaxPrice !== null
+                      {item.manualMaxPrice !== null && !item.conditionRank
                         ? ` · 自動Max ${formatCurrency(item.pricing.suggestedMaxPrice)}`
                         : ""}
                     </p>

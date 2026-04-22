@@ -59,6 +59,8 @@ export type AppraisalHistoryPricing = {
   listingCount: number;
 };
 
+export type AppraisalConditionRank = "A" | "B" | "C";
+
 export type AppraisalHistoryItem = {
   id: string;
   createdAt: string;
@@ -68,6 +70,7 @@ export type AppraisalHistoryItem = {
   identification: ProductIdentification;
   pricing: AppraisalHistoryPricing;
   manualMaxPrice: number | null;
+  conditionRank: AppraisalConditionRank | null;
   offerPrice: number | null;
   contractPrice: number | null;
   isExcluded: boolean;

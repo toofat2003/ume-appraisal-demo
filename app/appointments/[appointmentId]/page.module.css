@@ -375,6 +375,11 @@
   font: 800 10px/1 var(--font-body);
 }
 
+.itemPriceSub {
+  color: var(--text-muted);
+  font: 700 10px/1.2 var(--font-body);
+}
+
 .itemMeta,
 .itemPriceRow {
   margin: 0;

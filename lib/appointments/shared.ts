@@ -1,4 +1,8 @@
-import type { AppraisalAppointmentGroup, AppraisalHistoryItem } from "@/lib/appraisal/types";
+import type {
+  AppraisalAppointmentGroup,
+  AppraisalConditionRank,
+  AppraisalHistoryItem,
+} from "@/lib/appraisal/types";
 
 export type ActiveAppointment = {
   id: string;
@@ -20,8 +24,40 @@ export type AppointmentOption = {
   hasSavedItems: boolean;
 };
 
+export const CONDITION_RANK_OPTIONS: Array<{
+  rank: AppraisalConditionRank | null;
+  label: string;
+  multiplier: number;
+}> = [
+  { rank: null, label: "元Max", multiplier: 1 },
+  { rank: "A", label: "ランクA", multiplier: 0.6 },
+  { rank: "B", label: "ランクB", multiplier: 0.5 },
+  { rank: "C", label: "ランクC", multiplier: 0.2 },
+];
+
+export function getConditionRankMultiplier(
+  rank: AppraisalConditionRank | null
+): number {
+  return CONDITION_RANK_OPTIONS.find((option) => option.rank === rank)?.multiplier ?? 1;
+}
+
+export function getConditionAdjustedMaxPrice(
+  baseMaxPrice: number,
+  rank: AppraisalConditionRank | null
+): number {
+  return Math.round(baseMaxPrice * getConditionRankMultiplier(rank));
+}
+
+export function getConditionRankLabel(rank: AppraisalConditionRank | null): string {
+  return CONDITION_RANK_OPTIONS.find((option) => option.rank === rank)?.label ?? "元Max";
+}
+
 export function getEffectiveMaxPrice(item: AppraisalHistoryItem): number {
-  return item.manualMaxPrice ?? item.pricing.suggestedMaxPrice;
+  return (
+    item.manualMaxPrice ??
+    getConditionAdjustedMaxPrice(item.pricing.suggestedMaxPrice, item.conditionRank) ??
+    item.pricing.suggestedMaxPrice
+  );
 }
 
 export function groupHistoryItems(items: AppraisalHistoryItem[]): AppraisalAppointmentGroup[] {

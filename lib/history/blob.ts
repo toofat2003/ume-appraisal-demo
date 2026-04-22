@@ -1,5 +1,9 @@
 import { list, put } from "@vercel/blob";
-import { AppraisalHistoryImage, AppraisalHistoryItem } from "@/lib/appraisal/types";
+import {
+  AppraisalConditionRank,
+  AppraisalHistoryImage,
+  AppraisalHistoryItem,
+} from "@/lib/appraisal/types";
 import {
   DEFAULT_HISTORY_LIMIT,
   ListAppraisalHistoryOptions,
@@ -54,6 +58,10 @@ function isAppraisalHistoryItem(value: unknown): value is AppraisalHistoryItem {
   );
 }
 
+function normalizeConditionRank(value: unknown): AppraisalConditionRank | null {
+  return value === "A" || value === "B" || value === "C" ? value : null;
+}
+
 async function fetchHistoryRecord(url: string): Promise<AppraisalHistoryItem | null> {
   const response = await fetch(url, { cache: "no-store" });
   if (!response.ok) {
@@ -71,6 +79,7 @@ async function fetchHistoryRecord(url: string): Promise<AppraisalHistoryItem | n
       typeof payload.manualMaxPrice === "number" && Number.isFinite(payload.manualMaxPrice)
         ? payload.manualMaxPrice
         : null,
+    conditionRank: normalizeConditionRank(payload.conditionRank),
     offerPrice:
       typeof payload.offerPrice === "number" && Number.isFinite(payload.offerPrice)
         ? payload.offerPrice
@@ -150,6 +159,7 @@ export async function createAppraisalHistorySessionInBlob(
     identification: input.identification,
     pricing: mapPricing(input.pricing),
     manualMaxPrice: input.manualMaxPrice ?? null,
+    conditionRank: input.conditionRank ?? null,
     offerPrice: input.offerPrice ?? null,
     contractPrice: input.contractPrice ?? input.offerPrice ?? null,
     isExcluded: Boolean(input.isExcluded),
@@ -257,6 +267,8 @@ export async function updateAppraisalHistoryItemInBlob(
     ...item,
     manualMaxPrice:
       "manualMaxPrice" in input ? input.manualMaxPrice ?? null : item.manualMaxPrice,
+    conditionRank:
+      "conditionRank" in input ? input.conditionRank ?? null : item.conditionRank,
     offerPrice: "offerPrice" in input ? input.offerPrice ?? null : item.offerPrice,
     contractPrice:
       "offerPrice" in input

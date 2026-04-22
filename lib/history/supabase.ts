@@ -1,5 +1,9 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import { AppraisalHistoryImage, AppraisalHistoryItem } from "@/lib/appraisal/types";
+import {
+  AppraisalConditionRank,
+  AppraisalHistoryImage,
+  AppraisalHistoryItem,
+} from "@/lib/appraisal/types";
 import {
   DEFAULT_HISTORY_LIMIT,
   ListAppraisalHistoryOptions,
@@ -40,6 +44,7 @@ type SessionRow = {
   high_price: number;
   listing_count: number;
   manual_max_price: number | null;
+  condition_rank: string | null;
   offer_price: number | null;
   contract_price: number | null;
   is_excluded: boolean | null;
@@ -80,6 +85,7 @@ const SESSION_SELECT = `
   high_price,
   listing_count,
   manual_max_price,
+  condition_rank,
   offer_price,
   contract_price,
   is_excluded,
@@ -168,6 +174,10 @@ function mapImageRowsToHistoryImages(images: ImageRow[] = []): AppraisalHistoryI
     }));
 }
 
+function mapConditionRank(value: string | null | undefined): AppraisalConditionRank | null {
+  return value === "A" || value === "B" || value === "C" ? value : null;
+}
+
 function mapSessionRowToHistoryItem(row: SessionRow): AppraisalHistoryItem {
   return {
     id: row.id,
@@ -196,6 +206,7 @@ function mapSessionRowToHistoryItem(row: SessionRow): AppraisalHistoryItem {
       listingCount: row.listing_count,
     },
     manualMaxPrice: row.manual_max_price ?? null,
+    conditionRank: mapConditionRank(row.condition_rank),
     offerPrice: row.offer_price ?? null,
     contractPrice: row.contract_price ?? null,
     isExcluded: Boolean(row.is_excluded),
@@ -218,6 +229,7 @@ function buildHistoryItemFromInput(
     identification: input.identification,
     pricing: mapPricing(input.pricing),
     manualMaxPrice: input.manualMaxPrice ?? null,
+    conditionRank: input.conditionRank ?? null,
     offerPrice: input.offerPrice ?? null,
     contractPrice: input.contractPrice ?? input.offerPrice ?? null,
     isExcluded: Boolean(input.isExcluded),
@@ -258,6 +270,7 @@ export async function createAppraisalHistorySessionInSupabase(
     high_price: input.pricing.high,
     listing_count: input.pricing.listingCount,
     manual_max_price: input.manualMaxPrice ?? null,
+    condition_rank: input.conditionRank ?? null,
     offer_price: input.offerPrice ?? null,
     contract_price: input.contractPrice ?? input.offerPrice ?? null,
     is_excluded: Boolean(input.isExcluded),
@@ -392,10 +405,14 @@ export async function updateAppraisalHistoryItemInSupabase(
     return null;
   }
 
-  const updatePayload: Record<string, number | boolean | null> = {};
+  const updatePayload: Record<string, number | boolean | string | null> = {};
 
   if ("manualMaxPrice" in input) {
     updatePayload.manual_max_price = input.manualMaxPrice ?? null;
+  }
+
+  if ("conditionRank" in input) {
+    updatePayload.condition_rank = input.conditionRank ?? null;
   }
 
   if ("offerPrice" in input) {

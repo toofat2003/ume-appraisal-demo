@@ -1,4 +1,8 @@
-import { PricingSummary, ProductIdentification } from "@/lib/appraisal/types";
+import {
+  AppraisalConditionRank,
+  PricingSummary,
+  ProductIdentification,
+} from "@/lib/appraisal/types";
 
 export const DEFAULT_HISTORY_LIMIT = 60;
 export const APPOINTMENT_HISTORY_LIMIT = 200;
@@ -15,6 +19,7 @@ export type SaveAppraisalHistoryInput = {
   appointmentId?: string | null;
   appointmentLabel?: string | null;
   manualMaxPrice?: number | null;
+  conditionRank?: AppraisalConditionRank | null;
   offerPrice?: number | null;
   contractPrice?: number | null;
   isExcluded?: boolean;
@@ -48,6 +53,7 @@ export type RenameAppointmentResult = {
 export type UpdateAppraisalHistoryItemInput = {
   itemId: string;
   manualMaxPrice?: number | null;
+  conditionRank?: AppraisalConditionRank | null;
   offerPrice?: number | null;
   contractPrice?: number | null;
   isExcluded?: boolean;

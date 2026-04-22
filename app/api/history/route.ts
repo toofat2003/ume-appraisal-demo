@@ -14,6 +14,7 @@ import {
   getUserAgentFromRequest,
   logErrorEvent,
 } from "@/lib/observability/server";
+import type { AppraisalConditionRank } from "@/lib/appraisal/types";
 
 export const dynamic = "force-dynamic";
 
@@ -83,6 +84,7 @@ export async function PATCH(request: Request) {
       appointmentLabel?: unknown;
       itemId?: unknown;
       manualMaxPrice?: unknown;
+      conditionRank?: unknown;
       offerPrice?: unknown;
       contractPrice?: unknown;
       isExcluded?: unknown;
@@ -109,11 +111,35 @@ export async function PATCH(request: Request) {
       const manualMaxPrice = normalizePrice(payload.manualMaxPrice);
       const offerPrice = normalizePrice(payload.offerPrice);
       const contractPrice = normalizePrice(payload.contractPrice);
+      const normalizeConditionRank = (
+        value: unknown
+      ): { value: AppraisalConditionRank | null | undefined; error: string | null } => {
+        if (value === undefined) {
+          return { value: undefined, error: null };
+        }
+        if (value === null || value === "") {
+          return { value: null, error: null };
+        }
+        if (value === "A" || value === "B" || value === "C") {
+          return { value, error: null };
+        }
+        return { value: undefined, error: "状態ランクはA/B/Cから選択してください。" };
+      };
+      const conditionRank = normalizeConditionRank(payload.conditionRank);
 
-      if (manualMaxPrice.error || offerPrice.error || contractPrice.error) {
+      if (
+        manualMaxPrice.error ||
+        offerPrice.error ||
+        contractPrice.error ||
+        conditionRank.error
+      ) {
         return NextResponse.json(
           {
-            error: manualMaxPrice.error || offerPrice.error || contractPrice.error,
+            error:
+              manualMaxPrice.error ||
+              offerPrice.error ||
+              contractPrice.error ||
+              conditionRank.error,
           },
           { status: 400 }
         );
@@ -122,6 +148,7 @@ export async function PATCH(request: Request) {
       const updateInput: {
         itemId: string;
         manualMaxPrice?: number | null;
+        conditionRank?: AppraisalConditionRank | null;
         offerPrice?: number | null;
         contractPrice?: number | null;
         isExcluded?: boolean;
@@ -130,6 +157,10 @@ export async function PATCH(request: Request) {
 
       if (manualMaxPrice.value !== undefined) {
         updateInput.manualMaxPrice = manualMaxPrice.value;
+      }
+
+      if (conditionRank.value !== undefined) {
+        updateInput.conditionRank = conditionRank.value;
       }
 
       if (offerPrice.value !== undefined) {
