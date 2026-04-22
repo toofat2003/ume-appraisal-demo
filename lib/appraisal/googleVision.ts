@@ -3,6 +3,28 @@ import type { VisionCandidateDebug, VisionImageDebugStage } from "@/lib/appraisa
 const VISION_ANNOTATE_URL = "https://vision.googleapis.com/v1/images:annotate";
 const MAX_CANDIDATES_PER_IMAGE = 8;
 const MAX_TEXT_SNIPPETS = 8;
+const OCR_NOISE_TERMS = new Set([
+  "i",
+  "ii",
+  "iii",
+  "iv",
+  "v",
+  "vi",
+  "vii",
+  "viii",
+  "ix",
+  "x",
+  "xi",
+  "xii",
+]);
+const LOW_VALUE_VISUAL_LABELS = new Set([
+  "close-up",
+  "close up",
+  "image",
+  "photo",
+  "photograph",
+  "product",
+]);
 
 type WebEntity = {
   description?: string;
@@ -72,12 +94,76 @@ function candidateKey(value: string): string {
   return normalizeCandidate(value).toLowerCase();
 }
 
+function isLowValueVisualLabel(value: string): boolean {
+  return LOW_VALUE_VISUAL_LABELS.has(value.toLowerCase());
+}
+
 function splitOcrText(text: string): string[] {
   return text
     .split(/\n+/)
     .map((line) => normalizeCandidate(line))
     .filter((line) => line.length >= 3 && line.length <= 80)
     .slice(0, MAX_TEXT_SNIPPETS);
+}
+
+function isUsefulOcrTerm(value: string): boolean {
+  const normalized = value.toLowerCase();
+
+  if (OCR_NOISE_TERMS.has(normalized)) {
+    return false;
+  }
+
+  if (/^\d+\/\d+$/.test(normalized)) {
+    return false;
+  }
+
+  if (/^[ivx]+$/i.test(value)) {
+    return false;
+  }
+
+  if (/^[a-z]?[ivx]+[a-z]?$/i.test(value)) {
+    return false;
+  }
+
+  return /[a-z]/i.test(value) || /^[a-z]?\d{4,8}[a-z]?$/i.test(value);
+}
+
+function buildCompositeOcrQueries(
+  imageIndex: number,
+  scores: Map<string, GoogleVisionCandidate>,
+  logoDescriptions: string[],
+  textSnippets: string[],
+  bestGuessLabels: string[]
+) {
+  const usefulText = textSnippets.filter(isUsefulOcrTerm);
+  const brandCandidates = [...logoDescriptions, ...usefulText].filter((value) =>
+    /^[a-z][a-z .'-]{2,30}$/i.test(value)
+  );
+  const brand = brandCandidates[0];
+
+  if (!brand || usefulText.length === 0) {
+    return;
+  }
+
+  const modelTerms = usefulText
+    .filter((term) => term.toLowerCase() !== brand.toLowerCase())
+    .filter((term) => !/^(precision|automatic|quartz|chronometer)$/i.test(term))
+    .slice(0, 4);
+
+  if (modelTerms.length > 0) {
+    addCandidate(
+      scores,
+      imageIndex,
+      `${brand} ${modelTerms.slice(0, 3).join(" ")}`,
+      165,
+      "logo+ocr"
+    );
+  }
+
+  const bestGuess = bestGuessLabels.find((label) => !/close-up/i.test(label));
+  if (bestGuess && !/wall clock|clock face/i.test(bestGuess)) {
+    addCandidate(scores, imageIndex, `${brand} ${bestGuess}`, 125, "logo+bestGuessLabel");
+  }
 }
 
 function addCandidate(
@@ -88,7 +174,12 @@ function addCandidate(
   source: string
 ) {
   const normalized = normalizeCandidate(query);
-  if (!normalized || normalized.length < 3 || normalized.length > 120) {
+  if (
+    !normalized ||
+    normalized.length < 3 ||
+    normalized.length > 120 ||
+    isLowValueVisualLabel(normalized)
+  ) {
     return;
   }
 
@@ -194,9 +285,16 @@ async function annotateSingleImage(
       ?.map((logo) => normalizeCandidate(logo.description || ""))
       .filter(Boolean) || [];
   const textSnippets = splitOcrText(result?.textAnnotations?.[0]?.description || "");
+  const hasStrongOcrOrLogo = logoDescriptions.length > 0 || textSnippets.some(isUsefulOcrTerm);
 
   bestGuessLabels.forEach((label, index) => {
-    addCandidate(scores, imageIndex, label, 100 - index * 8, "bestGuessLabel");
+    addCandidate(
+      scores,
+      imageIndex,
+      label,
+      (hasStrongOcrOrLogo ? 72 : 100) - index * 8,
+      "bestGuessLabel"
+    );
   });
 
   webEntities.forEach((entity, index) => {
@@ -216,6 +314,8 @@ async function annotateSingleImage(
   textSnippets.forEach((snippet, index) => {
     addCandidate(scores, imageIndex, snippet, 42 - index * 3, "ocr");
   });
+
+  buildCompositeOcrQueries(imageIndex, scores, logoDescriptions, textSnippets, bestGuessLabels);
 
   pageTitles.slice(0, 6).forEach((title, index) => {
     addCandidate(scores, imageIndex, title, 26 - index * 2, "matchingPageTitle");
