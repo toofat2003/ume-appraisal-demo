@@ -31,8 +31,34 @@ type PreviewState = {
   url: string | null;
 };
 
+type SelectedPhoto = {
+  file: File;
+  slotLabel: string;
+};
+
+type BatchItemStatus = "queued" | "running" | "done" | "error";
+
+type BatchItem = {
+  id: string;
+  file: File;
+  url: string;
+  status: BatchItemStatus;
+  result: AppraisalResult | null;
+  error: string | null;
+  errorId: string | null;
+  startedAt: number | null;
+  finishedAt: number | null;
+};
+
+type AppraisalRequestError = Error & {
+  serverErrorId?: string | null;
+};
+
 const EMPTY_SLOT: PreviewState = { file: null, url: null };
 const MAX_HISTORY_ITEMS = 60;
+const MAX_BATCH_ITEMS = 10;
+const BATCH_CONCURRENCY = 3;
+const HISTORY_REFRESH_DELAYS_MS = [5000, 15000];
 
 const PHOTO_SLOTS = [
   {
@@ -116,11 +142,29 @@ export default function HomePage() {
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [isHistoryLoading, setIsHistoryLoading] = useState(true);
   const [historyEnabled, setHistoryEnabled] = useState(false);
+  const [batchItems, setBatchItems] = useState<BatchItem[]>([]);
+  const [batchError, setBatchError] = useState<string | null>(null);
+  const [isBatchRunning, setIsBatchRunning] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([null, null, null]);
+  const batchInputRef = useRef<HTMLInputElement | null>(null);
+  const batchItemsRef = useRef<BatchItem[]>([]);
   const resultsRef = useRef<HTMLElement>(null);
   const clientSessionIdRef = useRef<string | null>(null);
 
   const hasPhotos = previews.some((p) => p.file !== null);
+  const batchCompletedCount = batchItems.filter(
+    (item) => item.status === "done" || item.status === "error"
+  ).length;
+  const batchDoneCount = batchItems.filter((item) => item.status === "done").length;
+  const batchRunningCount = batchItems.filter((item) => item.status === "running").length;
+  const batchTotalMaxPrice = batchItems.reduce(
+    (sum, item) => sum + (item.result?.pricing.suggestedMaxPrice || 0),
+    0
+  );
+
+  useEffect(() => {
+    batchItemsRef.current = batchItems;
+  }, [batchItems]);
 
   useEffect(() => {
     if (result && resultsRef.current) {
@@ -136,6 +180,14 @@ export default function HomePage() {
     clientSessionIdRef.current = getOrCreateClientSessionId();
     setActiveAppointment(readStoredAppointment());
     setStoredAppointments(readStoredAppointments());
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      for (const item of batchItemsRef.current) {
+        URL.revokeObjectURL(item.url);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -279,13 +331,23 @@ export default function HomePage() {
     setAppointmentError(null);
   }
 
-  function addSavedHistoryItem(savedHistoryItem: AppraisalHistoryItem) {
+  function scheduleHistoryRefresh() {
+    void loadHistory({ silent: true });
+    for (const delayMs of HISTORY_REFRESH_DELAYS_MS) {
+      window.setTimeout(() => void loadHistory({ silent: true }), delayMs);
+    }
+  }
+
+  function addSavedHistoryItem(
+    savedHistoryItem: AppraisalHistoryItem,
+    appointmentOverride: ActiveAppointment | null = activeAppointment
+  ) {
     setHistoryEnabled(true);
-    if (activeAppointment) {
+    if (appointmentOverride) {
       setStoredAppointments((current) => {
         const next = upsertStoredAppointment(
           current,
-          activeAppointment,
+          appointmentOverride,
           savedHistoryItem.createdAt
         );
         persistStoredAppointments(next);
@@ -296,6 +358,56 @@ export default function HomePage() {
       const deduped = current.filter((item) => item.id !== savedHistoryItem.id);
       return [savedHistoryItem, ...deduped].slice(0, MAX_HISTORY_ITEMS);
     });
+  }
+
+  async function submitAppraisalRequest(
+    selectedPhotos: SelectedPhoto[],
+    appointment: ActiveAppointment | null
+  ): Promise<AppraisalResult> {
+    const formData = new FormData();
+    for (const photo of selectedPhotos) {
+      formData.append("images", photo.file);
+      formData.append("imageSlotLabels", photo.slotLabel);
+    }
+    if (appointment) {
+      formData.append("appointmentId", appointment.id);
+      formData.append("appointmentLabel", appointment.label);
+    }
+
+    const clientSessionId =
+      clientSessionIdRef.current || getOrCreateClientSessionId();
+    clientSessionIdRef.current = clientSessionId;
+    const response = await fetch("/api/appraisal", {
+      method: "POST",
+      headers: clientSessionId
+        ? { "x-client-session-id": clientSessionId }
+        : undefined,
+      body: formData,
+    });
+
+    const responseText = await response.text();
+    let payload: unknown;
+    try {
+      payload = JSON.parse(responseText);
+    } catch {
+      const parseError = new Error("査定結果の読み取りに失敗しました") as AppraisalRequestError;
+      parseError.serverErrorId = null;
+      throw parseError;
+    }
+
+    const payloadRecord =
+      payload && typeof payload === "object" ? (payload as Record<string, unknown>) : {};
+
+    if (!response.ok) {
+      const requestError = new Error(
+        typeof payloadRecord.error === "string" ? payloadRecord.error : "査定に失敗しました"
+      ) as AppraisalRequestError;
+      requestError.serverErrorId =
+        typeof payloadRecord.errorId === "string" ? payloadRecord.errorId : null;
+      throw requestError;
+    }
+
+    return payload as AppraisalResult;
   }
 
   async function handleManualSubmit(event: FormEvent<HTMLFormElement>) {
@@ -410,6 +522,189 @@ export default function HomePage() {
     }
   }
 
+  function handleBatchFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const selectedFiles = Array.from(event.target.files || []);
+    const nextFiles = selectedFiles.slice(0, MAX_BATCH_ITEMS);
+
+    setBatchItems((current) => {
+      for (const item of current) {
+        URL.revokeObjectURL(item.url);
+      }
+
+      return nextFiles.map((file) => ({
+        id: crypto.randomUUID(),
+        file,
+        url: URL.createObjectURL(file),
+        status: "queued" as const,
+        result: null,
+        error: null,
+        errorId: null,
+        startedAt: null,
+        finishedAt: null,
+      }));
+    });
+    setBatchError(
+      selectedFiles.length > MAX_BATCH_ITEMS
+        ? `一括査定は最大${MAX_BATCH_ITEMS}商品までです。先頭${MAX_BATCH_ITEMS}枚だけ追加しました。`
+        : null
+    );
+  }
+
+  function removeBatchItem(itemId: string) {
+    if (isBatchRunning) {
+      return;
+    }
+
+    setBatchItems((current) => {
+      const item = current.find((candidate) => candidate.id === itemId);
+      if (item) {
+        URL.revokeObjectURL(item.url);
+      }
+      return current.filter((candidate) => candidate.id !== itemId);
+    });
+  }
+
+  function clearBatchItems() {
+    if (isBatchRunning) {
+      return;
+    }
+
+    setBatchItems((current) => {
+      for (const item of current) {
+        URL.revokeObjectURL(item.url);
+      }
+      return [];
+    });
+    setBatchError(null);
+    if (batchInputRef.current) {
+      batchInputRef.current.value = "";
+    }
+  }
+
+  function handleBatchSubmit() {
+    if (isBatchRunning) {
+      return;
+    }
+
+    const itemsToRun = batchItems.slice(0, MAX_BATCH_ITEMS);
+    if (itemsToRun.length === 0) {
+      setBatchError("一括査定する写真を選択してください");
+      return;
+    }
+
+    const appointmentAtStart = activeAppointment;
+    setBatchError(null);
+    setIsBatchRunning(true);
+    setResult(null);
+    setBatchItems((current) =>
+      current.map((item) => ({
+        ...item,
+        status: "queued",
+        result: null,
+        error: null,
+        errorId: null,
+        startedAt: null,
+        finishedAt: null,
+      }))
+    );
+
+    let nextIndex = 0;
+    const runWorker = async () => {
+      while (nextIndex < itemsToRun.length) {
+        const item = itemsToRun[nextIndex];
+        nextIndex += 1;
+
+        setBatchItems((current) =>
+          current.map((candidate) =>
+            candidate.id === item.id
+              ? {
+                  ...candidate,
+                  status: "running",
+                  startedAt: Date.now(),
+                  finishedAt: null,
+                }
+              : candidate
+          )
+        );
+
+        try {
+          const nextResult = await submitAppraisalRequest(
+            [{ file: item.file, slotLabel: "全体" }],
+            appointmentAtStart
+          );
+
+          setResult(nextResult);
+          if (nextResult.savedHistoryItem) {
+            addSavedHistoryItem(nextResult.savedHistoryItem, appointmentAtStart);
+          }
+
+          setBatchItems((current) =>
+            current.map((candidate) =>
+              candidate.id === item.id
+                ? {
+                    ...candidate,
+                    status: "done",
+                    result: nextResult,
+                    error: null,
+                    errorId: null,
+                    finishedAt: Date.now(),
+                  }
+                : candidate
+            )
+          );
+          scheduleHistoryRefresh();
+        } catch (err) {
+          const requestError = err as AppraisalRequestError;
+          const message =
+            err instanceof Error ? err.message : "査定に失敗しました";
+          const errorId = requestError.serverErrorId || null;
+
+          void reportClientError({
+            source: "appraisal.batch.item",
+            message,
+            errorName: err instanceof Error ? err.name : null,
+            stack: err instanceof Error ? err.stack || null : null,
+            metadata: {
+              fileName: item.file.name,
+              fileSize: item.file.size,
+              fileType: item.file.type || "unknown",
+              appointmentId: appointmentAtStart?.id || null,
+              serverErrorId: errorId,
+            },
+          });
+
+          setBatchItems((current) =>
+            current.map((candidate) =>
+              candidate.id === item.id
+                ? {
+                    ...candidate,
+                    status: "error",
+                    error: message,
+                    errorId,
+                    finishedAt: Date.now(),
+                  }
+                : candidate
+            )
+          );
+        }
+      }
+    };
+
+    void (async () => {
+      try {
+        await Promise.all(
+          Array.from(
+            { length: Math.min(BATCH_CONCURRENCY, itemsToRun.length) },
+            () => runWorker()
+          )
+        );
+      } finally {
+        setIsBatchRunning(false);
+        scheduleHistoryRefresh();
+      }
+    })();
+  }
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
@@ -417,7 +712,7 @@ export default function HomePage() {
     setResult(null);
     setAppointmentError(null);
 
-    const selectedPhotos = previews.flatMap((preview, index) =>
+    const selectedPhotos: SelectedPhoto[] = previews.flatMap((preview, index) =>
       preview.file
         ? [{ file: preview.file, slotLabel: PHOTO_SLOTS[index].label as string }]
         : []
@@ -433,47 +728,23 @@ export default function HomePage() {
     let serverErrorId: string | null = null;
     void (async () => {
       try {
-        const formData = new FormData();
-        for (const photo of selectedPhotos) {
-          formData.append("images", photo.file);
-          formData.append("imageSlotLabels", photo.slotLabel);
-        }
-        if (activeAppointment) {
-          formData.append("appointmentId", activeAppointment.id);
-          formData.append("appointmentLabel", activeAppointment.label);
-        }
-
-        const clientSessionId =
-          clientSessionIdRef.current || getOrCreateClientSessionId();
-        clientSessionIdRef.current = clientSessionId;
-        const response = await fetch("/api/appraisal", {
-          method: "POST",
-          headers: clientSessionId
-            ? { "x-client-session-id": clientSessionId }
-            : undefined,
-          body: formData,
-        });
-
-        const payload = await response.json();
-        if (!response.ok) {
-          if (typeof payload.errorId === "string") {
-            serverErrorId = payload.errorId;
-            setErrorReference(payload.errorId);
-          }
-          throw new Error(payload.error || "査定に失敗しました");
-        }
-
-        const nextResult = payload as AppraisalResult;
+        const nextResult = await submitAppraisalRequest(
+          selectedPhotos,
+          activeAppointment
+        );
         setResult(nextResult);
 
         if (nextResult.savedHistoryItem) {
           addSavedHistoryItem(nextResult.savedHistoryItem);
         }
 
-        void loadHistory({ silent: true });
-        window.setTimeout(() => void loadHistory({ silent: true }), 5000);
-        window.setTimeout(() => void loadHistory({ silent: true }), 15000);
+        scheduleHistoryRefresh();
       } catch (err) {
+        const requestError = err as AppraisalRequestError;
+        if (requestError.serverErrorId) {
+          serverErrorId = requestError.serverErrorId;
+          setErrorReference(requestError.serverErrorId);
+        }
         if (err instanceof Error && !serverErrorId) {
           void reportClientError({
             source: "appraisal.submit",
@@ -520,7 +791,7 @@ export default function HomePage() {
       <div className={styles.layout}>
         {/* Capture panel */}
         <div className={styles.capture}>
-          <form className={styles.captureForm} onSubmit={handleSubmit}>
+          <div className={styles.captureForm}>
             <div className={styles.captureGuide}>
               <p className={styles.captureLead}>
                 写真は1枚でも査定できます。2枚目・3枚目は任意です。
@@ -640,112 +911,211 @@ export default function HomePage() {
               </form>
             </div>
 
-            <div className={styles.photoGrid}>
-              {PHOTO_SLOTS.map((slot, index) => (
-                <div key={slot.id} className={styles.photoSlotWrap}>
-                  <label
-                    className={`${styles.photoSlot} ${
-                      previews[index].url ? styles.photoSlotFilled : ""
-                    }`}
-                  >
-                    <input
-                      ref={(el) => {
-                        inputRefs.current[index] = el;
-                      }}
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      className={styles.fileInput}
-                      onChange={(e) => handleFileChange(index, e)}
-                    />
-                    {previews[index].url ? (
-                      <img
-                        src={previews[index].url!}
-                        alt={slot.label}
-                        className={styles.photoPreview}
+            <form className={styles.singleAppraisalForm} onSubmit={handleSubmit}>
+              <div className={styles.photoGrid}>
+                {PHOTO_SLOTS.map((slot, index) => (
+                  <div key={slot.id} className={styles.photoSlotWrap}>
+                    <label
+                      className={`${styles.photoSlot} ${
+                        previews[index].url ? styles.photoSlotFilled : ""
+                      }`}
+                    >
+                      <input
+                        ref={(el) => {
+                          inputRefs.current[index] = el;
+                        }}
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        className={styles.fileInput}
+                        onChange={(e) => handleFileChange(index, e)}
                       />
-                    ) : (
-                      <div className={styles.photoPlaceholder}>
+                      {previews[index].url ? (
+                        <img
+                          src={previews[index].url!}
+                          alt={slot.label}
+                          className={styles.photoPreview}
+                        />
+                      ) : (
+                        <div className={styles.photoPlaceholder}>
+                          <svg
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+                            <circle cx="12" cy="13" r="4" />
+                          </svg>
+                        </div>
+                      )}
+                    </label>
+                    {previews[index].url && (
+                      <button
+                        type="button"
+                        className={styles.removeBtn}
+                        onClick={() => removePhoto(index)}
+                        aria-label="写真を削除"
+                      >
                         <svg
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
+                          width="12"
+                          height="12"
+                          viewBox="0 0 12 12"
                           fill="none"
                           stroke="currentColor"
-                          strokeWidth="1.5"
+                          strokeWidth="2"
                           strokeLinecap="round"
-                          strokeLinejoin="round"
                         >
-                          <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
-                          <circle cx="12" cy="13" r="4" />
+                          <path d="M2 2l8 8M10 2l-8 8" />
                         </svg>
-                      </div>
+                      </button>
                     )}
-                  </label>
-                  {previews[index].url && (
-                    <button
-                      type="button"
-                      className={styles.removeBtn}
-                      onClick={() => removePhoto(index)}
-                      aria-label="写真を削除"
-                    >
-                      <svg
-                        width="12"
-                        height="12"
-                        viewBox="0 0 12 12"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                      >
-                        <path d="M2 2l8 8M10 2l-8 8" />
-                      </svg>
-                    </button>
-                  )}
-                  <div className={styles.slotMeta}>
-                    <div className={styles.slotMetaHeader}>
-                      <span className={styles.slotLabel}>{slot.label}</span>
-                      <span
-                        className={`${styles.slotTag} ${
-                          index === 0 ? styles.slotTagPrimary : styles.slotTagOptional
-                        }`}
-                      >
-                        {slot.tag}
-                      </span>
+                    <div className={styles.slotMeta}>
+                      <div className={styles.slotMetaHeader}>
+                        <span className={styles.slotLabel}>{slot.label}</span>
+                        <span
+                          className={`${styles.slotTag} ${
+                            index === 0 ? styles.slotTagPrimary : styles.slotTagOptional
+                          }`}
+                        >
+                          {slot.tag}
+                        </span>
+                      </div>
+                      <span className={styles.slotGuidance}>{slot.guidance}</span>
                     </div>
-                    <span className={styles.slotGuidance}>{slot.guidance}</span>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
 
-            <div className={styles.actionGroup}>
+              <div className={styles.actionGroup}>
+                <button
+                  type="submit"
+                  className={styles.submitBtn}
+                  disabled={!hasPhotos || isPending || isBatchRunning}
+                >
+                  {isPending ? (
+                    <>
+                      <span className={styles.spinner} />
+                      査定中...
+                    </>
+                  ) : (
+                    "査定する"
+                  )}
+                </button>
+
+                {result && (
+                  <button
+                    type="button"
+                    className={styles.resetBtn}
+                    onClick={handleReset}
+                  >
+                    新規査定
+                  </button>
+                )}
+              </div>
+            </form>
+
+            <div className={styles.batchPanel}>
+              <div className={styles.batchPanelHeader}>
+                <div>
+                  <p className={styles.batchPanelEyebrow}>一括査定</p>
+                  <h2 className={styles.batchPanelTitle}>
+                    最大{MAX_BATCH_ITEMS}商品をまとめて投入
+                  </h2>
+                  <p className={styles.batchPanelCaption}>
+                    1商品につき全体写真1枚を選択してください。最大{BATCH_CONCURRENCY}
+                    件ずつ並列で査定し、完了した商品から順にMax価格を表示します。
+                  </p>
+                </div>
+              </div>
+
+              <div className={styles.batchActions}>
+                <label className={styles.batchFileButton}>
+                  写真をまとめて選択
+                  <input
+                    ref={batchInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className={styles.fileInput}
+                    onChange={handleBatchFileChange}
+                    disabled={isBatchRunning}
+                  />
+                </label>
+                {batchItems.length > 0 && (
+                  <button
+                    type="button"
+                    className={styles.batchClearButton}
+                    onClick={clearBatchItems}
+                    disabled={isBatchRunning}
+                  >
+                    クリア
+                  </button>
+                )}
+              </div>
+
+              {batchItems.length > 0 && (
+                <div className={styles.batchQueue}>
+                  {batchItems.map((item, index) => (
+                    <div key={item.id} className={styles.batchQueueItem}>
+                      <img
+                        src={item.url}
+                        alt={`一括査定 ${index + 1}`}
+                        className={styles.batchQueueImage}
+                      />
+                      <div className={styles.batchQueueBody}>
+                        <span className={styles.batchQueueName}>
+                          {index + 1}. {item.file.name}
+                        </span>
+                        <span className={styles.batchQueueMeta}>
+                          {item.status === "done"
+                            ? formatCurrency(item.result?.pricing.suggestedMaxPrice || 0)
+                            : item.status === "running"
+                              ? "査定中"
+                              : item.status === "error"
+                                ? "失敗"
+                                : "待機中"}
+                        </span>
+                      </div>
+                      {!isBatchRunning && (
+                        <button
+                          type="button"
+                          className={styles.batchRemoveButton}
+                          onClick={() => removeBatchItem(item.id)}
+                          aria-label={`${item.file.name}を一括査定から外す`}
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <button
-                type="submit"
-                className={styles.submitBtn}
-                disabled={!hasPhotos || isPending}
+                type="button"
+                className={styles.batchSubmitButton}
+                onClick={handleBatchSubmit}
+                disabled={batchItems.length === 0 || isBatchRunning || isPending}
               >
-                {isPending ? (
+                {isBatchRunning ? (
                   <>
                     <span className={styles.spinner} />
-                    査定中...
+                    {batchRunningCount}件査定中 · {batchCompletedCount}/
+                    {batchItems.length}件完了
                   </>
                 ) : (
-                  "査定する"
+                  `${batchItems.length || 0}件を一括査定`
                 )}
               </button>
 
-              {result && (
-                <button
-                  type="button"
-                  className={styles.resetBtn}
-                  onClick={handleReset}
-                >
-                  新規査定
-                </button>
-              )}
+              {batchError && <p className={styles.batchError}>{batchError}</p>}
             </div>
-          </form>
+          </div>
 
           {error && (
             <div className={styles.errorBanner}>
@@ -778,6 +1148,106 @@ export default function HomePage() {
 
         {/* Results panel */}
         <section className={styles.main} ref={resultsRef}>
+          {batchItems.length > 0 && (
+            <div className={styles.batchResultsSection}>
+              <div className={styles.batchResultsHeader}>
+                <div>
+                  <h3 className={styles.sectionHeading}>一括査定の進捗</h3>
+                  <p className={styles.batchResultsCaption}>
+                    {batchCompletedCount}/{batchItems.length}件完了 · 成功
+                    {batchDoneCount}件 · 推奨Max合計{" "}
+                    {formatCurrency(batchTotalMaxPrice)}
+                  </p>
+                </div>
+                {isBatchRunning && (
+                  <span className={styles.batchLiveBadge}>
+                    <span className={styles.spinner} />
+                    実行中
+                  </span>
+                )}
+              </div>
+
+              <div className={styles.batchResultGrid}>
+                {batchItems.map((item, index) => (
+                  <article key={item.id} className={styles.batchResultCard}>
+                    <div className={styles.batchResultImageWrap}>
+                      <img
+                        src={item.url}
+                        alt={`一括査定 ${index + 1}`}
+                        className={styles.batchResultImage}
+                      />
+                      <span
+                        className={`${styles.batchStatusPill} ${
+                          item.status === "done"
+                            ? styles.batchStatusDone
+                            : item.status === "running"
+                              ? styles.batchStatusRunning
+                              : item.status === "error"
+                                ? styles.batchStatusError
+                                : styles.batchStatusQueued
+                        }`}
+                      >
+                        {item.status === "done"
+                          ? "完了"
+                          : item.status === "running"
+                            ? "査定中"
+                            : item.status === "error"
+                              ? "失敗"
+                              : "待機"}
+                      </span>
+                    </div>
+
+                    <div className={styles.batchResultBody}>
+                      <div className={styles.batchResultTop}>
+                        <span className={styles.batchResultIndex}>
+                          商品 {index + 1}
+                        </span>
+                        {item.finishedAt && (
+                          <span className={styles.batchResultTime}>
+                            {formatDateTime(new Date(item.finishedAt).toISOString())}
+                          </span>
+                        )}
+                      </div>
+
+                      {item.status === "done" && item.result ? (
+                        <>
+                          <h4 className={styles.batchResultName}>
+                            {item.result.identification.itemName}
+                          </h4>
+                          <div className={styles.batchResultPrice}>
+                            {formatCurrency(item.result.pricing.suggestedMaxPrice)}
+                          </div>
+                          <p className={styles.batchResultMeta}>
+                            {item.result.identification.brand ||
+                              item.result.identification.category}
+                            {" · "}
+                            {item.result.pricing.listingCount}件参照
+                          </p>
+                        </>
+                      ) : item.status === "error" ? (
+                        <>
+                          <h4 className={styles.batchResultName}>査定に失敗</h4>
+                          <p className={styles.batchResultError}>
+                            {item.error || "時間を置いて再試行してください。"}
+                            {item.errorId ? ` エラーID: ${item.errorId}` : ""}
+                          </p>
+                        </>
+                      ) : item.status === "running" ? (
+                        <p className={styles.batchResultPending}>
+                          商品特定と価格検索を実行しています...
+                        </p>
+                      ) : (
+                        <p className={styles.batchResultPending}>
+                          順番待ちです。前の査定が終わると自動で開始します。
+                        </p>
+                      )}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          )}
+
           {result ? (
             <div className={styles.resultFlow}>
               {/* Price hero */}
@@ -1023,7 +1493,7 @@ export default function HomePage() {
               </div>
               <p>写真を分析しています...</p>
             </div>
-          ) : (
+          ) : batchItems.length > 0 ? null : (
             <div className={styles.emptyState}>
               <svg
                 width="48"
