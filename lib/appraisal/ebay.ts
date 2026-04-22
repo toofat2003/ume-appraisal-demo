@@ -1532,7 +1532,7 @@ async function searchListingsByGemini(
       }
     : {
         provider: "gemini" as const,
-        model: process.env.GEMINI_MODEL || "gemini-3-pro-preview",
+        model: process.env.GEMINI_MODEL || "gemini-3-flash-preview",
         mode: selectedAttempt.mode,
         latencyMs: 0,
         itemName: "",

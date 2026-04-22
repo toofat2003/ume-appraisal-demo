@@ -13,7 +13,7 @@ falls back to the existing eBay `searchByImage` flow.
 - `EBAY_ENV` (default: `production`)
 - `GOOGLE_CLOUD_VISION_API_KEY` (optional; enables Google Vision image identification)
 - `GEMINI_API_KEY` (optional; enables Gemini image identification)
-- `GEMINI_MODEL` (optional; default: `gemini-3-pro-preview`)
+- `GEMINI_MODEL` (optional; default: `gemini-3-flash-preview`)
 - `APPRAISAL_IMAGE_PROVIDER` (optional; `auto`, `gemini`, `google-vision`, or `ebay-image`)
 
 ## Commands

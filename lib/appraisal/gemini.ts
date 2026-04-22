@@ -1,7 +1,7 @@
 import type { GeminiIdentificationDebug } from "@/lib/appraisal/types";
 
 const GEMINI_API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
-const DEFAULT_GEMINI_MODEL = "gemini-3-pro-preview";
+const DEFAULT_GEMINI_MODEL = "gemini-3-flash-preview";
 const MAX_QUERY_CANDIDATES = 8;
 
 type GeminiApiPart = {

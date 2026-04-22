@@ -9,7 +9,7 @@ Google Lens/Google画像検索そのものをサーバーサイドから同等AP
 ## 実装方針
 
 - `APPRAISAL_IMAGE_PROVIDER=gemini` でGemini 3を主経路にする。
-- `GEMINI_MODEL` のデフォルトは `gemini-3-pro-preview`。
+- `GEMINI_MODEL` のデフォルトは `gemini-3-flash-preview`。
 - Geminiは画像から `itemName`、`brand`、`model`、`category`、eBay向け検索語候補を返す。
 - 価格そのものはGeminiに推定させず、検索語をeBay Browse text searchへ渡して出品価格から算出する。
 - 2枚目/3枚目がある場合は、`1枚目のみ` と `全画像` のGemini同定を比較し、全画像側が明確に良い時だけ採用する。
@@ -23,14 +23,18 @@ Google Lens/Google画像検索そのものをサーバーサイドから同等AP
 | Google Vision | Product only | 1/8 | 1/5 | 1/8 | 72.0% |
 | Google Vision | Product + price tag | 3/8 | 2/5 | 3/8 | 59.1% |
 | eBay searchByImage | Product only | 2/8 | 2/5 | 2/8 | 44.5% |
-| Gemini 3 | Product only | 5/8 | 4/5 | 4/8 | 32.4% |
-| Gemini 3 | Product + price tag, selected | 5/8 | 4/5 | 5/8 | 30.8% |
+| Gemini 3 Pro | Product only | 5/8 | 4/5 | 4/8 | 32.4% |
+| Gemini 3 Pro | Product + price tag, selected | 5/8 | 4/5 | 5/8 | 30.8% |
+| Gemini 3 Flash | Product only | 4/8 | 4/5 | 4/8 | 34.6% |
+| Gemini 3 Flash | Product + price tag, selected | 5/8 | 4/5 | 5/8 | 33.0% |
 
 ## 残課題
 
 - 複数商品が同じ写真に写るケースでは、Gemini 3でも対象商品の切り分けに失敗することがある。
 - eBay側の検索結果に安い類似品や広すぎるカテゴリが混ざると、商品名が正しくても中央値が下振れする。
-- 速度はGemini呼び出しとeBay検索の両方に依存する。2枚目以降がある場合はGeminiを2回呼ぶため、精度優先のPOC向け設定。
+- Gemini 3 Pro previewは本番で1枚画像でもGemini単体が約198秒かかるケースがあり、運用上不安定。
+- Gemini 3 Flash previewはProより平均誤差が少し大きいが、eBay searchByImageより精度が高く、速度も安定しているためPOCの主経路にする。
+- 速度はGemini呼び出しとeBay検索の両方に依存する。2枚目以降がある場合はGeminiを2回呼ぶため、今後は低確信度時だけ全画像比較する余地がある。
 
 ## 参照
 

@@ -1,0 +1,404 @@
+{
+  "runId": "2026-04-22T14-08-01-727Z",
+  "datasetId": "price_pair_benchmark_2026-04-22",
+  "providerTarget": "gemini",
+  "includePriceImage": false,
+  "baseUrl": "http://127.0.0.1:63131",
+  "rows": [
+    {
+      "id": "pp_001",
+      "benchmarkStatus": "include",
+      "productImage": "images/IMG_7490.jpg",
+      "priceImage": "images/IMG_7491.jpg",
+      "expectedItemName": "Burberry TB Monogram Robin Crossbody Bag",
+      "identifiedItemName": "Burberry TB Monogram Stripe Robin Crossbody Bag",
+      "searchQuery": "Burberry TB Monogram Stripe Robin Crossbody Bag",
+      "provider": "gemini-3-image-understanding",
+      "confidence": 0.97,
+      "referencePriceUsd": 695,
+      "ebayP25Usd": 561,
+      "ebayMedianUsd": 620,
+      "ebayP75Usd": 834,
+      "medianErrorPct": -10.8,
+      "medianWithin30Pct": true,
+      "referenceWithinIqr": true,
+      "listingCount": 23,
+      "suggestedMaxPriceUsd": 281,
+      "elapsedMs": 13851,
+      "warnings": [
+        "新品系の出品が混ざっている可能性があり、Max価格がやや強気になっている恐れがあります。"
+      ],
+      "topListings": [
+        {
+          "title": "BURBERRY TB Monogram E-canvas Shoulder Crossbody Bag Brown 8020170",
+          "totalPrice": 585.36,
+          "url": "https://www.ebay.com/itm/188021650570?_skw=Burberry+TB+Monogram+Stripe+Robin+Crossbody+Bag&hash=item2bc6f6b48a:g:1bYAAeSwKvBpgeOi"
+        },
+        {
+          "title": "Burberry Monogram Stripe Robin Bag Canvas Leather Brown Shoulder Used Authentic",
+          "totalPrice": 495,
+          "url": "https://www.ebay.com/itm/236710758451?_skw=Burberry+TB+Monogram+Stripe+Robin+Crossbody+Bag&hash=item371d0f8833:g:B~wAAeSwfbVpw1p2&amdata=enc%3AAQALAAABEACCtXRWQnOEpyOqnQQ8KGa%2FTW66e610Geb4saH%2Frm6ZIu7Hdexo6dYtOIJgtmSnsrDWQSEo4TKgHemU9W3axBx2MZ00TQsmFgsVD1ufz1omOKrIXzVkuQtELJZPXTGqG1AV0UOmAtZqWmEDBQlbWyYEeAvJmvM6cxJ8Ue0UIMQIYKLjZ62DYeRMBapk%2FVqyGj91i2giZLMsSa6gHPOy%2BDAJqkvTHErkqJn2hdVqp98yHrhWAMkNZdTp%2FYQfiBFJQuNHT8270FkxDdbnuBM2QhZodfe8%2BNvX%2BFMfdRJhwyZwc%2BfDPyJQ9WRtth3Jm2enkg2DhAvey%2Fdd%2FNfenB%2FN6rQPdgVQNiR7Hoa7PXfae3PV"
+        },
+        {
+          "title": "BURBERRY TB Monogram Stripe CrossBody Bag PVC Leather Brown Black 90302136",
+          "totalPrice": 537.0899999999999,
+          "url": "https://www.ebay.com/itm/257344072376?_skw=Burberry+TB+Monogram+Stripe+Robin+Crossbody+Bag&hash=item3beae6eab8:g:V7IAAeSwedFpgssN&amdata=enc%3AAQALAAABEACCtXRWQnOEpyOqnQQ8KGZDxiwR6UA86s3YKzTZPN2K0ftqPLIZXrP4JjGutZjeOW%2FTN%2BaoM4EpU1BiDqVYurOhHC%2F8ZZRGuVEzKgfQZauZMy3pBYNFaWL8yhFl%2BdRF8iIyBleCvuKojbq1hPjUkU1IOhaJDnngQwOFts%2BlAXDFXUAvxIlfeyDT9aDz7UxbkwldSrV9%2FDtKeRDvXIISNpl3n1D3CVXI%2FY2uMNPTxRJ%2Fdza2G45CtuQaK2uCQL4%2BUBsWdjgF6pf1G0yFkoh6Wmi7ncman0sBqvuCtUxUNEbWYIJccA%2FV3xzjV5b3H%2BaOoJ8mTWqUbuQ0JiIhcHQGBbo4Z%2FDAGf2xP8mLYC5bgcO%2B"
+        },
+        {
+          "title": "Burberry TB Monogram Embossed Calfskin Chain Crossbody Bag",
+          "totalPrice": 610,
+          "url": "https://www.ebay.com/itm/167803039700?_skw=Burberry+TB+Monogram+Stripe+Robin+Crossbody+Bag&hash=item2711d72fd4:g:zNwAAeSwHAZozaDs"
+        },
+        {
+          "title": "Burberry TB Monogram Stripe Canvas Leather Crossbody Bag",
+          "totalPrice": 715,
+          "url": "https://www.ebay.com/itm/226857436008?_skw=Burberry+TB+Monogram+Stripe+Robin+Crossbody+Bag&hash=item34d1c1c368:g:XkwAAeSwev1obqyB"
+        }
+      ]
+    },
+    {
+      "id": "pp_002",
+      "benchmarkStatus": "include",
+      "productImage": "images/IMG_7492.jpg",
+      "priceImage": "images/IMG_7493.jpg",
+      "expectedItemName": "MCM Klassik Visetos Mix Small Crossbody in White and Brown",
+      "identifiedItemName": "MCM Klassik Visetos Mix Crossbody Bag",
+      "searchQuery": "MCM Klassik Visetos Mix Crossbody Bag",
+      "provider": "gemini-3-image-understanding",
+      "confidence": 0.97,
+      "referencePriceUsd": 595,
+      "ebayP25Usd": 210,
+      "ebayMedianUsd": 300,
+      "ebayP75Usd": 348,
+      "medianErrorPct": -49.6,
+      "medianWithin30Pct": false,
+      "referenceWithinIqr": false,
+      "listingCount": 20,
+      "suggestedMaxPriceUsd": 105,
+      "elapsedMs": 9171,
+      "warnings": [
+        "新品系の出品が混ざっている可能性があり、Max価格がやや強気になっている恐れがあります。"
+      ],
+      "topListings": [
+        {
+          "title": "MCM Visetos Leather Crossbody Bag Brown Authentic Pre Owned",
+          "totalPrice": 329,
+          "url": "https://www.ebay.com/itm/366333084896?_skw=MCM+Klassik+Visetos+Mix+Crossbody+Bag&hash=item554b2744e0:g:YvoAAeSwwG9p1UpZ"
+        },
+        {
+          "title": "MCM Klassik Mini Crossbody Monogram SPB-JB 363840",
+          "totalPrice": 179.99,
+          "url": "https://www.ebay.com/itm/257417070204?_skw=MCM+Klassik+Visetos+Mix+Crossbody+Bag&hash=item3bef40c67c:g:0qMAAeSwulNpvcT~&amdata=enc%3AAQALAAABAACCtXRWQnOEpyOqnQQ8KGa2ZKoEufAYM3%2FjO1Kxg6qMigEdcg9z%2BGj%2Bl%2BVga167r04WNz%2B0dBlPK9Ugz0um9q9bM34EA35hfqDgXv8gI2Y0cox%2FXysKNj8ZaIB2OB45ByXGO1dSrOzM6FR4aGxAc04vgJod25ZQQb3w8D%2FzPSV1EBlgiHeXJK2R8D5gd5D7gQmTFjGBHCDpl7bhbakZi%2BmcRUlSMngmmulZ%2F263DuWoNa51LssxNQ2UnjVXuRFwnrTkDZpjDZNG%2FV3ZiWOMeIjkXwlZ6OLB9LDIW3VeDlRAMGW51pn7AfPJAmXnDnEaXJNjDOsHSc0AWTSEAS%2B4oZk%3D"
+        },
+        {
+          "title": "MCM Klassik Multifunction Crossbody in Visetos SPB-JB 364143",
+          "totalPrice": 479.99,
+          "url": "https://www.ebay.com/itm/257426678232?_skw=MCM+Klassik+Visetos+Mix+Crossbody+Bag&hash=item3befd361d8:g:g2MAAeSwqlJpxWTg&amdata=enc%3AAQALAAABAACCtXRWQnOEpyOqnQQ8KGb5hjC8nJKtXzLi1pHG6VZCsfYJ9qeyUuDRXFTH0dDxzhBoa82ZCI6xVlkvumU%2BvSqLzf4aw3l3E3cLEnaflc%2BWDiLiOTuzqEDjShUIG89ik2XbOu0Ei562vmfJuKQgyuZ%2BCablyLDGysB%2FsRiL%2Bf4RN%2FGR%2Bub2KI141GtWD%2BkQA8tFMPm3bpGpUSmZgj4UoAeoxns3m3ogS4OTOUSKMolX6n8gRbekuIn%2Bo6UxRou%2B10OUmn65q9rs1CI2%2F9q%2BixSvslv0IskTFqCwHqMnWT4AIpmpEdt5dT9TBDaFZKvuc4g1Nff9J4aozJ9OPjZ3CM8%3D"
+        },
+        {
+          "title": "MCM Visetos Pink & Black Crossbody Leather Zip Bag",
+          "totalPrice": 365,
+          "url": "https://www.ebay.com/itm/257453544448?_skw=MCM+Klassik+Visetos+Mix+Crossbody+Bag&hash=item3bf16d5400:g:dsAAAeSw3Wlp2wao"
+        },
+        {
+          "title": "MCM Millie Visetos Small Crossbody Bag - Cognac Color",
+          "totalPrice": 450,
+          "url": "https://www.ebay.com/itm/127778934761?_skw=MCM+Klassik+Visetos+Mix+Crossbody+Bag&hash=item1dc037cfe9:g:yZUAAeSwh3tpyUtF"
+        }
+      ]
+    },
+    {
+      "id": "pp_003",
+      "benchmarkStatus": "review",
+      "productImage": "images/IMG_7486.jpg",
+      "priceImage": "images/IMG_7487.jpg",
+      "expectedItemName": "Chanel black drawstring bucket bag with bamboo handle",
+      "identifiedItemName": "Gucci Bamboo Suede and Leather Backpack",
+      "searchQuery": "Gucci Bamboo suede backpack black",
+      "provider": "gemini-3-image-understanding",
+      "confidence": 0.97,
+      "referencePriceUsd": 695,
+      "ebayP25Usd": 217,
+      "ebayMedianUsd": 248,
+      "ebayP75Usd": 287,
+      "medianErrorPct": -64.3,
+      "medianWithin30Pct": false,
+      "referenceWithinIqr": false,
+      "listingCount": 24,
+      "suggestedMaxPriceUsd": 108,
+      "elapsedMs": 10937,
+      "warnings": [
+        "新品系の出品が混ざっている可能性があり、Max価格がやや強気になっている恐れがあります。"
+      ],
+      "topListings": [
+        {
+          "title": "Gucci Black Suede Leather Bamboo Handle Backpack with Dust Bag",
+          "totalPrice": 292.5,
+          "url": "https://www.ebay.com/itm/147257353860?_skw=Gucci+Bamboo+suede+backpack+black&hash=item224938e684:g:p34AAeSwDWtp3ScC"
+        },
+        {
+          "title": "GUCCI Bamboo Backpack Suede Black Gold 003 58 0030 Auth ep11366",
+          "totalPrice": 168.75,
+          "url": "https://www.ebay.com/itm/306818864319?_skw=Gucci+Bamboo+suede+backpack+black&hash=item476fd454bf:g:zKcAAeSw4c1ps6Ov&amdata=enc%3AAQALAAABAACCtXRWQnOEpyOqnQQ8KGb44lennLIvUOI%2Bm%2BZ%2Fg%2BjcEiC5hHiEMh0OdJwErERS77UAIRmiZ9JErhZgQCFz%2Bq%2BwUo19aoDD4XLJ%2FMaYcgwkgZ%2BJLmEx4p14qoNcbaTy1hD1T5nwW9Ydb1OkA7UyQ8PZR1Xg6ayw5Hpseynum8msnrfyrgpSlWXxusD4SAG1Gwqdc1X8DUDj0cieZQERY%2FOUXN0lBIwfJWkJeqdGFZGC9hlFQ5MErZoWF2Dm7bth8GdhEH28i3f%2BYHqO14TIQWfqhsWDq2N8oPXd1hS7knneib8HTO37JHZirYf%2FCSmLugDy%2FXalBwGqWY%2FTw7cYA0g%3D"
+        },
+        {
+          "title": "Gucci Black Women's Backpack Bamboo Accents Shoulder Strap",
+          "totalPrice": 290,
+          "url": "https://www.ebay.com/itm/358450483143?_skw=Gucci+Bamboo+suede+backpack+black&hash=item5375504fc7:g:T5cAAeSwe1Np3-0m"
+        },
+        {
+          "title": "Gucci Vintage Suede Backpack Black Gold Hardware Small Authentic",
+          "totalPrice": 320.99,
+          "url": "https://www.ebay.com/itm/298176605343?_skw=Gucci+Bamboo+suede+backpack+black&hash=item456cb5ec9f:g:WmYAAeSwEZ1pyrRH"
+        },
+        {
+          "title": "Gucci Black Suede Leather Bamboo Backpack 003.1705.0030 NQ07942",
+          "totalPrice": 218,
+          "url": "https://www.ebay.com/itm/336542767950?_skw=Gucci+Bamboo+suede+backpack+black&hash=item4e5b831b4e:g:Ck4AAeSwVRdp5dm6"
+        }
+      ]
+    },
+    {
+      "id": "pp_004",
+      "benchmarkStatus": "review",
+      "productImage": "images/IMG_7479.jpg",
+      "priceImage": "images/IMG_7480.jpg",
+      "expectedItemName": "Prada Logo Jacquard Canvas and Leather Shoulder Bag",
+      "identifiedItemName": "Prada Logo Jacquard Messenger Bag",
+      "searchQuery": "Prada Logo Jacquard Messenger Bag Brown Canvas",
+      "provider": "gemini-3-image-understanding",
+      "confidence": 0.97,
+      "referencePriceUsd": 595,
+      "ebayP25Usd": 306,
+      "ebayMedianUsd": 413,
+      "ebayP75Usd": 673,
+      "medianErrorPct": -30.6,
+      "medianWithin30Pct": false,
+      "referenceWithinIqr": true,
+      "listingCount": 20,
+      "suggestedMaxPriceUsd": 153,
+      "elapsedMs": 13838,
+      "warnings": [
+        "新品系の出品が混ざっている可能性があり、Max価格がやや強気になっている恐れがあります。"
+      ],
+      "topListings": [
+        {
+          "title": "Prada Pre-Owned Authentic Messenger Bag Black 22*15*6 Free Tracked Shipping",
+          "totalPrice": 1369,
+          "url": "https://www.ebay.com/itm/389875147663?_skw=Prada+Logo+Jacquard+Messenger+Bag+Brown+Canvas&hash=item5ac65ea38f:g:3yYAAeSwQ5pp2hct"
+        },
+        {
+          "title": "PRADA Logo jacquard Shoulder Bag Messenger Bag Beige Brown SilverHardware canvas",
+          "totalPrice": 344,
+          "url": "https://www.ebay.com/itm/318084123023?_skw=Prada+Logo+Jacquard+Messenger+Bag+Brown+Canvas&hash=item4a0f4a898f:g:zi8AAeSwmmlp5bFE&amdata=enc%3AAQALAAABEACCtXRWQnOEpyOqnQQ8KGYfZYirqyQZRqvnyzEwstAw%2F%2Bsnj8Hf0hgC4mem6T2ai6Sg1zLkMZ0W6GpEomx%2FnFAsT7nxWveYFAtJuusgVUEIvWzxRsv4pFalJhKDdMdgXGO4Uo%2F074EKnnK8DzqaQuBv%2FphQhxpkwU7JnQJiZoWlCs8zYNO6TG2YaJo3KFkc4o8ee9S6Q2acTvfgS%2F3Siy7DT6WjDAdlAszampdNFrGNnWPJzd9mntHyClidig9Cw0jln3k2ctTIjGXAk0aGL%2B8x%2BosairPBQydYM7iTn%2FaNEySGfSbaILX%2BmGwq5bm30wvmov%2FIl2xAQ3Vir8J2R%2Bpmu8oCiMVk1a%2ByrszGXtEN"
+        },
+        {
+          "title": "PRADA Logo jacquard Shoulder Bag Messenger Bag Beige Brown SilverHardware canvas",
+          "totalPrice": 299,
+          "url": "https://www.ebay.com/itm/397814047337?_skw=Prada+Logo+Jacquard+Messenger+Bag+Brown+Canvas&hash=item5c9f90a269:g:k04AAeSwPw9p5bEt&amdata=enc%3AAQALAAABEACCtXRWQnOEpyOqnQQ8KGZgIxqE7RVlMyWusDNl6tEFerNOt5c5lWBn1WhSB7kL6dwrk5KKAx7wD6tbTo6j%2Fphy23TOG529%2Bf%2FYxJFO%2BRWMuwr6orjJqqPDNhZ%2FtuRDE34po6pVEG8mrN%2FTxszAjFW%2FNesJwPmZpDd%2FLqSbdgn8m7WYSI9qevnPtBYmSVnUqtvNg9Zd5aOPDghS72pob7d%2Bjk3as%2BcR9cuEGLGlk5FR1%2FDHvjULMrhOpV7bCCJ9L8ONyx03mz00X5PeJQT7b8otA5z19s2UVkU4K1suuZKPcITVpsz3Kw%2FYA%2FsBiP5bLPu1KRNfeg1%2FN%2F8Az3hV9omMG2vmz0fGRb5aXpcxT3Iw"
+        },
+        {
+          "title": "Prada Pre-Owned Authentic Messenger Bag 19*15*5 Free Tracked Shipping",
+          "totalPrice": 1209,
+          "url": "https://www.ebay.com/itm/389875144514?_skw=Prada+Logo+Jacquard+Messenger+Bag+Brown+Canvas&hash=item5ac65e9742:g:UI0AAeSw7kpp2hY1"
+        },
+        {
+          "title": "Prada Pre-Owned Authentic Messenger Bag Free Tracked Shipping",
+          "totalPrice": 1819,
+          "url": "https://www.ebay.com/itm/389889256401?_skw=Prada+Logo+Jacquard+Messenger+Bag+Brown+Canvas&hash=item5ac735ebd1:g:tAoAAeSwJVdp3jky"
+        }
+      ]
+    },
+    {
+      "id": "pp_005",
+      "benchmarkStatus": "include",
+      "productImage": "images/IMG_7478.jpg",
+      "priceImage": "images/IMG_7477.jpg",
+      "expectedItemName": "MCM Metallic Studded Vanity",
+      "identifiedItemName": "MCM Rockstar Vanity Case in Quilted Iridescent Leather",
+      "searchQuery": "MCM Rockstar Vanity Case quilted iridescent studs",
+      "provider": "gemini-3-image-understanding",
+      "confidence": 0.92,
+      "referencePriceUsd": 575,
+      "ebayP25Usd": 670,
+      "ebayMedianUsd": 691,
+      "ebayP75Usd": 711,
+      "medianErrorPct": 20.2,
+      "medianWithin30Pct": true,
+      "referenceWithinIqr": false,
+      "listingCount": 2,
+      "suggestedMaxPriceUsd": 335,
+      "elapsedMs": 14083,
+      "warnings": [
+        "類似出品件数が少ないため、あくまで概算として扱ってください。",
+        "新品系の出品が混ざっている可能性があり、Max価格がやや強気になっている恐れがあります。",
+        "品名からのeBay検索で十分な一致件数を取れず、価格参照がブレやすい状態です。"
+      ],
+      "topListings": [
+        {
+          "title": "Pre-owned MCM Rockstar Vanity Case",
+          "totalPrice": 650,
+          "url": "https://www.ebay.com/itm/336542958619?_skw=MCM+Rockstar+Vanity+Case+quilted+iridescent+studs&hash=item4e5b86041b:g:F2kAAeSwzmBp310J"
+        },
+        {
+          "title": "Auth MCM Rockstar Vanity Case, Cognacblack friday",
+          "totalPrice": 731.4,
+          "url": "https://www.ebay.com/itm/198036284394?_skw=MCM+Rockstar+Vanity+Case+quilted+iridescent+studs&hash=item2e1be1e3ea:g:3d8AAeSwK0RpGE~I&amdata=enc%3AAQALAAABEACCtXRWQnOEpyOqnQQ8KGaf4K1Wzsgk1E2NbXJxJHW27vXUTcqP6mps17nbgCnSiqavJQUpWqRuGZH0c141l1kT6Yf1GZI48O349b08tndae9%2BWySPKqaopxPxZr1hG58laheJdo%2FOPYyKh45JhK6jsxQeaj9yYHagCFA2qY0FOk27Xp7YSU0hwybPapj8LWJLjkHaj%2BM6dvDtRgg0WlG9MHUqroAGrHI0u5exU7rw4QnZQr6Ku3fiwo9bdAigqqP1RXfAXzpcLK7Cwn2kpbPS2zIYXKRmC6o%2BIjRT%2B2bPDaQm3MOJ6i2zx7dIr9ZKIUp8NFjgvDK7jmhEbjfxq1YFPVhZBc1S0YmX5j3ARADxS"
+        }
+      ]
+    },
+    {
+      "id": "pp_006",
+      "benchmarkStatus": "include",
+      "productImage": "images/IMG_7475.jpg",
+      "priceImage": "images/IMG_7476.jpg",
+      "expectedItemName": "Fendi Dark Green Baguette Teal Blue FF Logo Hardware Shoulder Bag",
+      "identifiedItemName": "Fendi Mamma Baguette Jersey Handbag with Turquoise Hardware",
+      "searchQuery": "Fendi Mamma Baguette black jersey turquoise hardware",
+      "provider": "gemini-3-image-understanding",
+      "confidence": 0.97,
+      "referencePriceUsd": 1015,
+      "ebayP25Usd": 637,
+      "ebayMedianUsd": 1200,
+      "ebayP75Usd": 1725,
+      "medianErrorPct": 18.2,
+      "medianWithin30Pct": true,
+      "referenceWithinIqr": true,
+      "listingCount": 23,
+      "suggestedMaxPriceUsd": 318,
+      "elapsedMs": 14117,
+      "warnings": [
+        "新品系の出品が混ざっている可能性があり、Max価格がやや強気になっている恐れがあります。"
+      ],
+      "topListings": [
+        {
+          "title": "Fendi Large Mama Baguette Brown Zucchino (ex022726b2)",
+          "totalPrice": 1190,
+          "url": "https://www.ebay.com/itm/377128084560?_skw=Fendi+Mamma+Baguette+black+jersey+turquoise+hardware&hash=item57ce95e450:g:tP8AAeSwp31p5fJX"
+        },
+        {
+          "title": "Auth FENDI Cotton Jersey Mamma Baguette Shoulder Bag FF Hardware Black 2Y5315",
+          "totalPrice": 482,
+          "url": "https://www.ebay.com/itm/298244833093?_skw=Fendi+Mamma+Baguette+black+jersey+turquoise+hardware&hash=item4570c6ff45:g:D2gAAeSwsL5p5djz&amdata=enc%3AAQALAAABEACCtXRWQnOEpyOqnQQ8KGZ%2FNHpXzWp5bmO8bErYP60wzMwJPZt4oC141tpJPCr%2Bgp2oXtSfMaLSqNeTuhDP2FZlRvbob6cyHanH3xrNon4gNVHjvV2CC4dcsLBETEDSYhGdFqDCaO5wWcPSbaDO0IzwN70nkmLkFprmzZ3APjd2Xs1Cve0jsbcDFr0o5zBUSUWIjxY3MM1vbBvVwkLd%2FjcLyHUBSEkX3bbj00Uf94jSRRs3tELh3ghIrLHa9MGE6yIy2%2FQWI82DPkGw1W%2Bt9aQhRodjYhMimGN%2BVROUj6Ohd8oN1T0jHbqI58NR1WMl3j8NSVOS9Wdo9MvBGR5zqQJv0EQZ%2BIr2ZhNNlWzaGumj"
+        },
+        {
+          "title": "Fendi Mamma Baguette Shoulder Bag Purse Black Nylon",
+          "totalPrice": 549,
+          "url": "https://www.ebay.com/itm/127789259926?_skw=Fendi+Mamma+Baguette+black+jersey+turquoise+hardware&hash=item1dc0d55c96:g:AGQAAeSwX0FpxkhB&amdata=enc%3AAQALAAABEACCtXRWQnOEpyOqnQQ8KGZYBEa5MJjceOAW2pGIAiOHGDIDcKtG3orTpirjI0bS6IpcyJne7npSJ3hHyQskP%2FGccHUlHlSYZg0t%2FVSMxuMXsZ%2FdVuo3uDqccTYNTc97AY%2BdSSQVQkXJZMVmwNfdSE0kWJcDJHRLjaOsExVhZC1cSfwC9zD%2BuLXqqSylUu0pHiA%2BIxZjMJyjd%2Bd5LRhwAEVgE8JpdhZstYJjnvRq1oCHf2LCHlLKeqK0yQ7du8p3FMgpHVZUykL4fw1ohjXCRK30drcCy23gM1vBO25sFRNC9L1CPhOJzJrfCNW0bQkJ8jQVq3l%2BGJP%2BpU8wIHRL6aWZQ6V3u%2BY3gguawAMZ7RjC"
+        },
+        {
+          "title": "Fendi Purple Sequin Baguette Shoulder Bag Medium",
+          "totalPrice": 4306.15,
+          "url": "https://www.ebay.com/itm/127779177706?_skw=Fendi+Mamma+Baguette+black+jersey+turquoise+hardware&hash=item1dc03b84ea:g:61gAAeSwSSBpyXrS"
+        },
+        {
+          "title": "Fendi wool Mamma Baguette shoulder bag",
+          "totalPrice": 2300,
+          "url": "https://www.ebay.com/itm/198295495586?_skw=Fendi+Mamma+Baguette+black+jersey+turquoise+hardware&hash=item2e2b5523a2:g:0coAAeSwrHRp5ZIf"
+        }
+      ]
+    },
+    {
+      "id": "pp_007",
+      "benchmarkStatus": "include",
+      "productImage": "images/IMG_7473.jpg",
+      "priceImage": "images/IMG_7474.jpg",
+      "expectedItemName": "Givenchy Olivia Green Shearling Mini Cut Out Bag",
+      "identifiedItemName": "Givenchy Mini G-Hobo Bag in Shearling",
+      "searchQuery": "Givenchy 4G padlock hobo bag green fur",
+      "provider": "gemini-3-image-understanding",
+      "confidence": 0.97,
+      "referencePriceUsd": 675,
+      "ebayP25Usd": 419,
+      "ebayMedianUsd": 720,
+      "ebayP75Usd": 848,
+      "medianErrorPct": 6.7,
+      "medianWithin30Pct": true,
+      "referenceWithinIqr": true,
+      "listingCount": 9,
+      "suggestedMaxPriceUsd": 210,
+      "elapsedMs": 25791,
+      "warnings": [
+        "新品系の出品が混ざっている可能性があり、Max価格がやや強気になっている恐れがあります。"
+      ],
+      "topListings": [
+        {
+          "title": "Givenchy Mediuum G Padlock Leather Hobo Bag Natural Beige Gold Women Purse",
+          "totalPrice": 848,
+          "url": "https://www.ebay.com/itm/117142620976?_skw=Givenchy+4G+padlock+hobo+bag+green+fur&hash=item1b463e8b30:g:YUgAAeSwXVho5-1h"
+        },
+        {
+          "title": "Givenchy Calfskin Mini G Hobo",
+          "totalPrice": 720,
+          "url": "https://www.ebay.com/itm/267615039896?_skw=Givenchy+4G+padlock+hobo+bag+green+fur&hash=item3e4f197198:g:JtkAAeSw13Zp5pQv&amdata=enc%3AAQALAAABAACCtXRWQnOEpyOqnQQ8KGZOO6r1trLJ69IGTPBL%2FRsAWD3FJ%2BxIWTMGGlZKWaBAOeo5G7J4wx%2F67KhBKGtO2Za0rrNzgnAPVVMFEWI%2B8Ql2AJeg%2FSeUxcb4zT9uPzYT%2FgziW9nw2P6PtYxOi6Rpw4RcIsj0eYHU8PEXR4iwwEnhlF6lBZON2BalLEfu%2FcyJ2FtmmOYwJLNpgyv2G60C9a%2Fhoqv43hA8HFRiz7yjJ6SSKfIfuAfL80a2xGAK5Ock10EM%2Bt2HT%2FdNfzc0fed2zqIBvLBqHfi3XoaFavagxutFWUFoPMfHSq63vJ3%2FLw5ctqQHJECoOfSyGqsyzxY%2Fqco%3D"
+        },
+        {
+          "title": "Auth Givenchy Black Lambskin Tinhan Hobo Bag Preloved Purse Shoulder Bag Handbag",
+          "totalPrice": 535,
+          "url": "https://www.ebay.com/itm/205255080718?_skw=Givenchy+4G+padlock+hobo+bag+green+fur&hash=item2fca27fb0e:g:AAoAAOSwLiJnmfg3&amdata=enc%3AAQALAAABAACCtXRWQnOEpyOqnQQ8KGbiY46qFOFcAc3qiveFAkFyHPrclW6mhDWPgyDHJmJWrg%2BMY%2FHx%2FZ2Ug7dse%2BhtHe%2BB1t0rcNv0PhZ4%2Fyz968EWoLHshmE%2FtIuRDz8RCbKtNZi%2FjXnK4WP5WOHYa3wV1MuhI5YhTvvJOlFBG853p7Xgmo%2Frzf0e5iv2yDXCV51uuXDSbZhTT7lqYr75pEcbyV29APojvY1mzu2qtXDzHhPipElNKdoAwlRmQn%2Fiz41Ysl64VLdbc%2BIy2XK2nYraI%2Fy%2FLxhHhZgReTvtcJruuaxkER8XzG1bzvNT5OSUNzmcBr3%2FxpNdNw%2FeYiYaghZLgL4%3D"
+        },
+        {
+          "title": "Givenchy Beige Monogram Leather Hobo",
+          "totalPrice": 238,
+          "url": "https://www.ebay.com/itm/406491527006?_skw=Givenchy+4G+padlock+hobo+bag+green+fur&hash=item5ea4c8775e:g:nZEAAeSwRytpiNYH&amdata=enc%3AAQALAAABAACCtXRWQnOEpyOqnQQ8KGZMq8%2BUJw%2FsiBfCp24sJ9gy2x83688RdQfO0050grH6PXrOwEpVM8yLMlqL5uhQyXwehcCLTn%2BtTNAZV9O4vNcmmHMHPmrb4cTmz4eyKxwI8n130Aty46nNgm3pAtAcFm33KFGR8B9RukngruxTwy1BgLAHHC9wMsesuqc7JT1OP6Plgv8WxkJfzLjXIFSQa88jL44whfpw3dC3oFN8Gi2yskl12Z1g7zJ75TVKPcgCV4PZx6ETYRcK%2B4HyS2GnkXpXB4l4g4I3%2FQ7OClqGQJywnyPNqAC7C9pBlPLx5VWwM4%2BK8hTotH8r%2BGGh7QzbUhM%3D"
+        },
+        {
+          "title": "Givenchy Citrus Green Shearling Mini G-Hobo Bag",
+          "totalPrice": 776.25,
+          "url": "https://www.ebay.com/itm/127706146365?_skw=Givenchy+4G+padlock+hobo+bag+green+fur&hash=item1dbbe1263d:g:lQMAAeSw~~1poCJK"
+        }
+      ]
+    },
+    {
+      "id": "pp_008",
+      "benchmarkStatus": "review",
+      "productImage": "images/IMG_7471.jpg",
+      "priceImage": "images/IMG_7472.jpg",
+      "expectedItemName": "Gucci GG Monogram Beige with Black Trim Wool Pouch",
+      "identifiedItemName": "Gucci GG Wool Pouch with Black Leather Trim",
+      "searchQuery": "Gucci GG monogram wool clutch",
+      "provider": "gemini-3-image-understanding",
+      "confidence": 0.97,
+      "referencePriceUsd": 750,
+      "ebayP25Usd": 153,
+      "ebayMedianUsd": 179,
+      "ebayP75Usd": 298,
+      "medianErrorPct": -76.1,
+      "medianWithin30Pct": false,
+      "referenceWithinIqr": false,
+      "listingCount": 23,
+      "suggestedMaxPriceUsd": 77,
+      "elapsedMs": 9866,
+      "warnings": [
+        "新品系の出品が混ざっている可能性があり、Max価格がやや強気になっている恐れがあります。"
+      ],
+      "topListings": [
+        {
+          "title": "Gucci Clutch Brown GG Monogram",
+          "totalPrice": 830,
+          "url": "https://www.ebay.com/itm/377117933748?_skw=Gucci+GG+monogram+wool+clutch&hash=item57cdfb00b4:g:PjoAAeSwe69p4KuE"
+        },
+        {
+          "title": "Vintage Gucci Monogram Mini GG Web Envelope Clutch Beige Canvas Leather Trim",
+          "totalPrice": 100.99,
+          "url": "https://www.ebay.com/itm/297950250670?_skw=Gucci+GG+monogram+wool+clutch&hash=item455f3806ae:g:hEoAAeSw24hpbuoK&amdata=enc%3AAQALAAABAACCtXRWQnOEpyOqnQQ8KGYxbaMjfhNAF%2F%2BTuHlf25MA8sEHBzFzPnCom%2ByVBQEBMYUBKF1i%2B%2ByRFwak9PsgNuY0B1guXfyiiCxz%2FEGPA%2FA5ytB4WCDniZpG6S2PWCzJ0MOyGT8zRE7wNLfz06MVcG9KoRpOokoYnQuVPiKA%2BNhIhCDRcWbZqcM%2FV4tTlTc39ZmyMlMr1hVvv%2FmGaqmDkTugvt2eh8ayKFL%2FN%2Bawbg7egWcbCX9oxCRTS0GXxnwJfFp8E%2FJVmrB%2Bp%2BPC8NIGeiuFSKzmjTSj3d31V%2FvgNY6xHWDNnSHTOkg6mVrAdkUCixc2Wp6S2A2ZABPYBZB2a3o%3D"
+        },
+        {
+          "title": "Auth GUCCI GG Web Sherry Line Clutch Bag Pouch Navy 0320a",
+          "totalPrice": 158,
+          "url": "https://www.ebay.com/itm/406784813649?_skw=Gucci+GG+monogram+wool+clutch&hash=item5eb643aa51:g:Op4AAeSwQ6lpvLav&amdata=enc%3AAQALAAABAACCtXRWQnOEpyOqnQQ8KGarDL1t1YB2xk7E22SAqmRmHRBZLK4vhOTtPxeXQsE4%2F3EkOcoOu%2Bl5vbA9ssBaGz3WciACX1GDzLPLo0QTVhLxvvKPsy1l%2FRYq8dCgl7cS1gF%2FIeFyDrnxtP9%2FnlH0XpKwSeTza22e%2FiaV5jix540XwvzPIfYYaEK%2Bg4rvLiHxufyYnUugU%2B3kuc96ZNwmzfzS3DQcQRFgC7tsLZEbo49R3cYuG2SM0IQoXyTN3FEQraPRu7PgBlVyGh4M0z8L2s9sW2hTzQ%2FJJ2RCTdoZKdW4lyC34ncw1h%2FEuSVPefb8DNVEzbcT4gTAQdWDtPwGjBQ%3D"
+        },
+        {
+          "title": "Auth GUCCI GG Web Sherry Line Clutch Bag Pouch Brown 0311a",
+          "totalPrice": 148,
+          "url": "https://www.ebay.com/itm/406754586159?_skw=Gucci+GG+monogram+wool+clutch&hash=item5eb4766e2f:g:DbMAAeSw~eppsL5P&amdata=enc%3AAQALAAABAACCtXRWQnOEpyOqnQQ8KGZJeAcqhvoyZwuu1jIx0%2BDO86OkDVI6JaOX%2FrqTchVbMjsIdRaz8F5g7gDxtSPLpgB5NO0XCYQH3Jf1mCM7oTPsgQELQaStY48fEmrvEzzKhuPMBvX4IoDXgAZkNWv4GYR72rc4np67oBYjG3W0b24W%2Fguo1ZGE4sxa6yJvj9paNrX9Ayecj9v7LaVnXse7jnsS80%2FWXuOXH1pnS63vZPlPn%2BB11igBdzQMSjXPnS5zwVxBbTAb6439LtJMhT0xXfptsXDvdpaq7MqE9k3Tad%2BZ3QqobmSn07MyuAoXQfbQkLUTavrukUj%2FH5PO7L0xuuY%3D"
+        },
+        {
+          "title": "Gucci Clutch Grey Calfskin",
+          "totalPrice": 470,
+          "url": "https://www.ebay.com/itm/377117934096?_skw=Gucci+GG+monogram+wool+clutch&hash=item57cdfb0210:g:dR0AAeSwKOdp4Kvg"
+        }
+      ]
+    }
+  ]
+}
