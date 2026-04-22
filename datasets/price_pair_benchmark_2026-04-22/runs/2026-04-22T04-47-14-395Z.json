@@ -1,0 +1,416 @@
+{
+  "runId": "2026-04-22T04-47-14-395Z",
+  "datasetId": "price_pair_benchmark_2026-04-22",
+  "providerTarget": "google-vision",
+  "baseUrl": "http://127.0.0.1:55357",
+  "rows": [
+    {
+      "id": "pp_001",
+      "benchmarkStatus": "include",
+      "productImage": "images/IMG_7490.jpg",
+      "priceImage": "images/IMG_7491.jpg",
+      "expectedItemName": "Burberry TB Monogram Robin Crossbody Bag",
+      "identifiedItemName": "Burberry Tb Monogram",
+      "searchQuery": "Burberry TB Monogram Crossbod",
+      "provider": "google-vision-web-detection",
+      "confidence": 0.95,
+      "referencePriceUsd": 695,
+      "ebayP25Usd": 508,
+      "ebayMedianUsd": 593,
+      "ebayP75Usd": 749,
+      "medianErrorPct": -14.7,
+      "medianWithin30Pct": true,
+      "referenceWithinIqr": true,
+      "listingCount": 22,
+      "suggestedMaxPriceUsd": 229,
+      "elapsedMs": 12798,
+      "warnings": [
+        "新品系の出品が混ざっている可能性があり、Max価格がやや強気になっている恐れがあります。"
+      ],
+      "topListings": [
+        {
+          "title": "BURBERRY TB Monogram Mini Camera Bag 8032774 Shoulder Bag Logo Brown Multi...",
+          "totalPrice": 380.88,
+          "url": "https://www.ebay.com/itm/358423695435?_skw=Burberry+TB+Monogram+Crossbod&hash=item5373b7904b:g:7x4AAeSwrWdp5cu5"
+        },
+        {
+          "title": "Burberry Mini Tb Crossbody In Black Monogram Quilted Lambskin Fw0326oxzdu",
+          "totalPrice": 620,
+          "url": "https://www.ebay.com/itm/188117896903?_skw=Burberry+TB+Monogram+Crossbod&hash=item2bccb34ec7:g:jZwAAeSwd0Bpp3RH&amdata=enc%3AAQALAAABAACCtXRWQnOEpyOqnQQ8KGbf7sT%2FB9CKQbIc7tJTgbw3p8hIeQbEYFQgY0xPC1tqp%2B5viXuLiPYuWgdFyDq9DJFVl%2BPh3D77%2BqVI60Rb10yip4kXfdK828d8XwcVq5Gs%2Bar5YA%2FRjjOJ0NXTmIolM6l8Hstb7UlT0dLG5V6EJVpv5Cx4YoWiDCnOBUayhokgFTo2PnJ0PHCJ%2BTERBwR27WI5BsPjxwrYzloA%2BmA%2BSUpv5vpTfhStvyNwm6e7rbfxOs0X7cySDzm2nR3BiRfueYyDkmiqRHX%2BczTDHp4T6bCh603kayz84mW0EFiMKBad%2FZeXunLKtHvppIvQC2zVHb4%3D"
+        },
+        {
+          "title": "BURBERRY TB Monogram E-canvas Shoulder Crossbody Bag Brown 8020170",
+          "totalPrice": 585.36,
+          "url": "https://www.ebay.com/itm/188021650570?_skw=Burberry+TB+Monogram+Crossbod&hash=item2bc6f6b48a:g:1bYAAeSwKvBpgeOi&amdata=enc%3AAQALAAABAACCtXRWQnOEpyOqnQQ8KGaneeV0iu6l5VMZVQkI7LzfS78oER7ukdKTAV1fYeAR94Lm7nxEah1sEH60RIFFm%2BAV2qzzqv8%2FwNPluW507JX%2FJSH9zTAv%2F3FtnD%2BwsDgufZYBDpxcMxcsYAAa2msHdc5qwWDNtpY0gzF%2BCv94rWgTnrUWzFOOR346RKO94wRyl2bRNfXAudniMC4FznCxg4jSDULRPnkXZjkXhbQC%2Fu%2FnZGBxjtevn2Q7%2BSNsUZcGhXssNx7kMeQo0Fa1QH%2BT1FPX6IyD0YdMrlnQ6OGGVKJHXP7v77F1FbZRBz4buy3sJJp7vFOypj%2FUZbTUgwl2W5o%3D"
+        },
+        {
+          "title": "Burberry TB Monogram Leather TB Small Flap Bag",
+          "totalPrice": 880,
+          "url": "https://www.ebay.com/itm/267615039803?_skw=Burberry+TB+Monogram+Crossbod&hash=item3e4f19713b:g:keIAAeSwA4Fp0s0R&amdata=enc%3AAQALAAABAACCtXRWQnOEpyOqnQQ8KGZMOJKx8q9gcjQnLLkJhugY3NrQQz%2B9ql2IjGCO045Qw%2BB3wpcRep5XdXJKXTbY32frkQ9DS%2FHNBn8sg0GoOYQhy9Wya5qPyamK9IHiGKEyKNfUqsl1QFpRsNRkxt3CvVZUkpAXlRfsK%2F8SIXAR2F9zguS6Tld7aZnGbdR6kS341U4LOQrzcNOtzGlvJPhqfihUj42PkUhzLDNnbSa6w3V3iD8oQYYCWpJ3IVFJ8TpSQnHv7kQHPXmBaRcMFUMYW5%2Bavkiewg8TYLyxyUpC1ISewNGd5RU%2FQScSFxnPoAuAKTDHbtEcPhrVa6Jv81PXRFw%3D"
+        },
+        {
+          "title": "Burberry TB Monogram Embossed Calfskin Chain Crossbody Bag",
+          "totalPrice": 610,
+          "url": "https://www.ebay.com/itm/167803039700?_skw=Burberry+TB+Monogram+Crossbod&hash=item2711d72fd4:g:zNwAAeSwHAZozaDs"
+        }
+      ]
+    },
+    {
+      "id": "pp_002",
+      "benchmarkStatus": "include",
+      "productImage": "images/IMG_7492.jpg",
+      "priceImage": "images/IMG_7493.jpg",
+      "expectedItemName": "MCM Klassik Visetos Mix Small Crossbody in White and Brown",
+      "identifiedItemName": "Mcm Tote Bag",
+      "searchQuery": "MCM",
+      "provider": "google-vision-web-detection",
+      "confidence": 0.95,
+      "referencePriceUsd": 595,
+      "ebayP25Usd": 200,
+      "ebayMedianUsd": 272,
+      "ebayP75Usd": 354,
+      "medianErrorPct": -54.3,
+      "medianWithin30Pct": false,
+      "referenceWithinIqr": false,
+      "listingCount": 16,
+      "suggestedMaxPriceUsd": 90,
+      "elapsedMs": 7800,
+      "warnings": [
+        "新品系の出品が混ざっている可能性があり、Max価格がやや強気になっている恐れがあります。"
+      ],
+      "topListings": [
+        {
+          "title": "MCM Liz reversible Large Monogram Tote Bag Logo Accents Gold Hardware.",
+          "totalPrice": 200,
+          "url": "https://www.ebay.com/itm/358468795814?_skw=MCM&hash=item537667bda6:g:f7sAAeSwS-xp5s53"
+        },
+        {
+          "title": "MCM original MCM Reversible Liz Shopper tote bag in Visetos coated canvas.",
+          "totalPrice": 310,
+          "url": "https://www.ebay.com/itm/236769568154?_skw=MCM&hash=item372090e59a:g:~zkAAeSwmH9p5y3S"
+        },
+        {
+          "title": "mcm handbag crossbody",
+          "totalPrice": 320,
+          "url": "https://www.ebay.com/itm/157790284276?_skw=MCM&hash=item24bd08a9f4:g:WUkAAeSwtRBpxYSe"
+        },
+        {
+          "title": "MCM Cognac Satchel Top Handle Gold Silver Hardware Logo Zip Closure",
+          "totalPrice": 210,
+          "url": "https://www.ebay.com/itm/298250689498?_skw=MCM&hash=item4571205bda:g:BU0AAeSwETJp6Awz"
+        },
+        {
+          "title": "MCM Reversible Liz Shopper in Visteos- Double Handles, Detachable Strap Pouch",
+          "totalPrice": 325,
+          "url": "https://www.ebay.com/itm/358469293316?_skw=MCM&hash=item53766f5504:g:EwMAAeSwKnpp5vru"
+        }
+      ]
+    },
+    {
+      "id": "pp_003",
+      "benchmarkStatus": "review",
+      "productImage": "images/IMG_7486.jpg",
+      "priceImage": "images/IMG_7487.jpg",
+      "expectedItemName": "Chanel black drawstring bucket bag with bamboo handle",
+      "identifiedItemName": "Coach Shoulder Bag",
+      "searchQuery": "handbag",
+      "provider": "google-vision-web-detection",
+      "confidence": 0.95,
+      "referencePriceUsd": 695,
+      "ebayP25Usd": 60,
+      "ebayMedianUsd": 103,
+      "ebayP75Usd": 245,
+      "medianErrorPct": -85.2,
+      "medianWithin30Pct": false,
+      "referenceWithinIqr": false,
+      "listingCount": 24,
+      "suggestedMaxPriceUsd": 27,
+      "elapsedMs": 8579,
+      "warnings": [
+        "新品系の出品が混ざっている可能性があり、Max価格がやや強気になっている恐れがあります。"
+      ],
+      "topListings": [
+        {
+          "title": "Coach Black leather Demi hobo Hampton shoulder bag 7593",
+          "totalPrice": 99.95,
+          "url": "https://www.ebay.com/itm/406876842367?_skw=handbag&hash=item5ebbbfe97f:g:2gsAAeSwXCBp5tvG"
+        },
+        {
+          "title": "NUTI Ostrich Hobo Shoulder Bag Handbag, Pale Yellow/Gold",
+          "totalPrice": 407,
+          "url": "https://www.ebay.com/itm/267646834383?_skw=handbag&hash=item3e50fe96cf:g:uCgAAeSwhkpp5~-8&amdata=enc%3AAQALAAAA4ACCtXRWQnOEpyOqnQQ8KGZsehiHKOrtpkFhQYBONJxkM%2FXmd7pte7DdSJlnbG4jXkkKuOpN2pyk6Pzetoet3PH%2BNi742MHurPk8h4LvgBjkOaBCMPyGyTuIrRnWnWBZ7oMWtwz%2FoPGWP01FAGF6rFWyZRRmYsaJlHZPe0e5%2BTR5BOkXIO%2BGyGJE5o39PpapjaCEugE0Hmpq%2FXxDqlS3Kx1mjesO4BdanhmNlHX9v6Q80PSm1nKsHYMSY2wuD1iZ%2BenuTtsJ1o8e9J6ZBAXtjthmp5NioVgg8AkfLRUrccjr"
+        },
+        {
+          "title": "Auth Balenciaga The First 2Way Handbag Purple Leather Shoulder Bag r19",
+          "totalPrice": 1349,
+          "url": "https://www.ebay.com/itm/206222932018?_skw=handbag&hash=item3003d83832:g:sbwAAeSwrclp5ttW&amdata=enc%3AAQALAAAA8ACCtXRWQnOEpyOqnQQ8KGaNrY%2F2wJ0eNFNH0sQwi4dV9Ed5CuqjoblVCKJzKOtpUWl%2BGtCvXbdLXYeEBtigSza4q9GceX856gLDEMjEKwAluBN3ZrIssMCFS0oR19UjOi%2BpKizdX2cZ5PwcIPMMCAcnDeml5NX%2FygFfzZ00rMgJlTSeWIbKAAXShLXxZ%2F6F9FIOdqPVh4SYdS5ukNkdgDwHznlGyVG%2FoUHcyKf1Ojf2JEPRCsD3Tm6augAWdDijv0z3v9tz0Ykju3nle4S3da1Xe%2BWJMe%2FZpCAXtTyACLmqGVN%2FersLz3MU3iIOcXy9dA%3D%3D"
+        },
+        {
+          "title": "NWT COACH Hamptons Hobo Bag Signature Jacquard Oak Maple Handbag CBF16",
+          "totalPrice": 149,
+          "url": "https://www.ebay.com/itm/227236988835?_skw=handbag&hash=item34e86147a3:g:HUMAAeSwTqFpo~fC&amdata=enc%3AAQALAAAA4ACCtXRWQnOEpyOqnQQ8KGbmlq9FasZQMVtzvAK9bHdyq9xFzPoIcD96q7a7buJ49nzkFsDjjMKf%2BMSVxdPbrX6SpgZMFB9U1gAWxPQpmdbfJ2VqAMRIgRKWO48wBsVfpOFIBmubej%2BwzLn5XctwUdDLwog8ADKJ%2Fz9%2BoBFtpEVkp7XSMXwUFrHgHkkp0j2yh6dICz9Ol8rIVHQbnjLTf9%2FxWbS3tJpjOoXJts8wO%2B9ZApflTO3yUB%2FG3qaM204AlJwuwg37Q%2Brvx2QZDo9YnCsZ%2FLrNX%2FsWfYv4J8QeEJAN"
+        },
+        {
+          "title": "Coach Y2K Vintage Brown Leather Shoulder Bag Buckle Accent Silver Hardware",
+          "totalPrice": 222,
+          "url": "https://www.ebay.com/itm/377132546252?_skw=handbag&hash=item57ced9f8cc:g:-9sAAeSwg6Bp6DSx"
+        }
+      ]
+    },
+    {
+      "id": "pp_004",
+      "benchmarkStatus": "review",
+      "productImage": "images/IMG_7479.jpg",
+      "priceImage": "images/IMG_7480.jpg",
+      "expectedItemName": "Prada Logo Jacquard Canvas and Leather Shoulder Bag",
+      "identifiedItemName": "Herman Refurbished Approved",
+      "searchQuery": "chair",
+      "provider": "google-vision-web-detection",
+      "confidence": 0.95,
+      "referencePriceUsd": 595,
+      "ebayP25Usd": 204,
+      "ebayMedianUsd": 325,
+      "ebayP75Usd": 502,
+      "medianErrorPct": -45.4,
+      "medianWithin30Pct": false,
+      "referenceWithinIqr": false,
+      "listingCount": 22,
+      "suggestedMaxPriceUsd": 112,
+      "elapsedMs": 8157,
+      "warnings": [
+        "新品系の出品が混ざっている可能性があり、Max価格がやや強気になっている恐れがあります。"
+      ],
+      "topListings": [
+        {
+          "title": "Herman Miller Mirra Chair - Refurbished Approved By Madison Seating",
+          "totalPrice": 299.11,
+          "url": "https://www.ebay.com/itm/124444610775?_skw=chair&hash=item1cf97a10d7:g:3NoAAeSwiqxpmJbL"
+        },
+        {
+          "title": "Steelcase Leap V2 Chair, Fully Loaded Black on Black",
+          "totalPrice": 449.1,
+          "url": "https://www.ebay.com/itm/131997459927?_skw=chair&hash=item1ebba965d7:g:z44AAOSwfcZh8ZuX&amdata=enc%3AAQALAAAA4ACCtXRWQnOEpyOqnQQ8KGacd0TtOlgviGEkw9wV6RXT89K94H9COaH7ISxniZMJtyRtxGqPFUi2xWEanKcg8sNngf5WtIXCQfxhZNsvptrCS25Qcdbj8D44LlzkVX85HM1iYvMZ%2FaXAn9p4cFDX%2F2wx0YTrUsPvg%2BRD0QCsR6cKSr%2BSYtHJEfHAYwrqDUGt0GDxDeXe8wRyC%2B7mTpJizypy7Uxp8ss7U%2F4iQqOD9QvqHJJ3FPeaLYW8O3cIZWr2jnjFlhFzmAPEGbnGnuc03X0SCgIlyq6m8RBc2UL%2BYfl%2F"
+        },
+        {
+          "title": "Humanscale Freedom Office Chair: Standard Arm Cup Left & Right",
+          "totalPrice": 120,
+          "url": "https://www.ebay.com/itm/157851368029?_skw=chair&hash=item24c0acba5d:g:M9gAAeSwKnpp6EoZ&amdata=enc%3AAQALAAAA4ACCtXRWQnOEpyOqnQQ8KGb4CFicXDvI7JZJtDw8JUSfaVr7qIFbkrEmMVM%2B469Y1ceo5R8DWrROre2o%2BhoQtmiSfKhY%2BZ2MLD%2Bfuq47%2B%2Fj5YNVRS6sKv6ASioCkiICXaDBWv2AA8pfNLbalqYgAQbHIBHWyLct2uOTnp4dTNHhcXrixDosjhE0R5lUiCznCRnC%2BCzkmtItQQA4rq0jlDmyxPtMUmpYKIlt5MXfx4Q4M6AUWMJgC%2F8yAVAgK9HXYuZepilKSZ4F5KEtCrp4FjEn0y7hYN%2BiCb%2FTCStnqR8oC"
+        },
+        {
+          "title": "Herman Miller Aeron Mesh Desk Chair Medium Size B fully adjustable w/ lumbar",
+          "totalPrice": 519.99,
+          "url": "https://www.ebay.com/itm/186668230294?_skw=chair&hash=item2b764b2696:g:n-MAAOxy5rpSTIFJ"
+        },
+        {
+          "title": "Herman Miller Aeron Chair-Fully Loaded- Refurbished Approved By Madison Seating",
+          "totalPrice": 549.11,
+          "url": "https://www.ebay.com/itm/121905415783?_skw=chair&hash=item1c62210667:g:1QwAAOSwKtVWzy63"
+        }
+      ]
+    },
+    {
+      "id": "pp_005",
+      "benchmarkStatus": "include",
+      "productImage": "images/IMG_7478.jpg",
+      "priceImage": "images/IMG_7477.jpg",
+      "expectedItemName": "MCM Metallic Studded Vanity",
+      "identifiedItemName": "J Messenger Bag",
+      "searchQuery": "bag",
+      "provider": "google-vision-web-detection",
+      "confidence": 0.95,
+      "referencePriceUsd": 575,
+      "ebayP25Usd": 40,
+      "ebayMedianUsd": 71,
+      "ebayP75Usd": 223,
+      "medianErrorPct": -87.7,
+      "medianWithin30Pct": false,
+      "referenceWithinIqr": false,
+      "listingCount": 14,
+      "suggestedMaxPriceUsd": 18,
+      "elapsedMs": 8227,
+      "warnings": [
+        "新品系の出品が混ざっている可能性があり、Max価格がやや強気になっている恐れがあります。"
+      ],
+      "topListings": [
+        {
+          "title": "J.CREW Messenger Bag Brown Leather Trim Buckle Zip Snap Adjustable Strap",
+          "totalPrice": 44.5,
+          "url": "https://www.ebay.com/itm/127822983435?_skw=bag&hash=item1dc2d7f10b:g:tC0AAeSwhS1p6CHA"
+        },
+        {
+          "title": "Prada Re-Nylon Black Crossbody Bag Men",
+          "totalPrice": 265,
+          "url": "https://www.ebay.com/itm/117156219246?_skw=bag&hash=item1b470e096e:g:sf8AAeSwJVdp5Dd0&amdata=enc%3AAQALAAAA4ACCtXRWQnOEpyOqnQQ8KGZ49sog80W95tsfFL4NLMDgvMVBLnC0BpG98tZNvSBqKcvM491p8A51BNqLYa05QvGvLqECj5hJmrzTy9cx%2FqJJnSndsC9ExQJErpHszuC5ES4Issg3r3fksx5Ptofb3BBO%2FEhoRw8uKoTs4DdXptxR6OdKgpf0xbAjtzgik7yt%2FcUsahE9rQshmDS3kxj5ZNyVazRTTqUSeCoZcfPg%2BieKFxRVKy2CVJ2tYvGiDWrBoDqyJ1o6PexNlNwoeyHq5q7AraYcwENVjfn%2BvyHVVdxd"
+        },
+        {
+          "title": "Marino Orlandi Brown Shoulder Bag with Zip Closure and Metal Hardware",
+          "totalPrice": 60,
+          "url": "https://www.ebay.com/itm/287286593023?_skw=bag&hash=item42e39d85ff:g:1~YAAeSwrIhp6CwO"
+        },
+        {
+          "title": "Camouflage Men's Backpack with Adjustable Straps, Zip Closure, Black Gray Beige",
+          "totalPrice": 9,
+          "url": "https://www.ebay.com/itm/127823161548?_skw=bag&hash=item1dc2daa8cc:g:~LQAAeSwWxpp6DvO"
+        },
+        {
+          "title": "Fossil Black Messenger Bag Shoulder Strap Brown Handles Multiple Zipper Pockets",
+          "totalPrice": 29.99,
+          "url": "https://www.ebay.com/itm/287286595785?_skw=bag&hash=item42e39d90c9:g:9dUAAeSwqBdp6C0F"
+        }
+      ]
+    },
+    {
+      "id": "pp_006",
+      "benchmarkStatus": "include",
+      "productImage": "images/IMG_7475.jpg",
+      "priceImage": "images/IMG_7476.jpg",
+      "expectedItemName": "Fendi Dark Green Baguette Teal Blue FF Logo Hardware Shoulder Bag",
+      "identifiedItemName": "Room Paperback By",
+      "searchQuery": "room",
+      "provider": "google-vision-web-detection",
+      "confidence": 0.95,
+      "referencePriceUsd": 1015,
+      "ebayP25Usd": 4,
+      "ebayMedianUsd": 4,
+      "ebayP75Usd": 4,
+      "medianErrorPct": -99.6,
+      "medianWithin30Pct": false,
+      "referenceWithinIqr": false,
+      "listingCount": 12,
+      "suggestedMaxPriceUsd": 2,
+      "elapsedMs": 9707,
+      "warnings": [
+        "新品系の出品が混ざっている可能性があり、Max価格がやや強気になっている恐れがあります。"
+      ],
+      "topListings": [
+        {
+          "title": "Room on the Broom - Paperback By Donaldson, Julia - VERY GOOD",
+          "totalPrice": 4.39,
+          "url": "https://www.ebay.com/itm/256667227579?_skw=room&hash=item3bc28f15bb:g:968AAOSwk8ZnArc8"
+        },
+        {
+          "title": "The Reptile Room (A Series of Unfortunate Events #2) - Hardcover - GOOD",
+          "totalPrice": 3.88,
+          "url": "https://www.ebay.com/itm/276431173029?_skw=room&hash=item405c94f5a5:g:LoMAAOSwQQ9mIb6s"
+        },
+        {
+          "title": "The Burning Room (A Harry Bosch Novel) - Hardcover - VERY GOOD",
+          "totalPrice": 3.88,
+          "url": "https://www.ebay.com/itm/254999659818?_skw=room&hash=item3b5f2a052a:g:6AUAAOSwlcBhr0VF"
+        },
+        {
+          "title": "The Mars Room: A Novel - Hardcover By Kushner, Rachel - GOOD",
+          "totalPrice": 4.08,
+          "url": "https://www.ebay.com/itm/274255023528?_skw=room&hash=item3fdadf8da8:g:NN0AAOSwbKJhcVNw"
+        },
+        {
+          "title": "Hostage: A Locked-Room Thriller - Paperback By Mackintosh, Clare - GOOD",
+          "totalPrice": 4.3,
+          "url": "https://www.ebay.com/itm/265644257199?_skw=room&hash=item3dd9a1afaf:g:9skAAOSwUjhiWXNI"
+        }
+      ]
+    },
+    {
+      "id": "pp_007",
+      "benchmarkStatus": "include",
+      "productImage": "images/IMG_7473.jpg",
+      "priceImage": "images/IMG_7474.jpg",
+      "expectedItemName": "Givenchy Olivia Green Shearling Mini Cut Out Bag",
+      "identifiedItemName": "Vossknut Cardigan Sweater",
+      "searchQuery": "wool",
+      "provider": "google-vision-web-detection",
+      "confidence": 0.95,
+      "referencePriceUsd": 675,
+      "ebayP25Usd": 31,
+      "ebayMedianUsd": 42,
+      "ebayP75Usd": 52,
+      "medianErrorPct": -93.8,
+      "medianWithin30Pct": false,
+      "referenceWithinIqr": false,
+      "listingCount": 19,
+      "suggestedMaxPriceUsd": 16,
+      "elapsedMs": 8199,
+      "warnings": [
+        "新品系の出品が混ざっている可能性があり、Max価格がやや強気になっている恐れがあります。"
+      ],
+      "topListings": [
+        {
+          "title": "Vossknut Women's Fair Isle Knit Cardigan Sweater - Made in Norway!",
+          "totalPrice": 30,
+          "url": "https://www.ebay.com/itm/277916615063?_skw=wool&hash=item40b51f0197:g:ISEAAeSwzANp6A6N"
+        },
+        {
+          "title": "Garnet Hill 100% Merino Wool Floral Print Cardigan Sweater L Cream",
+          "totalPrice": 30,
+          "url": "https://www.ebay.com/itm/267646828562?_skw=wool&hash=item3e50fe8012:g:~9sAAeSw8K9p6Ar6"
+        },
+        {
+          "title": "Zara Oversized Turtleneck Sweater — Oatmeal",
+          "totalPrice": 42.190000000000005,
+          "url": "https://www.ebay.com/itm/358473083229?_skw=wool&hash=item5376a9295d:g:uOcAAeSwyMZp6EZN"
+        },
+        {
+          "title": "Dale of Norway 100% wool sweater with decorative pewter clasps.",
+          "totalPrice": 98,
+          "url": "https://www.ebay.com/itm/188302646126?_skw=wool&hash=item2bd7b65b6e:g:Q0kAAeSwvSpp6A72"
+        },
+        {
+          "title": "Calvin Klein Jeans Women’s Large Sweater Short Sleeve Red Fuzzy 5% Wool Soft",
+          "totalPrice": 17.59,
+          "url": "https://www.ebay.com/itm/206224819350?_skw=wool&hash=item3003f50496:g:BiIAAeSwEPFp6BBi"
+        }
+      ]
+    },
+    {
+      "id": "pp_008",
+      "benchmarkStatus": "review",
+      "productImage": "images/IMG_7471.jpg",
+      "priceImage": "images/IMG_7472.jpg",
+      "expectedItemName": "Gucci GG Monogram Beige with Black Trim Wool Pouch",
+      "identifiedItemName": "Coach Wool Handbag",
+      "searchQuery": "Black Trim Wool Pouch handbag",
+      "provider": "google-vision-web-detection",
+      "confidence": 0.95,
+      "referencePriceUsd": 750,
+      "ebayP25Usd": 26,
+      "ebayMedianUsd": 36,
+      "ebayP75Usd": 94,
+      "medianErrorPct": -95.2,
+      "medianWithin30Pct": false,
+      "referenceWithinIqr": false,
+      "listingCount": 23,
+      "suggestedMaxPriceUsd": 12,
+      "elapsedMs": 7482,
+      "warnings": [
+        "新品系の出品が混ざっている可能性があり、Max価格がやや強気になっている恐れがあります。"
+      ],
+      "topListings": [
+        {
+          "title": "Coach Bleeker Tweed Demi Black Pouch Leather Trim Y2K Mini Handbag Authentic",
+          "totalPrice": 100,
+          "url": "https://www.ebay.com/itm/306657819283?_skw=Black+Trim+Wool+Pouch+handbag&hash=item47663afa93:g:ZasAAeSw46lpPuY1"
+        },
+        {
+          "title": "Braciano Vintage Red Felted Purse Weekender Tote Bag Button Trim Inside Pocket",
+          "totalPrice": 24.98,
+          "url": "https://www.ebay.com/itm/168293119585?_skw=Black+Trim+Wool+Pouch+handbag&hash=item272f0d3661:g:BiMAAeSwFC5p1SZs&amdata=enc%3AAQALAAABAACCtXRWQnOEpyOqnQQ8KGZQKjnjqCEHsBi%2BrytYxkAVhPdkF63nCS8pNzmcVhFp0HEIln3JmBGOHdYNWr%2BhxddedFDHwH7GPsmrCMS92xuyRRbTpxnIWL1tLPnUOb0SSjoHhsgkislogQ0hyQEe6F1YKtB2r%2FAqLx%2FeNmdZe0cq6wVLnmJZ1J1%2Be5KQIrp2GH59jIOQxEZHWDCQ8YqW3CGHqDTZXrN8w2xlJurK2eejpJQAL%2FScxWt7beTtGmuHlnI9HQiB%2BDTsXjcMlCdPxRMWjj%2BdhXDQZE%2Fzl6Fk%2B%2BZiQo7KMJ%2FI%2Foh%2FJjqrpk7WO9WfB9philVan8O4aH9vrX8%3D"
+        },
+        {
+          "title": "Vintage ETIENNE AIGNER Handbag Wool Blend Tweed Leather Trim Buckles",
+          "totalPrice": 19.99,
+          "url": "https://www.ebay.com/itm/277342224911?_skw=Black+Trim+Wool+Pouch+handbag&hash=item4092e2820f:g:K2gAAeSw6xdoqi18&amdata=enc%3AAQALAAABAACCtXRWQnOEpyOqnQQ8KGbN7XsGiXWG4KXpTxWVK47xyoczGGriCRE9%2FX8lrkzl6MWlB6r7VuBJRrb9aTIiwHrKw9fsh3AsvuHezt2R9nCnzQCA3GodcRm6eM6OLMBheUmOKz2tYKrK%2F54ogEiD5qLpETLbmRFEFvtVdWbrxRc2M0U%2BSacnBcwFCQYvmtsRFrdm8g%2FFaT3jnQFG1%2FQ5kPnAayMYvgz14iytpDhv1GIiHNhG2vBo0H7Ff1%2Bk0YzkNZS6CuFh64d%2BJYjMrufEyx1SQKkn9eqoU%2BJvW9T67VyncT09nlsgIDv3o0%2FFyl1L6AkutkGRP6oduOe9tgVIgA8%3D"
+        },
+        {
+          "title": "Relic Fossil Plaid Wool Handbag Purse Buckle Closure Leather Trim Retro Classic",
+          "totalPrice": 11.18,
+          "url": "https://www.ebay.com/itm/206173973068?_skw=Black+Trim+Wool+Pouch+handbag&hash=item3000ed2a4c:g:FnMAAeSwr21oQnxk"
+        },
+        {
+          "title": "Coach Tweed Mini Y2K Bag Wristlet Wool Suede Velvet Trim Jewel Bow Gray Maroon",
+          "totalPrice": 125,
+          "url": "https://www.ebay.com/itm/205930820682?_skw=Black+Trim+Wool+Pouch+handbag&hash=item2ff26ef44a:g:ED8AAeSwAyxpRI5C"
+        }
+      ]
+    }
+  ]
+}

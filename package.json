@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test:e2e": "node scripts/e2e-appraisal.mjs"
+    "test:e2e": "node scripts/e2e-appraisal.mjs",
+    "benchmark:price-pairs": "node scripts/run-price-pair-benchmark.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.103.3",

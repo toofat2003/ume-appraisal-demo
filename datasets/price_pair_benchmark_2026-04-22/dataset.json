@@ -1,0 +1,97 @@
+{
+  "datasetId": "price_pair_benchmark_2026-04-22",
+  "createdAt": "2026-04-22",
+  "currency": "USD",
+  "description": "User-provided store photos paired with visible price-tag photos. The target price is the pre-multiplier reference listing/tag price.",
+  "pairingRule": "Pairs were matched by adjacent original filename order and corrected by visual item/tag consistency.",
+  "entries": [
+    {
+      "id": "pp_001",
+      "productImage": "images/IMG_7490.jpg",
+      "priceImage": "images/IMG_7491.jpg",
+      "sourceProductImage": "/Users/kosukenakajima/Downloads/IMG_7490.HEIC",
+      "sourcePriceImage": "/Users/kosukenakajima/Downloads/IMG_7491.HEIC",
+      "itemNameFromTag": "Burberry TB Monogram Robin Crossbody Bag",
+      "referencePriceUsd": 695,
+      "benchmarkStatus": "include",
+      "notes": "Clean pair. The tag is attached to the same Burberry TB monogram bag."
+    },
+    {
+      "id": "pp_002",
+      "productImage": "images/IMG_7492.jpg",
+      "priceImage": "images/IMG_7493.jpg",
+      "sourceProductImage": "/Users/kosukenakajima/Downloads/IMG_7492.HEIC",
+      "sourcePriceImage": "/Users/kosukenakajima/Downloads/IMG_7493.HEIC",
+      "itemNameFromTag": "MCM Klassik Visetos Mix Small Crossbody in White and Brown",
+      "referencePriceUsd": 595,
+      "benchmarkStatus": "include",
+      "notes": "Clean pair. Filename upload order was misleading; visual match is IMG_7492 with IMG_7493."
+    },
+    {
+      "id": "pp_003",
+      "productImage": "images/IMG_7486.jpg",
+      "priceImage": "images/IMG_7487.jpg",
+      "sourceProductImage": "/Users/kosukenakajima/Downloads/IMG_7486.HEIC",
+      "sourcePriceImage": "/Users/kosukenakajima/Downloads/IMG_7487.HEIC",
+      "itemNameFromTag": "Chanel black drawstring bucket bag with bamboo handle",
+      "referencePriceUsd": 695,
+      "benchmarkStatus": "review",
+      "notes": "Price is handwritten on tag. Product photo has another bag in the background; target is the foreground black drawstring/bamboo-handle bag."
+    },
+    {
+      "id": "pp_004",
+      "productImage": "images/IMG_7479.jpg",
+      "priceImage": "images/IMG_7480.jpg",
+      "sourceProductImage": "/Users/kosukenakajima/Downloads/IMG_7479.HEIC",
+      "sourcePriceImage": "/Users/kosukenakajima/Downloads/IMG_7480.HEIC",
+      "itemNameFromTag": "Prada Logo Jacquard Canvas and Leather Shoulder Bag",
+      "referencePriceUsd": 595,
+      "benchmarkStatus": "review",
+      "notes": "Product photo includes two Prada bags. Target is the foreground beige/brown shoulder bag on the left."
+    },
+    {
+      "id": "pp_005",
+      "productImage": "images/IMG_7478.jpg",
+      "priceImage": "images/IMG_7477.jpg",
+      "sourceProductImage": "/Users/kosukenakajima/Downloads/IMG_7478.HEIC",
+      "sourcePriceImage": "/Users/kosukenakajima/Downloads/IMG_7477.HEIC",
+      "itemNameFromTag": "MCM Metallic Studded Vanity",
+      "referencePriceUsd": 575,
+      "benchmarkStatus": "include",
+      "notes": "Clean pair."
+    },
+    {
+      "id": "pp_006",
+      "productImage": "images/IMG_7475.jpg",
+      "priceImage": "images/IMG_7476.jpg",
+      "sourceProductImage": "/Users/kosukenakajima/Downloads/IMG_7475.HEIC",
+      "sourcePriceImage": "/Users/kosukenakajima/Downloads/IMG_7476.HEIC",
+      "itemNameFromTag": "Fendi Dark Green Baguette Teal Blue FF Logo Hardware Shoulder Bag",
+      "referencePriceUsd": 1015,
+      "benchmarkStatus": "include",
+      "notes": "Clean pair."
+    },
+    {
+      "id": "pp_007",
+      "productImage": "images/IMG_7473.jpg",
+      "priceImage": "images/IMG_7474.jpg",
+      "sourceProductImage": "/Users/kosukenakajima/Downloads/IMG_7473.HEIC",
+      "sourcePriceImage": "/Users/kosukenakajima/Downloads/IMG_7474.HEIC",
+      "itemNameFromTag": "Givenchy Olivia Green Shearling Mini Cut Out Bag",
+      "referencePriceUsd": 675,
+      "benchmarkStatus": "include",
+      "notes": "Clean pair."
+    },
+    {
+      "id": "pp_008",
+      "productImage": "images/IMG_7471.jpg",
+      "priceImage": "images/IMG_7472.jpg",
+      "sourceProductImage": "/Users/kosukenakajima/Downloads/IMG_7471.HEIC",
+      "sourcePriceImage": "/Users/kosukenakajima/Downloads/IMG_7472.HEIC",
+      "itemNameFromTag": "Gucci GG Monogram Beige with Black Trim Wool Pouch",
+      "referencePriceUsd": 750,
+      "benchmarkStatus": "review",
+      "notes": "Product photo includes multiple visible Gucci items. Target is the foreground beige/black GG wool pouch."
+    }
+  ]
+}
