@@ -39,6 +39,10 @@ function formatDateTime(value: string): string {
   }).format(new Date(value));
 }
 
+function isManualHistoryItem(item: AppraisalHistoryItem): boolean {
+  return item.pricing.listingCount === 0 && item.identification.conditionSummary === "手動入力";
+}
+
 export default function AppointmentDetailPage() {
   const params = useParams<{ appointmentId: string }>();
   const appointmentId = decodeURIComponent(params.appointmentId);
@@ -46,11 +50,16 @@ export default function AppointmentDetailPage() {
   const [storedAppointments, setStoredAppointments] = useState<StoredAppointment[]>([]);
   const [appointmentLabel, setAppointmentLabel] = useState("アポ詳細");
   const [renameValue, setRenameValue] = useState("");
+  const [manualItemName, setManualItemName] = useState("");
+  const [manualPriceUsd, setManualPriceUsd] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isManualSaving, setIsManualSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errorReference, setErrorReference] = useState<string | null>(null);
   const [renameError, setRenameError] = useState<string | null>(null);
+  const [manualError, setManualError] = useState<string | null>(null);
+  const [manualSuccess, setManualSuccess] = useState<string | null>(null);
   const clientSessionIdRef = useRef<string | null>(null);
 
   const appointmentGroup = useMemo(() => {
@@ -217,6 +226,93 @@ export default function AppointmentDetailPage() {
     }
   }
 
+  async function handleManualSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setManualError(null);
+    setManualSuccess(null);
+
+    const itemName = manualItemName.trim();
+    const priceUsd = Number(manualPriceUsd);
+
+    if (!itemName) {
+      setManualError("品目名を入力してください");
+      return;
+    }
+
+    if (!Number.isFinite(priceUsd) || priceUsd <= 0) {
+      setManualError("価格は1ドル以上の数値で入力してください");
+      return;
+    }
+
+    setIsManualSaving(true);
+    setError(null);
+    setErrorReference(null);
+
+    try {
+      const clientSessionId =
+        clientSessionIdRef.current || getOrCreateClientSessionId();
+      clientSessionIdRef.current = clientSessionId;
+      const response = await fetch("/api/history", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          ...(clientSessionId ? { "x-client-session-id": clientSessionId } : {}),
+        },
+        body: JSON.stringify({
+          itemName,
+          priceUsd,
+          appointmentId,
+          appointmentLabel,
+        }),
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        const message = payload.error || "手動入力の保存に失敗しました";
+        if (typeof payload.errorId === "string") {
+          setErrorReference(payload.errorId);
+        }
+        throw new Error(message);
+      }
+
+      if (payload.item) {
+        const savedItem = payload.item as AppraisalHistoryItem;
+        setItems((current) => {
+          const deduped = current.filter((item) => item.id !== savedItem.id);
+          return [savedItem, ...deduped];
+        });
+        setStoredAppointments((current) => {
+          const next = renameStoredAppointment(current, appointmentId, appointmentLabel);
+          persistStoredAppointments(next);
+          return next;
+        });
+      }
+
+      setManualItemName("");
+      setManualPriceUsd("");
+      setManualSuccess("手動入力を保存しました。");
+      void loadAppointment({ silent: true });
+    } catch (err) {
+      if (err instanceof Error) {
+        void reportClientError({
+          source: "appointment.detail.manual",
+          message: err.message,
+          errorName: err.name,
+          stack: err.stack || null,
+          metadata: {
+            appointmentId,
+            itemName,
+          },
+        });
+      }
+      setManualError(
+        err instanceof Error ? err.message : "手動入力の保存に失敗しました"
+      );
+    } finally {
+      setIsManualSaving(false);
+    }
+  }
+
   const itemCount = appointmentGroup?.itemCount || 0;
   const totalSuggestedMaxPrice = appointmentGroup?.totalSuggestedMaxPrice || 0;
   const latestAppraisalAt = appointmentGroup?.latestAppraisalAt || null;
@@ -268,6 +364,45 @@ export default function AppointmentDetailPage() {
           {renameError && <p className={styles.messageError}>{renameError}</p>}
         </section>
 
+        <section className={styles.manualSection}>
+          <div className={styles.sectionHeader}>
+            <div>
+              <h2 className={styles.sectionTitle}>手動入力で追加</h2>
+              <p className={styles.sectionCaption}>
+                自動査定が使えない時は、品目名と査定価格だけをこのアポに保存できます。
+              </p>
+            </div>
+          </div>
+          <form className={styles.manualForm} onSubmit={handleManualSubmit}>
+            <input
+              type="text"
+              value={manualItemName}
+              onChange={(event) => setManualItemName(event.target.value)}
+              className={styles.manualInput}
+              placeholder="例: Rolex Air-King"
+            />
+            <input
+              type="number"
+              min="1"
+              step="1"
+              inputMode="decimal"
+              value={manualPriceUsd}
+              onChange={(event) => setManualPriceUsd(event.target.value)}
+              className={styles.manualPriceInput}
+              placeholder="価格 USD"
+            />
+            <button
+              type="submit"
+              className={styles.manualButton}
+              disabled={isManualSaving}
+            >
+              {isManualSaving ? "保存中..." : "手動保存"}
+            </button>
+          </form>
+          {manualError && <p className={styles.messageError}>{manualError}</p>}
+          {manualSuccess && <p className={styles.messageSuccess}>{manualSuccess}</p>}
+        </section>
+
         {error && (
           <section className={styles.messageSection}>
             <p className={styles.messageError}>{error}</p>
@@ -294,22 +429,26 @@ export default function AppointmentDetailPage() {
               {items.map((item) => (
                 <article key={item.id} className={styles.itemCard}>
                   <div className={styles.itemImages}>
-                    {item.images.map((image) => (
-                      <a
-                        key={image.pathname}
-                        href={image.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className={styles.imageLink}
-                      >
-                        <img
-                          src={image.url}
-                          alt={image.slotLabel}
-                          className={styles.image}
-                        />
-                        <span className={styles.imageBadge}>{image.slotLabel}</span>
-                      </a>
-                    ))}
+                    {item.images.length > 0 ? (
+                      item.images.map((image) => (
+                        <a
+                          key={image.pathname}
+                          href={image.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={styles.imageLink}
+                        >
+                          <img
+                            src={image.url}
+                            alt={image.slotLabel}
+                            className={styles.image}
+                          />
+                          <span className={styles.imageBadge}>{image.slotLabel}</span>
+                        </a>
+                      ))
+                    ) : (
+                      <div className={styles.manualImagePlaceholder}>手動入力</div>
+                    )}
                   </div>
 
                   <div className={styles.itemBody}>
@@ -322,14 +461,18 @@ export default function AppointmentDetailPage() {
                     <p className={styles.itemMeta}>
                       {formatDateTime(item.createdAt)}
                       {" · "}
-                      {item.identification.brand || item.identification.category}
+                      {isManualHistoryItem(item)
+                        ? "手動入力"
+                        : item.identification.brand || item.identification.category}
                     </p>
                     <p className={styles.itemPriceRow}>
-                      買取目安 {formatCurrency(item.pricing.buyPriceRangeLow)}
-                      {" – "}
-                      {formatCurrency(item.pricing.buyPriceRangeHigh)}
-                      {" · "}
-                      {item.pricing.listingCount}件参照
+                      {isManualHistoryItem(item)
+                        ? "手動入力価格"
+                        : `買取目安 ${formatCurrency(
+                            item.pricing.buyPriceRangeLow
+                          )} – ${formatCurrency(item.pricing.buyPriceRangeHigh)} · ${
+                            item.pricing.listingCount
+                          }件参照`}
                     </p>
                   </div>
                 </article>

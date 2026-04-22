@@ -64,7 +64,7 @@ async function fetchHistoryRecord(url: string): Promise<AppraisalHistoryItem | n
 export async function saveAppraisalHistory(
   input: SaveAppraisalHistoryInput
 ): Promise<AppraisalHistoryItem | null> {
-  if (!isBlobConfigured() || input.images.length === 0) {
+  if (!isBlobConfigured()) {
     return null;
   }
 

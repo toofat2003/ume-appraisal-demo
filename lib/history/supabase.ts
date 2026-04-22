@@ -151,11 +151,13 @@ function mapSessionRowToHistoryItem(row: SessionRow): AppraisalHistoryItem {
 export async function saveAppraisalHistoryToSupabase(
   input: SaveAppraisalHistoryInput
 ): Promise<AppraisalHistoryItem | null> {
-  if (!isSupabaseConfigured() || input.images.length === 0) {
+  if (!isSupabaseConfigured()) {
     return null;
   }
 
-  await ensureBucket();
+  if (input.images.length > 0) {
+    await ensureBucket();
+  }
 
   const client = getClient();
   const sessionId = crypto.randomUUID();
@@ -221,12 +223,15 @@ export async function saveAppraisalHistoryToSupabase(
     throw sessionError;
   }
 
-  const { error: imageInsertError } = await client.from("appraisal_images").insert(
-    uploadedImages.map((image) => ({
-      session_id: sessionId,
-      ...image,
-    }))
-  );
+  const { error: imageInsertError } =
+    uploadedImages.length > 0
+      ? await client.from("appraisal_images").insert(
+          uploadedImages.map((image) => ({
+            session_id: sessionId,
+            ...image,
+          }))
+        )
+      : { error: null };
 
   if (imageInsertError) {
     throw imageInsertError;

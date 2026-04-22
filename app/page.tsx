@@ -89,6 +89,10 @@ function formatGeminiMode(mode: "primary-only" | "all-images" | undefined): stri
   return mode === "all-images" ? "全画像" : "1枚目のみ";
 }
 
+function isManualHistoryItem(item: AppraisalHistoryItem): boolean {
+  return item.pricing.listingCount === 0 && item.identification.conditionSummary === "手動入力";
+}
+
 export default function HomePage() {
   const [previews, setPreviews] = useState<PreviewState[]>([
     EMPTY_SLOT,
@@ -102,6 +106,11 @@ export default function HomePage() {
   const [storedAppointments, setStoredAppointments] = useState<StoredAppointment[]>([]);
   const [appointmentLabelInput, setAppointmentLabelInput] = useState("");
   const [appointmentError, setAppointmentError] = useState<string | null>(null);
+  const [manualItemName, setManualItemName] = useState("");
+  const [manualPriceUsd, setManualPriceUsd] = useState("");
+  const [manualError, setManualError] = useState<string | null>(null);
+  const [manualSuccess, setManualSuccess] = useState<string | null>(null);
+  const [isManualSaving, setIsManualSaving] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [historyItems, setHistoryItems] = useState<AppraisalHistoryItem[]>([]);
   const [historyError, setHistoryError] = useState<string | null>(null);
@@ -270,6 +279,101 @@ export default function HomePage() {
     setAppointmentError(null);
   }
 
+  function addSavedHistoryItem(savedHistoryItem: AppraisalHistoryItem) {
+    setHistoryEnabled(true);
+    if (activeAppointment) {
+      setStoredAppointments((current) => {
+        const next = upsertStoredAppointment(
+          current,
+          activeAppointment,
+          savedHistoryItem.createdAt
+        );
+        persistStoredAppointments(next);
+        return next;
+      });
+    }
+    setHistoryItems((current) => {
+      const deduped = current.filter((item) => item.id !== savedHistoryItem.id);
+      return [savedHistoryItem, ...deduped].slice(0, MAX_HISTORY_ITEMS);
+    });
+  }
+
+  async function handleManualSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setManualError(null);
+    setManualSuccess(null);
+
+    const itemName = manualItemName.trim();
+    const priceUsd = Number(manualPriceUsd);
+
+    if (!activeAppointment) {
+      setManualError("先にアポを選択してください。");
+      return;
+    }
+
+    if (!itemName) {
+      setManualError("品目名を入力してください。");
+      return;
+    }
+
+    if (!Number.isFinite(priceUsd) || priceUsd <= 0) {
+      setManualError("価格は1ドル以上の数値で入力してください。");
+      return;
+    }
+
+    setIsManualSaving(true);
+
+    try {
+      const clientSessionId =
+        clientSessionIdRef.current || getOrCreateClientSessionId();
+      clientSessionIdRef.current = clientSessionId;
+      const response = await fetch("/api/history", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          ...(clientSessionId ? { "x-client-session-id": clientSessionId } : {}),
+        },
+        body: JSON.stringify({
+          itemName,
+          priceUsd,
+          appointmentId: activeAppointment.id,
+          appointmentLabel: activeAppointment.label,
+        }),
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error || "手動入力の保存に失敗しました");
+      }
+
+      if (payload.item) {
+        addSavedHistoryItem(payload.item as AppraisalHistoryItem);
+      }
+      setManualItemName("");
+      setManualPriceUsd("");
+      setManualSuccess("手動入力を保存しました。");
+      void loadHistory({ silent: true });
+    } catch (err) {
+      if (err instanceof Error) {
+        void reportClientError({
+          source: "history.manual.submit",
+          message: err.message,
+          errorName: err.name,
+          stack: err.stack || null,
+          metadata: {
+            appointmentId: activeAppointment.id,
+            itemName,
+          },
+        });
+      }
+      setManualError(
+        err instanceof Error ? err.message : "手動入力の保存に失敗しました"
+      );
+    } finally {
+      setIsManualSaving(false);
+    }
+  }
+
   function updatePreview(index: number, file: File | null) {
     setPreviews((current) =>
       current.map((preview, i) => {
@@ -363,23 +467,7 @@ export default function HomePage() {
         setResult(nextResult);
 
         if (nextResult.savedHistoryItem) {
-          const savedHistoryItem = nextResult.savedHistoryItem;
-          setHistoryEnabled(true);
-          if (activeAppointment) {
-            setStoredAppointments((current) => {
-              const next = upsertStoredAppointment(
-                current,
-                activeAppointment,
-                savedHistoryItem.createdAt
-              );
-              persistStoredAppointments(next);
-              return next;
-            });
-          }
-          setHistoryItems((current) => {
-            const deduped = current.filter((item) => item.id !== savedHistoryItem.id);
-            return [savedHistoryItem, ...deduped].slice(0, MAX_HISTORY_ITEMS);
-          });
+          addSavedHistoryItem(nextResult.savedHistoryItem);
         }
 
         void loadHistory({ silent: true });
@@ -508,6 +596,46 @@ export default function HomePage() {
               {appointmentError && (
                 <p className={styles.appointmentError}>{appointmentError}</p>
               )}
+
+              <form className={styles.manualPanel} onSubmit={handleManualSubmit}>
+                <div>
+                  <p className={styles.manualPanelTitle}>手動入力で保存</p>
+                  <p className={styles.manualPanelCaption}>
+                    APIが不調な時は、品目名と査定価格だけをこのアポに残せます。
+                  </p>
+                </div>
+                <div className={styles.manualFields}>
+                  <input
+                    type="text"
+                    value={manualItemName}
+                    onChange={(event) => setManualItemName(event.target.value)}
+                    className={styles.manualInput}
+                    placeholder="例: Burberry ショルダーバッグ"
+                  />
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    inputMode="decimal"
+                    value={manualPriceUsd}
+                    onChange={(event) => setManualPriceUsd(event.target.value)}
+                    className={styles.manualPriceInput}
+                    placeholder="価格 USD"
+                  />
+                  <button
+                    type="submit"
+                    className={styles.manualSaveButton}
+                    disabled={isManualSaving}
+                  >
+                    {isManualSaving ? "保存中..." : "手動保存"}
+                  </button>
+                </div>
+                {!activeAppointment && (
+                  <p className={styles.manualHint}>手動保存にはアポ選択が必要です。</p>
+                )}
+                {manualError && <p className={styles.appointmentError}>{manualError}</p>}
+                {manualSuccess && <p className={styles.manualSuccess}>{manualSuccess}</p>}
+              </form>
             </div>
 
             <div className={styles.photoGrid}>
@@ -976,24 +1104,30 @@ export default function HomePage() {
                       {group.items.map((item) => (
                         <article key={item.id} className={styles.historyCard}>
                           <div className={styles.historyImages}>
-                            {item.images.map((image) => (
-                              <a
-                                key={image.pathname}
-                                href={image.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className={styles.historyImageLink}
-                              >
-                                <img
-                                  src={image.url}
-                                  alt={image.slotLabel}
-                                  className={styles.historyImage}
-                                />
-                                <span className={styles.historyImageBadge}>
-                                  {image.slotLabel}
-                                </span>
-                              </a>
-                            ))}
+                            {item.images.length > 0 ? (
+                              item.images.map((image) => (
+                                <a
+                                  key={image.pathname}
+                                  href={image.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className={styles.historyImageLink}
+                                >
+                                  <img
+                                    src={image.url}
+                                    alt={image.slotLabel}
+                                    className={styles.historyImage}
+                                  />
+                                  <span className={styles.historyImageBadge}>
+                                    {image.slotLabel}
+                                  </span>
+                                </a>
+                              ))
+                            ) : (
+                              <div className={styles.historyManualPlaceholder}>
+                                手動入力
+                              </div>
+                            )}
                           </div>
 
                           <div className={styles.historyBody}>
@@ -1009,17 +1143,25 @@ export default function HomePage() {
                             <p className={styles.historyMeta}>
                               {formatDateTime(item.createdAt)}
                               {" · "}
-                              {item.identification.brand || item.identification.category}
+                              {isManualHistoryItem(item)
+                                ? "手動入力"
+                                : item.identification.brand || item.identification.category}
                             </p>
 
                             <div className={styles.historyPriceRow}>
-                              <span>
-                                買取目安{" "}
-                                {formatCurrency(item.pricing.buyPriceRangeLow)}
-                                {" – "}
-                                {formatCurrency(item.pricing.buyPriceRangeHigh)}
-                              </span>
-                              <span>{item.pricing.listingCount}件参照</span>
+                              {isManualHistoryItem(item) ? (
+                                <span>手動入力価格</span>
+                              ) : (
+                                <>
+                                  <span>
+                                    買取目安{" "}
+                                    {formatCurrency(item.pricing.buyPriceRangeLow)}
+                                    {" – "}
+                                    {formatCurrency(item.pricing.buyPriceRangeHigh)}
+                                  </span>
+                                  <span>{item.pricing.listingCount}件参照</span>
+                                </>
+                              )}
                             </div>
                           </div>
                         </article>
