@@ -631,7 +631,7 @@ export default function AppointmentDetailPage() {
                         ) : null}
                         {item.conditionRank && (
                           <span className={styles.itemPriceSub}>
-                            自動Max {formatCurrency(item.pricing.suggestedMaxPrice)}
+                            中央値 {formatCurrency(item.pricing.median)}
                           </span>
                         )}
                       </div>
@@ -652,7 +652,7 @@ export default function AppointmentDetailPage() {
                             item.pricing.listingCount
                           }件参照`}
                       {item.manualMaxPrice !== null && !item.conditionRank
-                        ? ` · 自動Max ${formatCurrency(item.pricing.suggestedMaxPrice)}`
+                        ? ` · 査定Max ${formatCurrency(item.pricing.suggestedMaxPrice)}`
                         : ""}
                     </p>
                     <div className={styles.itemSettlementRow}>

@@ -588,6 +588,51 @@
   font: 800 14px/1 var(--font-body);
 }
 
+.batchConditionRankGrid,
+.conditionRankGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.batchConditionRankButton,
+.conditionRankButton {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  padding: 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: left;
+}
+
+.batchConditionRankButton span,
+.conditionRankButton span {
+  font: 900 12px/1 var(--font-body);
+}
+
+.batchConditionRankButton small,
+.conditionRankButton small {
+  color: var(--text-muted);
+  font: 700 10px/1 var(--font-body);
+}
+
+.batchConditionRankButtonSelected,
+.conditionRankButtonSelected {
+  border-color: rgba(134, 239, 172, 0.32);
+  background: rgba(134, 239, 172, 0.08);
+  color: #86efac;
+}
+
+.batchConditionRankButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .batchProductResult {
   display: flex;
   flex-direction: column;
@@ -662,6 +707,28 @@
   margin: 0;
   font: 500 12px/1.45 var(--font-body);
   color: #f87171;
+}
+
+.conditionRankPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(134, 239, 172, 0.16);
+  background: rgba(134, 239, 172, 0.05);
+}
+
+.conditionRankTitle {
+  margin: 0;
+  color: var(--text-primary);
+  font: 800 13px/1.25 var(--font-body);
+}
+
+.conditionRankCaption {
+  margin: 5px 0 0;
+  color: var(--text-muted);
+  font: 500 11px/1.5 var(--font-body);
 }
 
 /* === Photo Grid === */

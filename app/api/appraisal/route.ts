@@ -1,6 +1,16 @@
 import { after, NextResponse } from "next/server";
 import { searchListingsByImage } from "@/lib/appraisal/ebay";
-import { AppraisalDebug, AppraisalResult, ListingSummary } from "@/lib/appraisal/types";
+import {
+  AppraisalConditionRank,
+  AppraisalDebug,
+  AppraisalResult,
+  ListingSummary,
+} from "@/lib/appraisal/types";
+import {
+  getConditionAdjustedMaxPrice,
+  getConditionRankLabel,
+  getConditionRankMultiplier,
+} from "@/lib/appointments/shared";
 import {
   createAppraisalHistorySession,
   saveAppraisalHistoryImages,
@@ -32,41 +42,6 @@ function quantile(values: number[], q: number): number {
   const lower = sorted[base];
   const upper = sorted[Math.min(base + 1, sorted.length - 1)];
   return lower + (upper - lower) * remainder;
-}
-
-function getCategoryRatio(categoryGroup: string): number {
-  switch (categoryGroup) {
-    case "luxury":
-    case "watch":
-    case "jewelry":
-      return 0.6;
-    case "electronics":
-    case "tools":
-      return 0.55;
-    case "fashion":
-      return 0.5;
-    case "media":
-    case "collectible":
-      return 0.45;
-    case "home":
-    case "appliance":
-      return 0.4;
-    default:
-      return 0.45;
-  }
-}
-
-function getConfidenceAdjustment(confidence: number): number {
-  if (confidence >= 0.9) {
-    return 1;
-  }
-  if (confidence >= 0.75) {
-    return 0.95;
-  }
-  if (confidence >= 0.6) {
-    return 0.9;
-  }
-  return 0.8;
 }
 
 function buildWarnings(
@@ -121,6 +96,10 @@ function buildWarnings(
   return warnings;
 }
 
+function normalizeConditionRank(value: FormDataEntryValue | null): AppraisalConditionRank {
+  return value === "B" || value === "C" ? value : "A";
+}
+
 async function fileToBase64(file: File): Promise<{ contentType: string; data: string }> {
   const arrayBuffer = await file.arrayBuffer();
   return {
@@ -147,6 +126,7 @@ export async function POST(request: Request) {
   let slotLabels: string[] = [];
   let appointmentId: string | null = null;
   let appointmentLabel: string | null = null;
+  let conditionRank: AppraisalConditionRank = "A";
 
   try {
     const formData = await request.formData();
@@ -166,6 +146,7 @@ export async function POST(request: Request) {
       typeof formData.get("appointmentLabel") === "string"
         ? ((formData.get("appointmentLabel") as string).trim() || null)
         : null;
+    conditionRank = normalizeConditionRank(formData.get("conditionRank"));
 
     if (appointmentLabel && appointmentLabel.length > MAX_APPOINTMENT_LABEL_LENGTH) {
       appointmentLabel = appointmentLabel.slice(0, MAX_APPOINTMENT_LABEL_LENGTH);
@@ -194,6 +175,7 @@ export async function POST(request: Request) {
       imageTypes: files.map((file) => file.type || "unknown"),
       imageSizes: files.map((file) => file.size),
       imageSlotLabels: slotLabels,
+      conditionRank,
       appointmentId,
       appointmentLabel,
     };
@@ -236,9 +218,8 @@ export async function POST(request: Request) {
     const p25 = quantile(totalPrices, 0.25);
     const median = quantile(totalPrices, 0.5);
     const p75 = quantile(totalPrices, 0.75);
-    const ratio = getCategoryRatio(identification.categoryGroup);
-    const confidenceAdjustment = getConfidenceAdjustment(identification.confidence);
-    const suggestedMaxPrice = roundCurrency(p25 * ratio * confidenceAdjustment);
+    const conditionMultiplier = getConditionRankMultiplier(conditionRank);
+    const suggestedMaxPrice = getConditionAdjustedMaxPrice(median, conditionRank);
     const buyPriceRangeLow = roundCurrency(suggestedMaxPrice * 0.8);
     const buyPriceRangeHigh = suggestedMaxPrice;
 
@@ -252,9 +233,9 @@ export async function POST(request: Request) {
         suggestedMaxPrice,
         buyPriceRangeLow,
         buyPriceRangeHigh,
-        categoryRatio: ratio,
-        confidenceAdjustment,
-        formula: "出品総額のp25 × カテゴリ係数 × 確信度補正",
+        categoryRatio: conditionMultiplier,
+        confidenceAdjustment: 1,
+        formula: `市場価格中央値 × ${getConditionRankLabel(conditionRank)}係数 (${conditionMultiplier})`,
       },
       listings: listings.slice(0, 8),
       warnings: buildWarnings(listings, identification.confidence, accessoryFilteredCount, debug),
@@ -300,6 +281,7 @@ export async function POST(request: Request) {
       const savedHistory = await createAppraisalHistorySession({
         identification: result.identification,
         pricing: result.pricing,
+        conditionRank,
         appointmentId,
         appointmentLabel,
         rawResult: historyRawResult,

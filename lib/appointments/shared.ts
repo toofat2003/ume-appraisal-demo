@@ -42,10 +42,10 @@ export function getConditionRankMultiplier(
 }
 
 export function getConditionAdjustedMaxPrice(
-  baseMaxPrice: number,
+  marketMedianPrice: number,
   rank: AppraisalConditionRank | null
 ): number {
-  return Math.round(baseMaxPrice * getConditionRankMultiplier(rank));
+  return Math.round(marketMedianPrice * getConditionRankMultiplier(rank));
 }
 
 export function getConditionRankLabel(rank: AppraisalConditionRank | null): string {
@@ -53,11 +53,7 @@ export function getConditionRankLabel(rank: AppraisalConditionRank | null): stri
 }
 
 export function getEffectiveMaxPrice(item: AppraisalHistoryItem): number {
-  return (
-    item.manualMaxPrice ??
-    getConditionAdjustedMaxPrice(item.pricing.suggestedMaxPrice, item.conditionRank) ??
-    item.pricing.suggestedMaxPrice
-  );
+  return item.manualMaxPrice ?? item.pricing.suggestedMaxPrice;
 }
 
 export function groupHistoryItems(items: AppraisalHistoryItem[]): AppraisalAppointmentGroup[] {

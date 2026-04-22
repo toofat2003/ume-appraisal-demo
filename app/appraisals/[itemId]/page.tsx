@@ -6,8 +6,6 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import styles from "./page.module.css";
 import type { AppraisalConditionRank, AppraisalHistoryItem } from "@/lib/appraisal/types";
 import {
-  CONDITION_RANK_OPTIONS,
-  getConditionAdjustedMaxPrice,
   getConditionRankLabel,
   getEffectiveMaxPrice,
 } from "@/lib/appointments/shared";
@@ -50,7 +48,6 @@ export default function AppraisalDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isSavingMaxPrice, setIsSavingMaxPrice] = useState(false);
-  const [isSavingConditionRank, setIsSavingConditionRank] = useState(false);
   const [isTogglingExcluded, setIsTogglingExcluded] = useState(false);
   const [isTogglingContracted, setIsTogglingContracted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -195,52 +192,6 @@ export default function AppraisalDetailPage() {
       setError(err instanceof Error ? err.message : "Max価格の保存に失敗しました");
     } finally {
       setIsSavingMaxPrice(false);
-    }
-  }
-
-  async function handleConditionRankSelect(rank: AppraisalConditionRank | null) {
-    if (!item) {
-      return;
-    }
-
-    setIsSavingConditionRank(true);
-    setError(null);
-    setErrorReference(null);
-    setSuccessMessage(null);
-
-    const nextManualMaxPrice =
-      rank === null
-        ? null
-        : getConditionAdjustedMaxPrice(item.pricing.suggestedMaxPrice, rank);
-
-    try {
-      const nextItem = await patchItem({
-        manualMaxPrice: nextManualMaxPrice,
-        conditionRank: rank,
-      });
-      setItem(nextItem);
-      setManualMaxPriceInput(inputValueFromPrice(nextItem.manualMaxPrice));
-      setSuccessMessage(
-        rank === null
-          ? "元のMax価格を採用しました。"
-          : `${getConditionRankLabel(rank)}のMax価格を採用しました。`
-      );
-    } catch (err) {
-      if (err instanceof Error) {
-        void reportClientError({
-          source: "appraisal.detail.condition_rank",
-          message: err.message,
-          errorName: err.name,
-          stack: err.stack || null,
-          metadata: {
-            itemId,
-            rank,
-          },
-        });
-      }
-      setError(err instanceof Error ? err.message : "状態ランクの保存に失敗しました");
-    } finally {
-      setIsSavingConditionRank(false);
     }
   }
 
@@ -396,7 +347,9 @@ export default function AppraisalDetailPage() {
                 </span>
                 {(item.manualMaxPrice !== null || item.conditionRank !== null) && (
                   <span className={styles.heroPriceNote}>
-                    自動Max {formatCurrency(item.pricing.suggestedMaxPrice)}
+                    {item.conditionRank
+                      ? `市場中央値 ${formatCurrency(item.pricing.median)}`
+                      : `査定Max ${formatCurrency(item.pricing.suggestedMaxPrice)}`}
                   </span>
                 )}
               </div>
@@ -440,45 +393,20 @@ export default function AppraisalDetailPage() {
                 <div>
                   <h2 className={styles.sectionTitle}>Max価格</h2>
                   <p className={styles.sectionCaption}>
-                    状態ランクを選ぶと、その価格が採用Maxとしてアポ集計に反映されます。
-                    必要に応じて下の手動Max価格で上書きできます。
+                    状態ランクは撮影・査定開始時に選択します。必要に応じて下の手動Max価格で上書きできます。
                   </p>
                 </div>
               </div>
-              <div className={styles.conditionOptionGrid}>
-                {CONDITION_RANK_OPTIONS.map((option) => {
-                  const optionPrice = getConditionAdjustedMaxPrice(
-                    item.pricing.suggestedMaxPrice,
-                    option.rank
-                  );
-                  const isSelected =
-                    item.conditionRank === option.rank &&
-                    (option.rank !== null || item.manualMaxPrice === null);
-
-                  return (
-                    <button
-                      key={option.rank || "base"}
-                      type="button"
-                      className={`${styles.conditionOptionButton} ${
-                        isSelected ? styles.conditionOptionSelected : ""
-                      }`}
-                      onClick={() => void handleConditionRankSelect(option.rank)}
-                      disabled={isSavingConditionRank}
-                    >
-                      <span className={styles.conditionOptionLabel}>{option.label}</span>
-                      <strong>{formatCurrency(optionPrice)}</strong>
-                      <small>
-                        {option.multiplier === 1
-                          ? "元のMax価格"
-                          : `Max × ${option.multiplier}`}
-                      </small>
-                    </button>
-                  );
-                })}
+              <div className={styles.conditionRankDisplay}>
+                <span>査定時ランク</span>
+                <strong>
+                  {item.conditionRank ? getConditionRankLabel(item.conditionRank) : "未記録"}
+                </strong>
+                <small>市場価格中央値 {formatCurrency(item.pricing.median)}</small>
               </div>
               {hasCustomManualMaxPrice && (
                 <p className={styles.overrideNote}>
-                  手動Max価格が優先中です。4択に戻す場合は、上の選択肢を押してください。
+                  手動Max価格が優先中です。
                 </p>
               )}
               <form className={styles.settlementForm} onSubmit={handleMaxPriceSubmit}>
@@ -492,7 +420,7 @@ export default function AppraisalDetailPage() {
                     value={manualMaxPriceInput}
                     onChange={(event) => setManualMaxPriceInput(event.target.value)}
                     className={styles.priceInput}
-                    placeholder={`自動Max ${formatCurrency(item.pricing.suggestedMaxPrice)}`}
+                    placeholder={`査定Max ${formatCurrency(item.pricing.suggestedMaxPrice)}`}
                   />
                 </label>
                 <button
@@ -555,7 +483,7 @@ export default function AppraisalDetailPage() {
                   <span className={styles.summaryValue}>{formatCurrency(effectiveMaxPrice)}</span>
                 </div>
                 <div className={styles.summaryItem}>
-                  <span className={styles.summaryLabel}>自動Max価格</span>
+                  <span className={styles.summaryLabel}>査定Max価格</span>
                   <span className={styles.summaryValue}>
                     {formatCurrency(item.pricing.suggestedMaxPrice)}
                   </span>

@@ -4,12 +4,15 @@ import Link from "next/link";
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import styles from "./page.module.css";
 import type {
+  AppraisalConditionRank,
   AppraisalHistoryItem,
   AppraisalResult,
 } from "@/lib/appraisal/types";
 import {
   ActiveAppointment,
   buildAppointmentOptions,
+  CONDITION_RANK_OPTIONS,
+  getConditionRankLabel,
   groupHistoryItems,
   mergeStoredAppointmentsWithHistory,
   StoredAppointment,
@@ -41,6 +44,7 @@ type BatchItemStatus = "draft" | "queued" | "running" | "done" | "error";
 type BatchItem = {
   id: string;
   photos: PreviewState[];
+  conditionRank: AppraisalConditionRank;
   status: BatchItemStatus;
   result: AppraisalResult | null;
   error: string | null;
@@ -80,6 +84,11 @@ const PHOTO_SLOTS = [
   },
 ] as const;
 
+const APPRAISAL_CONDITION_OPTIONS = CONDITION_RANK_OPTIONS.filter(
+  (option): option is { rank: AppraisalConditionRank; label: string; multiplier: number } =>
+    option.rank !== null
+);
+
 function createEmptyPhotoSlots(): PreviewState[] {
   return PHOTO_SLOTS.map(() => ({ file: null, url: null }));
 }
@@ -118,6 +127,7 @@ function createBatchItem(file?: File): BatchItem {
   return {
     id: crypto.randomUUID(),
     photos,
+    conditionRank: "A",
     status: "draft",
     result: null,
     error: null,
@@ -183,6 +193,8 @@ export default function HomePage() {
   const [manualError, setManualError] = useState<string | null>(null);
   const [manualSuccess, setManualSuccess] = useState<string | null>(null);
   const [isManualSaving, setIsManualSaving] = useState(false);
+  const [singleConditionRank, setSingleConditionRank] =
+    useState<AppraisalConditionRank>("A");
   const [isPending, setIsPending] = useState(false);
   const [historyItems, setHistoryItems] = useState<AppraisalHistoryItem[]>([]);
   const [historyError, setHistoryError] = useState<string | null>(null);
@@ -409,7 +421,8 @@ export default function HomePage() {
 
   async function submitAppraisalRequest(
     selectedPhotos: SelectedPhoto[],
-    appointment: ActiveAppointment | null
+    appointment: ActiveAppointment | null,
+    conditionRank: AppraisalConditionRank
   ): Promise<AppraisalResult> {
     const formData = new FormData();
     for (const photo of selectedPhotos) {
@@ -420,6 +433,7 @@ export default function HomePage() {
       formData.append("appointmentId", appointment.id);
       formData.append("appointmentLabel", appointment.label);
     }
+    formData.append("conditionRank", conditionRank);
 
     const clientSessionId =
       clientSessionIdRef.current || getOrCreateClientSessionId();
@@ -648,6 +662,30 @@ export default function HomePage() {
     );
   }
 
+  function updateBatchConditionRank(
+    itemId: string,
+    conditionRank: AppraisalConditionRank
+  ) {
+    setBatchItems((current) =>
+      current.map((item) => {
+        if (item.id !== itemId || item.status === "running") {
+          return item;
+        }
+
+        return {
+          ...item,
+          conditionRank,
+          status: "draft",
+          result: null,
+          error: null,
+          errorId: null,
+          startedAt: null,
+          finishedAt: null,
+        };
+      })
+    );
+  }
+
   function handleBatchPhotoChange(
     itemId: string,
     slotIndex: number,
@@ -745,7 +783,8 @@ export default function HomePage() {
           const selectedPhotos = getBatchSelectedPhotos(item);
           const nextResult = await submitAppraisalRequest(
             selectedPhotos,
-            appointmentAtStart
+            appointmentAtStart,
+            item.conditionRank
           );
 
           if (nextResult.savedHistoryItem) {
@@ -781,6 +820,7 @@ export default function HomePage() {
             metadata: {
               photoCount: getBatchSelectedPhotos(item).length,
               fileNames: getBatchSelectedPhotos(item).map((photo) => photo.file.name),
+              conditionRank: item.conditionRank,
               appointmentId: appointmentAtStart?.id || null,
               serverErrorId: errorId,
             },
@@ -866,7 +906,8 @@ export default function HomePage() {
       try {
         const nextResult = await submitAppraisalRequest(
           selectedPhotos,
-          activeAppointment
+          activeAppointment,
+          singleConditionRank
         );
         setResult(nextResult);
 
@@ -890,6 +931,7 @@ export default function HomePage() {
             metadata: {
               photoCount: selectedPhotos.length,
               slotLabels: selectedPhotos.map((photo) => photo.slotLabel),
+              conditionRank: singleConditionRank,
             },
           });
         }
@@ -1127,6 +1169,32 @@ export default function HomePage() {
                 ))}
               </div>
 
+              <section className={styles.conditionRankPanel}>
+                <div>
+                  <p className={styles.conditionRankTitle}>状態ランク</p>
+                  <p className={styles.conditionRankCaption}>
+                    撮影時点でランクを選ぶと、市場価格中央値に掛ける係数が決まります。
+                  </p>
+                </div>
+                <div className={styles.conditionRankGrid}>
+                  {APPRAISAL_CONDITION_OPTIONS.map((option) => (
+                    <button
+                      key={option.rank}
+                      type="button"
+                      className={`${styles.conditionRankButton} ${
+                        singleConditionRank === option.rank
+                          ? styles.conditionRankButtonSelected
+                          : ""
+                      }`}
+                      onClick={() => setSingleConditionRank(option.rank)}
+                    >
+                      <span>{option.label}</span>
+                      <small>中央値 × {option.multiplier}</small>
+                    </button>
+                  ))}
+                </div>
+              </section>
+
               <div className={styles.actionGroup}>
                 <button
                   type="submit"
@@ -1299,6 +1367,25 @@ export default function HomePage() {
                         })}
                       </div>
 
+                      <div className={styles.batchConditionRankGrid}>
+                        {APPRAISAL_CONDITION_OPTIONS.map((option) => (
+                          <button
+                            key={option.rank}
+                            type="button"
+                            className={`${styles.batchConditionRankButton} ${
+                              item.conditionRank === option.rank
+                                ? styles.batchConditionRankButtonSelected
+                                : ""
+                            }`}
+                            onClick={() => updateBatchConditionRank(item.id, option.rank)}
+                            disabled={item.status === "running"}
+                          >
+                            <span>{option.label}</span>
+                            <small>× {option.multiplier}</small>
+                          </button>
+                        ))}
+                      </div>
+
                       {item.status === "done" && item.result ? (
                         <div className={styles.batchProductResult}>
                           <div>
@@ -1308,6 +1395,8 @@ export default function HomePage() {
                             </strong>
                           </div>
                           <p>
+                            {getConditionRankLabel(item.conditionRank)}
+                            {" · "}
                             {item.result.identification.brand ||
                               item.result.identification.category}
                             {" · "}
@@ -1333,7 +1422,7 @@ export default function HomePage() {
                         </p>
                       ) : (
                         <p className={styles.batchProductPending}>
-                          全体写真を入れると査定できます。識別情報や状態写真は任意です。
+                          全体写真と状態ランクを確認してから査定してください。
                         </p>
                       )}
 
