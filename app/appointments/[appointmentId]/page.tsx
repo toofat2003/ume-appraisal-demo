@@ -22,7 +22,11 @@ import {
   reportClientError,
 } from "@/lib/observability/client";
 
-function formatCurrency(amount: number): string {
+function formatCurrency(amount: number | null | undefined): string {
+  if (amount === null || amount === undefined) {
+    return "-";
+  }
+
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
@@ -55,6 +59,7 @@ export default function AppointmentDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isManualSaving, setIsManualSaving] = useState(false);
+  const [updatingItemId, setUpdatingItemId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [errorReference, setErrorReference] = useState<string | null>(null);
   const [renameError, setRenameError] = useState<string | null>(null);
@@ -313,8 +318,67 @@ export default function AppointmentDetailPage() {
     }
   }
 
+  async function handleToggleExcluded(item: AppraisalHistoryItem) {
+    setUpdatingItemId(item.id);
+    setError(null);
+    setErrorReference(null);
+
+    try {
+      const clientSessionId =
+        clientSessionIdRef.current || getOrCreateClientSessionId();
+      clientSessionIdRef.current = clientSessionId;
+      const response = await fetch("/api/history", {
+        method: "PATCH",
+        headers: {
+          "content-type": "application/json",
+          ...(clientSessionId ? { "x-client-session-id": clientSessionId } : {}),
+        },
+        body: JSON.stringify({
+          itemId: item.id,
+          isExcluded: !item.isExcluded,
+        }),
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        const message = payload.error || "除外状態の更新に失敗しました";
+        if (typeof payload.errorId === "string") {
+          setErrorReference(payload.errorId);
+        }
+        throw new Error(message);
+      }
+
+      const updatedItem = payload.item as AppraisalHistoryItem;
+      setItems((current) =>
+        current.map((candidate) =>
+          candidate.id === updatedItem.id ? updatedItem : candidate
+        )
+      );
+    } catch (err) {
+      if (err instanceof Error) {
+        void reportClientError({
+          source: "appointment.detail.exclude",
+          message: err.message,
+          errorName: err.name,
+          stack: err.stack || null,
+          metadata: {
+            appointmentId,
+            itemId: item.id,
+          },
+        });
+      }
+      setError(err instanceof Error ? err.message : "除外状態の更新に失敗しました");
+    } finally {
+      setUpdatingItemId(null);
+    }
+  }
+
   const itemCount = appointmentGroup?.itemCount || 0;
+  const totalItemCount = appointmentGroup?.totalItemCount || 0;
+  const excludedItemCount = appointmentGroup?.excludedItemCount || 0;
   const totalSuggestedMaxPrice = appointmentGroup?.totalSuggestedMaxPrice || 0;
+  const totalOfferPrice = appointmentGroup?.totalOfferPrice || 0;
+  const totalContractPrice = appointmentGroup?.totalContractPrice || 0;
   const latestAppraisalAt = appointmentGroup?.latestAppraisalAt || null;
 
   return (
@@ -333,15 +397,30 @@ export default function AppointmentDetailPage() {
             <h1 className={styles.heroTitle}>{appointmentLabel}</h1>
             <p className={styles.heroCaption}>
               {latestAppraisalAt
-                ? `${formatDateTime(latestAppraisalAt)} · ${itemCount}件`
+                ? `${formatDateTime(latestAppraisalAt)} · 対象${itemCount}件 / 全${totalItemCount}件`
                 : "まだ査定は保存されていません"}
+              {excludedItemCount > 0 ? ` · 除外${excludedItemCount}件` : ""}
             </p>
           </div>
-          <div className={styles.heroSummary}>
-            <span className={styles.heroSummaryLabel}>推奨Max合計</span>
-            <span className={styles.heroSummaryValue}>
-              {formatCurrency(totalSuggestedMaxPrice)}
-            </span>
+          <div className={styles.heroSummaryGrid}>
+            <div className={styles.heroSummary}>
+              <span className={styles.heroSummaryLabel}>推奨Max合計</span>
+              <span className={styles.heroSummaryValue}>
+                {formatCurrency(totalSuggestedMaxPrice)}
+              </span>
+            </div>
+            <div className={styles.heroSummary}>
+              <span className={styles.heroSummaryLabel}>オファー合計</span>
+              <span className={styles.heroSummaryValue}>
+                {formatCurrency(totalOfferPrice)}
+              </span>
+            </div>
+            <div className={styles.heroSummary}>
+              <span className={styles.heroSummaryLabel}>成約合計</span>
+              <span className={styles.heroSummaryValue}>
+                {formatCurrency(totalContractPrice)}
+              </span>
+            </div>
           </div>
         </section>
 
@@ -415,7 +494,9 @@ export default function AppointmentDetailPage() {
         <section className={styles.itemsSection}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>このアポの査定履歴</h2>
-            <span className={styles.sectionCount}>{itemCount}件</span>
+            <span className={styles.sectionCount}>
+              対象{itemCount}件 / 全{totalItemCount}件
+            </span>
           </div>
 
           {isLoading ? (
@@ -427,7 +508,12 @@ export default function AppointmentDetailPage() {
           ) : (
             <div className={styles.itemGrid}>
               {items.map((item) => (
-                <article key={item.id} className={styles.itemCard}>
+                <article
+                  key={item.id}
+                  className={`${styles.itemCard} ${
+                    item.isExcluded ? styles.itemCardExcluded : ""
+                  }`}
+                >
                   <div className={styles.itemImages}>
                     {item.images.length > 0 ? (
                       item.images.map((image) => (
@@ -441,7 +527,9 @@ export default function AppointmentDetailPage() {
                           <img
                             src={image.url}
                             alt={image.slotLabel}
-                            className={styles.image}
+                            className={`${styles.image} ${
+                              item.isExcluded ? styles.imageExcluded : ""
+                            }`}
                           />
                           <span className={styles.imageBadge}>{image.slotLabel}</span>
                         </a>
@@ -455,7 +543,9 @@ export default function AppointmentDetailPage() {
 
                   <div className={styles.itemBody}>
                     <div className={styles.itemTop}>
-                      <h3 className={styles.itemName}>{item.identification.itemName}</h3>
+                      <Link href={`/appraisals/${item.id}`} className={styles.itemDetailLink}>
+                        <h3 className={styles.itemName}>{item.identification.itemName}</h3>
+                      </Link>
                       <span className={styles.itemPrice}>
                         {formatCurrency(item.pricing.suggestedMaxPrice)}
                       </span>
@@ -476,6 +566,30 @@ export default function AppointmentDetailPage() {
                             item.pricing.listingCount
                           }件参照`}
                     </p>
+                    <div className={styles.itemSettlementRow}>
+                      <span>オファー {formatCurrency(item.offerPrice)}</span>
+                      <span>成約 {formatCurrency(item.contractPrice)}</span>
+                    </div>
+                    <div className={styles.itemActionRow}>
+                      <Link href={`/appraisals/${item.id}`} className={styles.detailButton}>
+                        詳細・価格入力
+                      </Link>
+                      <button
+                        type="button"
+                        className={item.isExcluded ? styles.restoreButton : styles.excludeButton}
+                        onClick={() => void handleToggleExcluded(item)}
+                        disabled={updatingItemId === item.id}
+                      >
+                        {updatingItemId === item.id
+                          ? "更新中..."
+                          : item.isExcluded
+                            ? "除外解除"
+                            : "除外"}
+                      </button>
+                    </div>
+                    {item.isExcluded && (
+                      <p className={styles.excludedNote}>この品物は合計から除外中です。</p>
+                    )}
                   </div>
                 </article>
               ))}

@@ -1349,6 +1349,11 @@
   background: var(--bg-card);
 }
 
+.historyCardExcluded {
+  border-color: rgba(255, 255, 255, 0.04);
+  background: rgba(26, 26, 31, 0.55);
+}
+
 .historyImages {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1370,6 +1375,11 @@
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+.historyImageExcluded {
+  filter: grayscale(1);
+  opacity: 0.42;
 }
 
 .historyImageBadge {
@@ -1434,6 +1444,12 @@
   gap: 12px;
   font: 500 12px/1.5 var(--font-body);
   color: var(--text-secondary);
+}
+
+.historyExcludedNote {
+  margin: 0;
+  font: 700 12px/1.5 var(--font-body);
+  color: #fca5a5;
 }
 
 /* === Empty & Loading States === */

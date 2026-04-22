@@ -9,6 +9,7 @@ import {
   SaveAppraisalHistoryImagesInput,
   SaveAppraisalHistoryInput,
   SaveAppraisalHistorySessionInput,
+  UpdateAppraisalHistoryItemInput,
   sanitizeSegment,
 } from "@/lib/history/shared";
 
@@ -60,7 +61,22 @@ async function fetchHistoryRecord(url: string): Promise<AppraisalHistoryItem | n
   }
 
   const payload = (await response.json()) as unknown;
-  return isAppraisalHistoryItem(payload) ? payload : null;
+  if (!isAppraisalHistoryItem(payload)) {
+    return null;
+  }
+
+  return {
+    ...payload,
+    offerPrice:
+      typeof payload.offerPrice === "number" && Number.isFinite(payload.offerPrice)
+        ? payload.offerPrice
+        : null,
+    contractPrice:
+      typeof payload.contractPrice === "number" && Number.isFinite(payload.contractPrice)
+        ? payload.contractPrice
+        : null,
+    isExcluded: Boolean(payload.isExcluded),
+  };
 }
 
 async function putHistoryRecord(item: AppraisalHistoryItem): Promise<void> {
@@ -128,6 +144,9 @@ export async function createAppraisalHistorySessionInBlob(
     images: [],
     identification: input.identification,
     pricing: mapPricing(input.pricing),
+    offerPrice: input.offerPrice ?? null,
+    contractPrice: input.contractPrice ?? null,
+    isExcluded: Boolean(input.isExcluded),
   };
 
   await putHistoryRecord(item);
@@ -203,6 +222,7 @@ export async function listAppraisalHistory(
 
   return items
     .filter((item): item is AppraisalHistoryItem => item !== null)
+    .filter((item) => (options.itemId ? item.id === options.itemId : true))
     .filter((item) =>
       options.appointmentId ? item.appointmentId === options.appointmentId : true
     )
@@ -211,6 +231,35 @@ export async function listAppraisalHistory(
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )
     .slice(0, limit);
+}
+
+export async function updateAppraisalHistoryItemInBlob(
+  input: UpdateAppraisalHistoryItemInput
+): Promise<AppraisalHistoryItem | null> {
+  if (!isBlobConfigured()) {
+    return null;
+  }
+
+  const item = await findHistoryRecordById(input.itemId);
+
+  if (!item) {
+    return null;
+  }
+
+  const nextItem: AppraisalHistoryItem = {
+    ...item,
+    offerPrice: "offerPrice" in input ? input.offerPrice ?? null : item.offerPrice,
+    contractPrice:
+      "contractPrice" in input ? input.contractPrice ?? null : item.contractPrice,
+    isExcluded:
+      "isExcluded" in input && typeof input.isExcluded === "boolean"
+        ? input.isExcluded
+        : item.isExcluded,
+  };
+
+  await putHistoryRecord(nextItem);
+
+  return nextItem;
 }
 
 export async function renameAppointmentInBlob(

@@ -86,6 +86,12 @@
   gap: 6px;
 }
 
+.heroSummaryGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
 .heroSummaryLabel {
   font: 500 11px/1 var(--font-body);
   color: var(--text-muted);
@@ -251,6 +257,11 @@
   background: var(--bg-surface);
 }
 
+.itemCardExcluded {
+  border-color: rgba(255, 255, 255, 0.04);
+  background: rgba(26, 26, 31, 0.55);
+}
+
 .itemImages {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -272,6 +283,11 @@
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+.imageExcluded {
+  filter: grayscale(1);
+  opacity: 0.42;
 }
 
 .imageBadge {
@@ -317,6 +333,16 @@
   font: 600 16px/1.35 var(--font-body);
 }
 
+.itemDetailLink {
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.itemDetailLink:hover .itemName {
+  color: var(--accent);
+}
+
 .itemPrice {
   flex-shrink: 0;
   color: var(--accent);
@@ -330,11 +356,78 @@
   color: var(--text-muted);
 }
 
+.itemSettlementRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font: 600 12px/1.5 var(--font-body);
+  color: var(--text-secondary);
+}
+
+.itemActionRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.detailButton,
+.excludeButton,
+.restoreButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  font: 700 12px/1 var(--font-body);
+  cursor: pointer;
+}
+
+.detailButton {
+  border: 1px solid rgba(212, 148, 58, 0.28);
+  background: var(--accent-dim);
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.excludeButton,
+.restoreButton {
+  border: none;
+}
+
+.excludeButton {
+  background: rgba(248, 113, 113, 0.16);
+  color: #fca5a5;
+}
+
+.restoreButton {
+  background: rgba(134, 239, 172, 0.14);
+  color: #86efac;
+}
+
+.excludeButton:disabled,
+.restoreButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.excludedNote {
+  margin: 0;
+  font: 700 12px/1.5 var(--font-body);
+  color: #fca5a5;
+}
+
 @media (min-width: 768px) {
   .hero {
     flex-direction: row;
     align-items: flex-end;
     justify-content: space-between;
+  }
+
+  .heroSummaryGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    min-width: min(520px, 100%);
   }
 
   .itemGrid {

@@ -67,6 +67,9 @@ export type AppraisalHistoryItem = {
   images: AppraisalHistoryImage[];
   identification: ProductIdentification;
   pricing: AppraisalHistoryPricing;
+  offerPrice: number | null;
+  contractPrice: number | null;
+  isExcluded: boolean;
 };
 
 export type AppraisalAppointmentGroup = {
@@ -74,7 +77,11 @@ export type AppraisalAppointmentGroup = {
   appointmentLabel: string;
   latestAppraisalAt: string;
   itemCount: number;
+  totalItemCount: number;
+  excludedItemCount: number;
   totalSuggestedMaxPrice: number;
+  totalOfferPrice: number;
+  totalContractPrice: number;
   items: AppraisalHistoryItem[];
 };
 

@@ -14,6 +14,9 @@ export type SaveAppraisalHistoryInput = {
   images: HistoryImageInput[];
   appointmentId?: string | null;
   appointmentLabel?: string | null;
+  offerPrice?: number | null;
+  contractPrice?: number | null;
+  isExcluded?: boolean;
   rawResult?: unknown;
 };
 
@@ -31,12 +34,20 @@ export type SaveAppraisalHistoryImagesInput = {
 export type ListAppraisalHistoryOptions = {
   limit?: number;
   appointmentId?: string | null;
+  itemId?: string | null;
 };
 
 export type RenameAppointmentResult = {
   appointmentId: string;
   appointmentLabel: string;
   updatedCount: number;
+};
+
+export type UpdateAppraisalHistoryItemInput = {
+  itemId: string;
+  offerPrice?: number | null;
+  contractPrice?: number | null;
+  isExcluded?: boolean;
 };
 
 export function sanitizeSegment(value: string): string {

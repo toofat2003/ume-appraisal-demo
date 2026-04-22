@@ -5,6 +5,7 @@ import {
   renameAppointmentInBlob,
   saveAppraisalHistoryImagesInBlob,
   saveAppraisalHistory as saveBlobHistory,
+  updateAppraisalHistoryItemInBlob,
 } from "@/lib/history/blob";
 import {
   createAppraisalHistorySessionInSupabase,
@@ -13,12 +14,14 @@ import {
   renameAppointmentInSupabase,
   saveAppraisalHistoryImagesToSupabase,
   saveAppraisalHistoryToSupabase,
+  updateAppraisalHistoryItemInSupabase,
 } from "@/lib/history/supabase";
 import {
   ListAppraisalHistoryOptions,
   SaveAppraisalHistoryImagesInput,
   SaveAppraisalHistoryInput,
   SaveAppraisalHistorySessionInput,
+  UpdateAppraisalHistoryItemInput,
 } from "@/lib/history/shared";
 
 export async function saveAppraisalHistory(input: SaveAppraisalHistoryInput) {
@@ -66,6 +69,16 @@ export async function renameAppointment(
   }
 
   return renameAppointmentInBlob(appointmentId, appointmentLabel);
+}
+
+export async function updateAppraisalHistoryItem(
+  input: UpdateAppraisalHistoryItemInput
+) {
+  if (isSupabaseHistoryStorageEnabled()) {
+    return updateAppraisalHistoryItemInSupabase(input);
+  }
+
+  return updateAppraisalHistoryItemInBlob(input);
 }
 
 export function isHistoryStorageEnabled(): boolean {

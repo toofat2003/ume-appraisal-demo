@@ -1574,7 +1574,12 @@ export default function HomePage() {
 
                     <div className={styles.historyGrid}>
                       {group.items.map((item) => (
-                        <article key={item.id} className={styles.historyCard}>
+                        <article
+                          key={item.id}
+                          className={`${styles.historyCard} ${
+                            item.isExcluded ? styles.historyCardExcluded : ""
+                          }`}
+                        >
                           <div className={styles.historyImages}>
                             {item.images.length > 0 ? (
                               item.images.map((image) => (
@@ -1588,7 +1593,9 @@ export default function HomePage() {
                                   <img
                                     src={image.url}
                                     alt={image.slotLabel}
-                                    className={styles.historyImage}
+                                    className={`${styles.historyImage} ${
+                                      item.isExcluded ? styles.historyImageExcluded : ""
+                                    }`}
                                   />
                                   <span className={styles.historyImageBadge}>
                                     {image.slotLabel}
@@ -1615,7 +1622,9 @@ export default function HomePage() {
                             <p className={styles.historyMeta}>
                               {formatDateTime(item.createdAt)}
                               {" · "}
-                              {isManualHistoryItem(item)
+                              {item.isExcluded
+                                ? "除外中"
+                                : isManualHistoryItem(item)
                                 ? "手動入力"
                                 : item.identification.brand || item.identification.category}
                             </p>
@@ -1635,6 +1644,11 @@ export default function HomePage() {
                                 </>
                               )}
                             </div>
+                            {item.isExcluded && (
+                              <p className={styles.historyExcludedNote}>
+                                この品物はアポ合計から除外中です。
+                              </p>
+                            )}
                           </div>
                         </article>
                       ))}

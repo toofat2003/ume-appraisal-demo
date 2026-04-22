@@ -5,6 +5,7 @@ import {
   listAppraisalHistory,
   renameAppointment,
   saveAppraisalHistory,
+  updateAppraisalHistoryItem,
 } from "@/lib/history";
 import { APPOINTMENT_HISTORY_LIMIT, DEFAULT_HISTORY_LIMIT } from "@/lib/history/shared";
 import { groupHistoryItems } from "@/lib/appointments/shared";
@@ -20,17 +21,19 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const appointmentId = searchParams.get("appointmentId")?.trim() || null;
+    const itemId = searchParams.get("itemId")?.trim() || null;
     const requestedLimit = Number(searchParams.get("limit") || "");
     const limit = Number.isFinite(requestedLimit) && requestedLimit > 0
       ? Math.min(
           Math.floor(requestedLimit),
-          appointmentId ? APPOINTMENT_HISTORY_LIMIT : DEFAULT_HISTORY_LIMIT
+          appointmentId || itemId ? APPOINTMENT_HISTORY_LIMIT : DEFAULT_HISTORY_LIMIT
         )
-      : appointmentId
+      : appointmentId || itemId
         ? APPOINTMENT_HISTORY_LIMIT
         : DEFAULT_HISTORY_LIMIT;
     const items = await listAppraisalHistory({
       appointmentId,
+      itemId,
       limit,
     });
     const appointment =
@@ -78,7 +81,76 @@ export async function PATCH(request: Request) {
     const payload = (await request.json()) as {
       appointmentId?: unknown;
       appointmentLabel?: unknown;
+      itemId?: unknown;
+      offerPrice?: unknown;
+      contractPrice?: unknown;
+      isExcluded?: unknown;
     };
+    const itemId = typeof payload.itemId === "string" ? payload.itemId.trim() : "";
+
+    if (itemId) {
+      const normalizePrice = (
+        value: unknown
+      ): { value: number | null | undefined; error: string | null } => {
+        if (value === undefined) {
+          return { value: undefined, error: null };
+        }
+        if (value === null || value === "") {
+          return { value: null, error: null };
+        }
+        const numericValue = Number(value);
+        if (!Number.isFinite(numericValue) || numericValue < 0) {
+          return { value: undefined, error: "価格は0以上の数値で入力してください。" };
+        }
+        return { value: Math.round(numericValue), error: null };
+      };
+      const offerPrice = normalizePrice(payload.offerPrice);
+      const contractPrice = normalizePrice(payload.contractPrice);
+
+      if (offerPrice.error || contractPrice.error) {
+        return NextResponse.json(
+          {
+            error: offerPrice.error || contractPrice.error,
+          },
+          { status: 400 }
+        );
+      }
+
+      const updateInput: {
+        itemId: string;
+        offerPrice?: number | null;
+        contractPrice?: number | null;
+        isExcluded?: boolean;
+      } = { itemId };
+
+      if (offerPrice.value !== undefined) {
+        updateInput.offerPrice = offerPrice.value;
+      }
+
+      if (contractPrice.value !== undefined) {
+        updateInput.contractPrice = contractPrice.value;
+      }
+
+      if (typeof payload.isExcluded === "boolean") {
+        updateInput.isExcluded = payload.isExcluded;
+      }
+
+      const updatedItem = await updateAppraisalHistoryItem(updateInput);
+
+      if (!updatedItem) {
+        return NextResponse.json(
+          {
+            error: "対象の査定履歴が見つかりません。",
+          },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({
+        item: updatedItem,
+      });
+    }
+
     const appointmentId =
       typeof payload.appointmentId === "string" ? payload.appointmentId.trim() : "";
     const appointmentLabel =
@@ -108,13 +180,13 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Appointment rename error:", error);
+    console.error("History patch error:", error);
     const errorId = await logErrorEvent({
       requestId,
-      source: "api.history.rename",
+      source: "api.history.patch",
       route: "/api/history",
       message:
-        error instanceof Error ? error.message : "アポ名変更中に予期しないエラーが発生しました。",
+        error instanceof Error ? error.message : "査定履歴更新中に予期しないエラーが発生しました。",
       errorName: error instanceof Error ? error.name : null,
       stack: error instanceof Error ? error.stack : null,
       metadata: {
@@ -126,7 +198,7 @@ export async function PATCH(request: Request) {
     });
     return NextResponse.json(
       {
-        error: "アポ名の変更に失敗しました。",
+        error: "査定履歴の更新に失敗しました。",
         errorId,
       },
       { status: 500 }

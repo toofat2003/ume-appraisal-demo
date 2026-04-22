@@ -9,6 +9,7 @@ import {
   SaveAppraisalHistoryImagesInput,
   SaveAppraisalHistoryInput,
   SaveAppraisalHistorySessionInput,
+  UpdateAppraisalHistoryItemInput,
   sanitizeSegment,
 } from "@/lib/history/shared";
 
@@ -38,6 +39,9 @@ type SessionRow = {
   median_price: number;
   high_price: number;
   listing_count: number;
+  offer_price: number | null;
+  contract_price: number | null;
+  is_excluded: boolean | null;
   appraisal_images?: ImageRow[];
 };
 
@@ -51,6 +55,38 @@ type ImageRow = {
 type UploadedImageRow = ImageRow & {
   mime_type: string;
 };
+
+const SESSION_SELECT = `
+  id,
+  created_at,
+  appointment_id,
+  appointment_label,
+  item_name,
+  brand,
+  model,
+  category,
+  category_group,
+  condition_summary,
+  confidence,
+  search_query,
+  reasoning,
+  suggested_max_price,
+  buy_price_range_low,
+  buy_price_range_high,
+  low_price,
+  median_price,
+  high_price,
+  listing_count,
+  offer_price,
+  contract_price,
+  is_excluded,
+  appraisal_images (
+    slot_label,
+    storage_path,
+    public_url,
+    position
+  )
+`;
 
 function isSupabaseConfigured(): boolean {
   return Boolean(
@@ -155,6 +191,9 @@ function mapSessionRowToHistoryItem(row: SessionRow): AppraisalHistoryItem {
       high: row.high_price,
       listingCount: row.listing_count,
     },
+    offerPrice: row.offer_price ?? null,
+    contractPrice: row.contract_price ?? null,
+    isExcluded: Boolean(row.is_excluded),
   };
 }
 
@@ -172,6 +211,9 @@ function buildHistoryItemFromInput(
     images: mapImageRowsToHistoryImages(images),
     identification: input.identification,
     pricing: mapPricing(input.pricing),
+    offerPrice: input.offerPrice ?? null,
+    contractPrice: input.contractPrice ?? null,
+    isExcluded: Boolean(input.isExcluded),
   };
 }
 
@@ -207,6 +249,9 @@ export async function createAppraisalHistorySessionInSupabase(
     median_price: input.pricing.median,
     high_price: input.pricing.high,
     listing_count: input.pricing.listingCount,
+    offer_price: input.offerPrice ?? null,
+    contract_price: input.contractPrice ?? null,
+    is_excluded: Boolean(input.isExcluded),
     raw_result_json: input.rawResult ?? {},
   });
 
@@ -309,38 +354,13 @@ export async function listAppraisalHistoryFromSupabase(
   const client = getClient();
   let query = client
     .from("appraisal_sessions")
-    .select(
-      `
-        id,
-        created_at,
-        appointment_id,
-        appointment_label,
-        item_name,
-        brand,
-        model,
-        category,
-        category_group,
-        condition_summary,
-        confidence,
-        search_query,
-        reasoning,
-        suggested_max_price,
-        buy_price_range_low,
-        buy_price_range_high,
-        low_price,
-        median_price,
-        high_price,
-        listing_count,
-        appraisal_images (
-          slot_label,
-          storage_path,
-          public_url,
-          position
-        )
-      `
-    )
+    .select(SESSION_SELECT)
     .order("created_at", { ascending: false })
     .limit(limit);
+
+  if (options.itemId) {
+    query = query.eq("id", options.itemId).limit(1);
+  }
 
   if (options.appointmentId) {
     query = query.eq("appointment_id", options.appointmentId);
@@ -353,6 +373,50 @@ export async function listAppraisalHistoryFromSupabase(
   }
 
   return (data || []).map((row) => mapSessionRowToHistoryItem(row as SessionRow));
+}
+
+export async function updateAppraisalHistoryItemInSupabase(
+  input: UpdateAppraisalHistoryItemInput
+): Promise<AppraisalHistoryItem | null> {
+  if (!isSupabaseConfigured()) {
+    return null;
+  }
+
+  const updatePayload: Record<string, number | boolean | null> = {};
+
+  if ("offerPrice" in input) {
+    updatePayload.offer_price = input.offerPrice ?? null;
+  }
+
+  if ("contractPrice" in input) {
+    updatePayload.contract_price = input.contractPrice ?? null;
+  }
+
+  if ("isExcluded" in input && typeof input.isExcluded === "boolean") {
+    updatePayload.is_excluded = input.isExcluded;
+  }
+
+  if (Object.keys(updatePayload).length === 0) {
+    const [existing] = await listAppraisalHistoryFromSupabase({
+      itemId: input.itemId,
+      limit: 1,
+    });
+    return existing || null;
+  }
+
+  const client = getClient();
+  const { data, error } = await client
+    .from("appraisal_sessions")
+    .update(updatePayload)
+    .eq("id", input.itemId)
+    .select(SESSION_SELECT)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return data ? mapSessionRowToHistoryItem(data as SessionRow) : null;
 }
 
 export async function renameAppointmentInSupabase(
