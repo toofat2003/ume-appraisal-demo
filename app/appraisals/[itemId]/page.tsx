@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import styles from "./page.module.css";
 import type { AppraisalHistoryItem } from "@/lib/appraisal/types";
+import { getEffectiveMaxPrice } from "@/lib/appointments/shared";
 import {
   getOrCreateClientSessionId,
   reportClientError,
@@ -39,9 +40,11 @@ export default function AppraisalDetailPage() {
   const params = useParams<{ itemId: string }>();
   const itemId = decodeURIComponent(params.itemId);
   const [item, setItem] = useState<AppraisalHistoryItem | null>(null);
+  const [manualMaxPriceInput, setManualMaxPriceInput] = useState("");
   const [offerPriceInput, setOfferPriceInput] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSavingMaxPrice, setIsSavingMaxPrice] = useState(false);
   const [isTogglingExcluded, setIsTogglingExcluded] = useState(false);
   const [isTogglingContracted, setIsTogglingContracted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -89,6 +92,7 @@ export default function AppraisalDetailPage() {
       }
 
       setItem(nextItem);
+      setManualMaxPriceInput(inputValueFromPrice(nextItem.manualMaxPrice));
       setOfferPriceInput(inputValueFromPrice(nextItem.offerPrice));
     } catch (err) {
       if (err instanceof Error) {
@@ -109,6 +113,7 @@ export default function AppraisalDetailPage() {
   }
 
   async function patchItem(payload: {
+    manualMaxPrice?: number | null;
     offerPrice?: number | null;
     isExcluded?: boolean;
     isContracted?: boolean;
@@ -151,6 +156,38 @@ export default function AppraisalDetailPage() {
     }
 
     return Math.round(numericValue);
+  }
+
+  async function handleMaxPriceSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsSavingMaxPrice(true);
+    setError(null);
+    setErrorReference(null);
+    setSuccessMessage(null);
+
+    try {
+      const nextItem = await patchItem({
+        manualMaxPrice: parsePriceInput(manualMaxPriceInput),
+      });
+      setItem(nextItem);
+      setManualMaxPriceInput(inputValueFromPrice(nextItem.manualMaxPrice));
+      setSuccessMessage("Max価格を保存しました。");
+    } catch (err) {
+      if (err instanceof Error) {
+        void reportClientError({
+          source: "appraisal.detail.max_price",
+          message: err.message,
+          errorName: err.name,
+          stack: err.stack || null,
+          metadata: {
+            itemId,
+          },
+        });
+      }
+      setError(err instanceof Error ? err.message : "Max価格の保存に失敗しました");
+    } finally {
+      setIsSavingMaxPrice(false);
+    }
   }
 
   async function handleSettlementSubmit(event: FormEvent<HTMLFormElement>) {
@@ -256,6 +293,7 @@ export default function AppraisalDetailPage() {
   const backHref = item?.appointmentId
     ? `/appointments/${encodeURIComponent(item.appointmentId)}`
     : "/";
+  const effectiveMaxPrice = item ? getEffectiveMaxPrice(item) : null;
 
   return (
     <div className={styles.page}>
@@ -290,10 +328,17 @@ export default function AppraisalDetailPage() {
                 </p>
               </div>
               <div className={styles.heroPriceBlock}>
-                <span className={styles.heroPriceLabel}>推奨Max価格</span>
-                <span className={styles.heroPrice}>
-                  {formatCurrency(item.pricing.suggestedMaxPrice)}
+                <span className={styles.heroPriceLabel}>
+                  {item.manualMaxPrice === null ? "推奨Max価格" : "Max価格（手動）"}
                 </span>
+                <span className={styles.heroPrice}>
+                  {formatCurrency(effectiveMaxPrice)}
+                </span>
+                {item.manualMaxPrice !== null && (
+                  <span className={styles.heroPriceNote}>
+                    自動Max {formatCurrency(item.pricing.suggestedMaxPrice)}
+                  </span>
+                )}
               </div>
             </section>
 
@@ -327,6 +372,44 @@ export default function AppraisalDetailPage() {
                 </div>
               ) : (
                 <div className={styles.imagePlaceholder}>画像なし</div>
+              )}
+            </section>
+
+            <section className={styles.maxPriceSection}>
+              <div className={styles.sectionHeader}>
+                <div>
+                  <h2 className={styles.sectionTitle}>Max価格</h2>
+                  <p className={styles.sectionCaption}>
+                    空欄に戻すと自動査定のMax価格を採用します。手動入力がある場合は、アポ集計も手動値を優先します。
+                  </p>
+                </div>
+              </div>
+              <form className={styles.settlementForm} onSubmit={handleMaxPriceSubmit}>
+                <label className={styles.fieldLabel}>
+                  手動Max価格 USD
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    inputMode="decimal"
+                    value={manualMaxPriceInput}
+                    onChange={(event) => setManualMaxPriceInput(event.target.value)}
+                    className={styles.priceInput}
+                    placeholder={`自動Max ${formatCurrency(item.pricing.suggestedMaxPrice)}`}
+                  />
+                </label>
+                <button
+                  type="submit"
+                  className={styles.saveButton}
+                  disabled={isSavingMaxPrice}
+                >
+                  {isSavingMaxPrice ? "保存中..." : "Max価格を保存"}
+                </button>
+              </form>
+              {item.manualMaxPrice !== null && (
+                <p className={styles.overrideNote}>
+                  現在は手動Max価格 {formatCurrency(item.manualMaxPrice)} を集計に採用しています。
+                </p>
               )}
             </section>
 
@@ -370,6 +453,20 @@ export default function AppraisalDetailPage() {
 
             <section className={styles.summarySection}>
               <div className={styles.summaryGrid}>
+                <div className={styles.summaryItem}>
+                  <span className={styles.summaryLabel}>採用Max価格</span>
+                  <span className={styles.summaryValue}>{formatCurrency(effectiveMaxPrice)}</span>
+                </div>
+                <div className={styles.summaryItem}>
+                  <span className={styles.summaryLabel}>自動Max価格</span>
+                  <span className={styles.summaryValue}>
+                    {formatCurrency(item.pricing.suggestedMaxPrice)}
+                  </span>
+                </div>
+                <div className={styles.summaryItem}>
+                  <span className={styles.summaryLabel}>手動Max価格</span>
+                  <span className={styles.summaryValue}>{formatCurrency(item.manualMaxPrice)}</span>
+                </div>
                 <div className={styles.summaryItem}>
                   <span className={styles.summaryLabel}>買取目安</span>
                   <span className={styles.summaryValue}>

@@ -14,6 +14,7 @@ export type SaveAppraisalHistoryInput = {
   images: HistoryImageInput[];
   appointmentId?: string | null;
   appointmentLabel?: string | null;
+  manualMaxPrice?: number | null;
   offerPrice?: number | null;
   contractPrice?: number | null;
   isExcluded?: boolean;
@@ -46,6 +47,7 @@ export type RenameAppointmentResult = {
 
 export type UpdateAppraisalHistoryItemInput = {
   itemId: string;
+  manualMaxPrice?: number | null;
   offerPrice?: number | null;
   contractPrice?: number | null;
   isExcluded?: boolean;

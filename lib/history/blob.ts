@@ -67,6 +67,10 @@ async function fetchHistoryRecord(url: string): Promise<AppraisalHistoryItem | n
 
   return {
     ...payload,
+    manualMaxPrice:
+      typeof payload.manualMaxPrice === "number" && Number.isFinite(payload.manualMaxPrice)
+        ? payload.manualMaxPrice
+        : null,
     offerPrice:
       typeof payload.offerPrice === "number" && Number.isFinite(payload.offerPrice)
         ? payload.offerPrice
@@ -145,6 +149,7 @@ export async function createAppraisalHistorySessionInBlob(
     images: [],
     identification: input.identification,
     pricing: mapPricing(input.pricing),
+    manualMaxPrice: input.manualMaxPrice ?? null,
     offerPrice: input.offerPrice ?? null,
     contractPrice: input.contractPrice ?? input.offerPrice ?? null,
     isExcluded: Boolean(input.isExcluded),
@@ -250,6 +255,8 @@ export async function updateAppraisalHistoryItemInBlob(
 
   const nextItem: AppraisalHistoryItem = {
     ...item,
+    manualMaxPrice:
+      "manualMaxPrice" in input ? input.manualMaxPrice ?? null : item.manualMaxPrice,
     offerPrice: "offerPrice" in input ? input.offerPrice ?? null : item.offerPrice,
     contractPrice:
       "offerPrice" in input

@@ -82,6 +82,7 @@ export async function PATCH(request: Request) {
       appointmentId?: unknown;
       appointmentLabel?: unknown;
       itemId?: unknown;
+      manualMaxPrice?: unknown;
       offerPrice?: unknown;
       contractPrice?: unknown;
       isExcluded?: unknown;
@@ -105,13 +106,14 @@ export async function PATCH(request: Request) {
         }
         return { value: Math.round(numericValue), error: null };
       };
+      const manualMaxPrice = normalizePrice(payload.manualMaxPrice);
       const offerPrice = normalizePrice(payload.offerPrice);
       const contractPrice = normalizePrice(payload.contractPrice);
 
-      if (offerPrice.error || contractPrice.error) {
+      if (manualMaxPrice.error || offerPrice.error || contractPrice.error) {
         return NextResponse.json(
           {
-            error: offerPrice.error || contractPrice.error,
+            error: manualMaxPrice.error || offerPrice.error || contractPrice.error,
           },
           { status: 400 }
         );
@@ -119,11 +121,16 @@ export async function PATCH(request: Request) {
 
       const updateInput: {
         itemId: string;
+        manualMaxPrice?: number | null;
         offerPrice?: number | null;
         contractPrice?: number | null;
         isExcluded?: boolean;
         isContracted?: boolean;
       } = { itemId };
+
+      if (manualMaxPrice.value !== undefined) {
+        updateInput.manualMaxPrice = manualMaxPrice.value;
+      }
 
       if (offerPrice.value !== undefined) {
         updateInput.offerPrice = offerPrice.value;

@@ -102,6 +102,16 @@
   color: var(--accent);
 }
 
+.profitSummary {
+  border-radius: var(--radius-md);
+  padding: 12px;
+  background: rgba(134, 239, 172, 0.08);
+}
+
+.profitSummary .heroSummaryValue {
+  color: #86efac;
+}
+
 .renameSection,
 .manualSection,
 .itemsSection,
@@ -347,6 +357,22 @@
   flex-shrink: 0;
   color: var(--accent);
   font: 700 18px/1 var(--font-mono);
+}
+
+.itemPriceBlock {
+  display: flex;
+  flex-shrink: 0;
+  align-items: flex-end;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.itemPriceBadge {
+  padding: 4px 6px;
+  border-radius: var(--radius-full);
+  background: rgba(212, 148, 58, 0.12);
+  color: var(--accent);
+  font: 800 10px/1 var(--font-body);
 }
 
 .itemMeta,

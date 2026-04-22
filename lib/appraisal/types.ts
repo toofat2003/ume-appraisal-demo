@@ -67,6 +67,7 @@ export type AppraisalHistoryItem = {
   images: AppraisalHistoryImage[];
   identification: ProductIdentification;
   pricing: AppraisalHistoryPricing;
+  manualMaxPrice: number | null;
   offerPrice: number | null;
   contractPrice: number | null;
   isExcluded: boolean;
@@ -85,6 +86,7 @@ export type AppraisalAppointmentGroup = {
   totalContractPrice: number;
   totalContractedSuggestedMaxPrice: number;
   totalContractedOfferPrice: number;
+  totalContractedGrossProfit: number;
   items: AppraisalHistoryItem[];
 };
 

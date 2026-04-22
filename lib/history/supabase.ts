@@ -39,6 +39,7 @@ type SessionRow = {
   median_price: number;
   high_price: number;
   listing_count: number;
+  manual_max_price: number | null;
   offer_price: number | null;
   contract_price: number | null;
   is_excluded: boolean | null;
@@ -78,6 +79,7 @@ const SESSION_SELECT = `
   median_price,
   high_price,
   listing_count,
+  manual_max_price,
   offer_price,
   contract_price,
   is_excluded,
@@ -193,6 +195,7 @@ function mapSessionRowToHistoryItem(row: SessionRow): AppraisalHistoryItem {
       high: row.high_price,
       listingCount: row.listing_count,
     },
+    manualMaxPrice: row.manual_max_price ?? null,
     offerPrice: row.offer_price ?? null,
     contractPrice: row.contract_price ?? null,
     isExcluded: Boolean(row.is_excluded),
@@ -214,6 +217,7 @@ function buildHistoryItemFromInput(
     images: mapImageRowsToHistoryImages(images),
     identification: input.identification,
     pricing: mapPricing(input.pricing),
+    manualMaxPrice: input.manualMaxPrice ?? null,
     offerPrice: input.offerPrice ?? null,
     contractPrice: input.contractPrice ?? input.offerPrice ?? null,
     isExcluded: Boolean(input.isExcluded),
@@ -253,6 +257,7 @@ export async function createAppraisalHistorySessionInSupabase(
     median_price: input.pricing.median,
     high_price: input.pricing.high,
     listing_count: input.pricing.listingCount,
+    manual_max_price: input.manualMaxPrice ?? null,
     offer_price: input.offerPrice ?? null,
     contract_price: input.contractPrice ?? input.offerPrice ?? null,
     is_excluded: Boolean(input.isExcluded),
@@ -388,6 +393,10 @@ export async function updateAppraisalHistoryItemInSupabase(
   }
 
   const updatePayload: Record<string, number | boolean | null> = {};
+
+  if ("manualMaxPrice" in input) {
+    updatePayload.manual_max_price = input.manualMaxPrice ?? null;
+  }
 
   if ("offerPrice" in input) {
     updatePayload.offer_price = input.offerPrice ?? null;

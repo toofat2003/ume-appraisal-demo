@@ -20,6 +20,10 @@ export type AppointmentOption = {
   hasSavedItems: boolean;
 };
 
+export function getEffectiveMaxPrice(item: AppraisalHistoryItem): number {
+  return item.manualMaxPrice ?? item.pricing.suggestedMaxPrice;
+}
+
 export function groupHistoryItems(items: AppraisalHistoryItem[]): AppraisalAppointmentGroup[] {
   const groups = new Map<string, AppraisalAppointmentGroup>();
 
@@ -29,6 +33,8 @@ export function groupHistoryItems(items: AppraisalHistoryItem[]): AppraisalAppoi
     const existing = groups.get(groupKey);
     const isIncluded = !item.isExcluded;
     const isContracted = isIncluded && item.isContracted;
+    const effectiveMaxPrice = getEffectiveMaxPrice(item);
+    const offerPrice = item.offerPrice || 0;
 
     if (!existing) {
       groups.set(groupKey, {
@@ -38,13 +44,14 @@ export function groupHistoryItems(items: AppraisalHistoryItem[]): AppraisalAppoi
         itemCount: isIncluded ? 1 : 0,
         totalItemCount: 1,
         excludedItemCount: isIncluded ? 0 : 1,
-        totalSuggestedMaxPrice: isIncluded ? item.pricing.suggestedMaxPrice : 0,
-        totalOfferPrice: isIncluded ? item.offerPrice || 0 : 0,
+        totalSuggestedMaxPrice: isIncluded ? effectiveMaxPrice : 0,
+        totalOfferPrice: isIncluded ? offerPrice : 0,
         totalContractPrice: isIncluded ? item.contractPrice || 0 : 0,
         totalContractedSuggestedMaxPrice: isContracted
-          ? item.pricing.suggestedMaxPrice
+          ? effectiveMaxPrice
           : 0,
-        totalContractedOfferPrice: isContracted ? item.offerPrice || 0 : 0,
+        totalContractedOfferPrice: isContracted ? offerPrice : 0,
+        totalContractedGrossProfit: isContracted ? effectiveMaxPrice - offerPrice : 0,
         items: [item],
       });
       continue;
@@ -54,12 +61,13 @@ export function groupHistoryItems(items: AppraisalHistoryItem[]): AppraisalAppoi
     existing.totalItemCount += 1;
     if (isIncluded) {
       existing.itemCount += 1;
-      existing.totalSuggestedMaxPrice += item.pricing.suggestedMaxPrice;
-      existing.totalOfferPrice += item.offerPrice || 0;
+      existing.totalSuggestedMaxPrice += effectiveMaxPrice;
+      existing.totalOfferPrice += offerPrice;
       existing.totalContractPrice += item.contractPrice || 0;
       if (item.isContracted) {
-        existing.totalContractedSuggestedMaxPrice += item.pricing.suggestedMaxPrice;
-        existing.totalContractedOfferPrice += item.offerPrice || 0;
+        existing.totalContractedSuggestedMaxPrice += effectiveMaxPrice;
+        existing.totalContractedOfferPrice += offerPrice;
+        existing.totalContractedGrossProfit += effectiveMaxPrice - offerPrice;
       }
     } else {
       existing.excludedItemCount += 1;

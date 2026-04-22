@@ -6,6 +6,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./page.module.css";
 import type { AppraisalHistoryItem } from "@/lib/appraisal/types";
 import {
+  getEffectiveMaxPrice,
   groupHistoryItems,
   mergeStoredAppointmentsWithHistory,
   renameStoredAppointment,
@@ -436,6 +437,7 @@ export default function AppointmentDetailPage() {
   const totalContractedSuggestedMaxPrice =
     appointmentGroup?.totalContractedSuggestedMaxPrice || 0;
   const totalContractedOfferPrice = appointmentGroup?.totalContractedOfferPrice || 0;
+  const totalContractedGrossProfit = appointmentGroup?.totalContractedGrossProfit || 0;
   const latestAppraisalAt = appointmentGroup?.latestAppraisalAt || null;
 
   return (
@@ -461,7 +463,7 @@ export default function AppointmentDetailPage() {
           </div>
           <div className={styles.heroSummaryGrid}>
             <div className={styles.heroSummary}>
-              <span className={styles.heroSummaryLabel}>推奨Max合計</span>
+              <span className={styles.heroSummaryLabel}>Max価格合計</span>
               <span className={styles.heroSummaryValue}>
                 {formatCurrency(totalSuggestedMaxPrice)}
               </span>
@@ -473,15 +475,21 @@ export default function AppointmentDetailPage() {
               </span>
             </div>
             <div className={styles.heroSummary}>
-              <span className={styles.heroSummaryLabel}>成約Max合計</span>
+              <span className={styles.heroSummaryLabel}>成約Max価格合計</span>
               <span className={styles.heroSummaryValue}>
                 {formatCurrency(totalContractedSuggestedMaxPrice)}
               </span>
             </div>
             <div className={styles.heroSummary}>
-              <span className={styles.heroSummaryLabel}>成約オファー合計</span>
+              <span className={styles.heroSummaryLabel}>成約価格合計</span>
               <span className={styles.heroSummaryValue}>
                 {formatCurrency(totalContractedOfferPrice)}
+              </span>
+            </div>
+            <div className={`${styles.heroSummary} ${styles.profitSummary}`}>
+              <span className={styles.heroSummaryLabel}>粗利</span>
+              <span className={styles.heroSummaryValue}>
+                {formatCurrency(totalContractedGrossProfit)}
               </span>
             </div>
           </div>
@@ -609,9 +617,14 @@ export default function AppointmentDetailPage() {
                       <Link href={`/appraisals/${item.id}`} className={styles.itemDetailLink}>
                         <h3 className={styles.itemName}>{item.identification.itemName}</h3>
                       </Link>
-                      <span className={styles.itemPrice}>
-                        {formatCurrency(item.pricing.suggestedMaxPrice)}
-                      </span>
+                      <div className={styles.itemPriceBlock}>
+                        <span className={styles.itemPrice}>
+                          {formatCurrency(getEffectiveMaxPrice(item))}
+                        </span>
+                        {item.manualMaxPrice !== null && (
+                          <span className={styles.itemPriceBadge}>手動Max</span>
+                        )}
+                      </div>
                     </div>
                     <p className={styles.itemMeta}>
                       {formatDateTime(item.createdAt)}
@@ -628,6 +641,9 @@ export default function AppointmentDetailPage() {
                           )} – ${formatCurrency(item.pricing.buyPriceRangeHigh)} · ${
                             item.pricing.listingCount
                           }件参照`}
+                      {item.manualMaxPrice !== null
+                        ? ` · 自動Max ${formatCurrency(item.pricing.suggestedMaxPrice)}`
+                        : ""}
                     </p>
                     <div className={styles.itemSettlementRow}>
                       <span>オファー {formatCurrency(item.offerPrice)}</span>
