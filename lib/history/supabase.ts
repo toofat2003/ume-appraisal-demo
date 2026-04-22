@@ -1,12 +1,14 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import { AppraisalHistoryItem } from "@/lib/appraisal/types";
+import { AppraisalHistoryImage, AppraisalHistoryItem } from "@/lib/appraisal/types";
 import {
   DEFAULT_HISTORY_LIMIT,
   ListAppraisalHistoryOptions,
   RenameAppointmentResult,
   getExtension,
   mapPricing,
+  SaveAppraisalHistoryImagesInput,
   SaveAppraisalHistoryInput,
+  SaveAppraisalHistorySessionInput,
   sanitizeSegment,
 } from "@/lib/history/shared";
 
@@ -44,6 +46,10 @@ type ImageRow = {
   storage_path: string;
   public_url: string;
   position: number;
+};
+
+type UploadedImageRow = ImageRow & {
+  mime_type: string;
 };
 
 function isSupabaseConfigured(): boolean {
@@ -112,19 +118,23 @@ async function ensureBucket(): Promise<void> {
   }
 }
 
+function mapImageRowsToHistoryImages(images: ImageRow[] = []): AppraisalHistoryImage[] {
+  return [...images]
+    .sort((a, b) => a.position - b.position)
+    .map((image) => ({
+      url: image.public_url,
+      pathname: image.storage_path,
+      slotLabel: image.slot_label,
+    }));
+}
+
 function mapSessionRowToHistoryItem(row: SessionRow): AppraisalHistoryItem {
   return {
     id: row.id,
     createdAt: row.created_at,
     appointmentId: row.appointment_id,
     appointmentLabel: row.appointment_label,
-    images: [...(row.appraisal_images || [])]
-      .sort((a, b) => a.position - b.position)
-      .map((image) => ({
-        url: image.public_url,
-        pathname: image.storage_path,
-        slotLabel: image.slot_label,
-      })),
+    images: mapImageRowsToHistoryImages(row.appraisal_images || []),
     identification: {
       itemName: row.item_name,
       brand: row.brand,
@@ -148,52 +158,33 @@ function mapSessionRowToHistoryItem(row: SessionRow): AppraisalHistoryItem {
   };
 }
 
-export async function saveAppraisalHistoryToSupabase(
-  input: SaveAppraisalHistoryInput
+function buildHistoryItemFromInput(
+  id: string,
+  createdAt: string,
+  input: SaveAppraisalHistorySessionInput,
+  images: ImageRow[] = []
+): AppraisalHistoryItem {
+  return {
+    id,
+    createdAt,
+    appointmentId: input.appointmentId || null,
+    appointmentLabel: input.appointmentLabel || null,
+    images: mapImageRowsToHistoryImages(images),
+    identification: input.identification,
+    pricing: mapPricing(input.pricing),
+  };
+}
+
+export async function createAppraisalHistorySessionInSupabase(
+  input: SaveAppraisalHistorySessionInput
 ): Promise<AppraisalHistoryItem | null> {
   if (!isSupabaseConfigured()) {
     return null;
   }
 
-  if (input.images.length > 0) {
-    await ensureBucket();
-  }
-
   const client = getClient();
   const sessionId = crypto.randomUUID();
   const createdAt = new Date().toISOString();
-
-  const uploadedImages = await Promise.all(
-    input.images.map(async ({ file, slotLabel }, index) => {
-      const storagePath = `${sessionId}/${String(index + 1).padStart(2, "0")}-${sanitizeSegment(
-        slotLabel
-      )}.${getExtension(file)}`;
-
-      const { data: uploadData, error: uploadError } = await client.storage
-        .from(SUPABASE_BUCKET)
-        .upload(storagePath, file, {
-          contentType: file.type || "image/jpeg",
-          cacheControl: "3600",
-          upsert: false,
-        });
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      const { data: publicData } = client.storage
-        .from(SUPABASE_BUCKET)
-        .getPublicUrl(uploadData.path);
-
-      return {
-        slot_label: slotLabel,
-        storage_path: uploadData.path,
-        public_url: publicData.publicUrl,
-        position: index,
-        mime_type: file.type || "image/jpeg",
-      };
-    })
-  );
 
   const { error: sessionError } = await client.from("appraisal_sessions").insert({
     id: sessionId,
@@ -223,13 +214,59 @@ export async function saveAppraisalHistoryToSupabase(
     throw sessionError;
   }
 
+  return buildHistoryItemFromInput(sessionId, createdAt, input);
+}
+
+export async function saveAppraisalHistoryImagesToSupabase(
+  input: SaveAppraisalHistoryImagesInput
+): Promise<AppraisalHistoryImage[]> {
+  if (!isSupabaseConfigured() || input.images.length === 0) {
+    return [];
+  }
+
+  await ensureBucket();
+
+  const client = getClient();
+  const uploadedImages: UploadedImageRow[] = await Promise.all(
+    input.images.map(async ({ file, slotLabel }, index) => {
+      const storagePath = `${input.sessionId}/${String(index + 1).padStart(2, "0")}-${sanitizeSegment(
+        slotLabel
+      )}.${getExtension(file)}`;
+
+      const { data: uploadData, error: uploadError } = await client.storage
+        .from(SUPABASE_BUCKET)
+        .upload(storagePath, file, {
+          contentType: file.type || "image/jpeg",
+          cacheControl: "3600",
+          upsert: true,
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data: publicData } = client.storage
+        .from(SUPABASE_BUCKET)
+        .getPublicUrl(uploadData.path);
+
+      return {
+        slot_label: slotLabel,
+        storage_path: uploadData.path,
+        public_url: publicData.publicUrl,
+        position: index,
+        mime_type: file.type || "image/jpeg",
+      };
+    })
+  );
+
   const { error: imageInsertError } =
     uploadedImages.length > 0
-      ? await client.from("appraisal_images").insert(
+      ? await client.from("appraisal_images").upsert(
           uploadedImages.map((image) => ({
-            session_id: sessionId,
+            session_id: input.sessionId,
             ...image,
-          }))
+          })),
+          { onConflict: "storage_path" }
         )
       : { error: null };
 
@@ -237,20 +274,27 @@ export async function saveAppraisalHistoryToSupabase(
     throw imageInsertError;
   }
 
+  return mapImageRowsToHistoryImages(uploadedImages);
+}
+
+export async function saveAppraisalHistoryToSupabase(
+  input: SaveAppraisalHistoryInput
+): Promise<AppraisalHistoryItem | null> {
+  const session = await createAppraisalHistorySessionInSupabase(input);
+
+  if (!session || input.images.length === 0) {
+    return session;
+  }
+
+  const images = await saveAppraisalHistoryImagesToSupabase({
+    sessionId: session.id,
+    createdAt: session.createdAt,
+    images: input.images,
+  });
+
   return {
-    id: sessionId,
-    createdAt,
-    appointmentId: input.appointmentId || null,
-    appointmentLabel: input.appointmentLabel || null,
-    images: uploadedImages
-      .sort((a, b) => a.position - b.position)
-      .map((image) => ({
-        url: image.public_url,
-        pathname: image.storage_path,
-        slotLabel: image.slot_label,
-      })),
-    identification: input.identification,
-    pricing: mapPricing(input.pricing),
+    ...session,
+    images,
   };
 }
 

@@ -6,7 +6,9 @@ import {
   RenameAppointmentResult,
   getExtension,
   mapPricing,
+  SaveAppraisalHistoryImagesInput,
   SaveAppraisalHistoryInput,
+  SaveAppraisalHistorySessionInput,
   sanitizeSegment,
 } from "@/lib/history/shared";
 
@@ -61,18 +63,21 @@ async function fetchHistoryRecord(url: string): Promise<AppraisalHistoryItem | n
   return isAppraisalHistoryItem(payload) ? payload : null;
 }
 
-export async function saveAppraisalHistory(
-  input: SaveAppraisalHistoryInput
-): Promise<AppraisalHistoryItem | null> {
-  if (!isBlobConfigured()) {
-    return null;
-  }
+async function putHistoryRecord(item: AppraisalHistoryItem): Promise<void> {
+  await put(getHistoryRecordPathname(item), JSON.stringify(item, null, 2), {
+    access: "public",
+    addRandomSuffix: false,
+    contentType: "application/json; charset=utf-8",
+    cacheControlMaxAge: 60,
+  });
+}
 
-  const id = crypto.randomUUID();
-  const createdAt = new Date().toISOString();
-
-  const images: AppraisalHistoryImage[] = await Promise.all(
-    input.images.map(async ({ file, slotLabel }, index) => {
+async function uploadHistoryImages(
+  id: string,
+  images: SaveAppraisalHistoryInput["images"]
+): Promise<AppraisalHistoryImage[]> {
+  return Promise.all(
+    images.map(async ({ file, slotLabel }, index) => {
       const pathname = `${getHistoryImagePrefix()}${id}/${String(index + 1).padStart(2, "0")}-${sanitizeSegment(
         slotLabel
       )}.${getExtension(file)}`;
@@ -89,26 +94,88 @@ export async function saveAppraisalHistory(
       };
     })
   );
+}
 
+async function findHistoryRecordById(
+  id: string
+): Promise<AppraisalHistoryItem | null> {
+  const page = await list({
+    prefix: getHistoryRecordPrefix(),
+    limit: 500,
+  });
+
+  const recordBlob = page.blobs.find((blob) =>
+    blob.pathname.endsWith(`_${id}.json`)
+  );
+
+  return recordBlob ? fetchHistoryRecord(recordBlob.url) : null;
+}
+
+export async function createAppraisalHistorySessionInBlob(
+  input: SaveAppraisalHistorySessionInput
+): Promise<AppraisalHistoryItem | null> {
+  if (!isBlobConfigured()) {
+    return null;
+  }
+
+  const id = crypto.randomUUID();
+  const createdAt = new Date().toISOString();
   const item: AppraisalHistoryItem = {
     id,
     createdAt,
     appointmentId: input.appointmentId || null,
     appointmentLabel: input.appointmentLabel || null,
-    images,
+    images: [],
     identification: input.identification,
     pricing: mapPricing(input.pricing),
   };
 
-  const recordPathname = `${getHistoryRecordPrefix()}${createdAt.replace(/[:.]/g, "-")}_${id}.json`;
-  await put(recordPathname, JSON.stringify(item, null, 2), {
-    access: "public",
-    addRandomSuffix: false,
-    contentType: "application/json; charset=utf-8",
-    cacheControlMaxAge: 60,
-  });
+  await putHistoryRecord(item);
 
   return item;
+}
+
+export async function saveAppraisalHistoryImagesInBlob(
+  input: SaveAppraisalHistoryImagesInput
+): Promise<AppraisalHistoryImage[]> {
+  if (!isBlobConfigured() || input.images.length === 0) {
+    return [];
+  }
+
+  const item = await findHistoryRecordById(input.sessionId);
+
+  if (!item) {
+    throw new Error("Blob history record was not found for image save");
+  }
+
+  const images = await uploadHistoryImages(input.sessionId, input.images);
+  await putHistoryRecord({
+    ...item,
+    images,
+  });
+
+  return images;
+}
+
+export async function saveAppraisalHistory(
+  input: SaveAppraisalHistoryInput
+): Promise<AppraisalHistoryItem | null> {
+  const session = await createAppraisalHistorySessionInBlob(input);
+
+  if (!session || input.images.length === 0) {
+    return session;
+  }
+
+  const images = await saveAppraisalHistoryImagesInBlob({
+    sessionId: session.id,
+    createdAt: session.createdAt,
+    images: input.images,
+  });
+
+  return {
+    ...session,
+    images,
+  };
 }
 
 export async function listAppraisalHistory(

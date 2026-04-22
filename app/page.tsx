@@ -471,6 +471,8 @@ export default function HomePage() {
         }
 
         void loadHistory({ silent: true });
+        window.setTimeout(() => void loadHistory({ silent: true }), 5000);
+        window.setTimeout(() => void loadHistory({ silent: true }), 15000);
       } catch (err) {
         if (err instanceof Error && !serverErrorId) {
           void reportClientError({
@@ -1125,7 +1127,7 @@ export default function HomePage() {
                               ))
                             ) : (
                               <div className={styles.historyManualPlaceholder}>
-                                手動入力
+                                {isManualHistoryItem(item) ? "手動入力" : "画像保存中"}
                               </div>
                             )}
                           </div>

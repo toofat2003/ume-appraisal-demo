@@ -447,7 +447,9 @@ export default function AppointmentDetailPage() {
                         </a>
                       ))
                     ) : (
-                      <div className={styles.manualImagePlaceholder}>手動入力</div>
+                      <div className={styles.manualImagePlaceholder}>
+                        {isManualHistoryItem(item) ? "手動入力" : "画像保存中"}
+                      </div>
                     )}
                   </div>
 

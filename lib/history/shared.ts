@@ -17,6 +17,17 @@ export type SaveAppraisalHistoryInput = {
   rawResult?: unknown;
 };
 
+export type SaveAppraisalHistorySessionInput = Omit<
+  SaveAppraisalHistoryInput,
+  "images"
+>;
+
+export type SaveAppraisalHistoryImagesInput = {
+  sessionId: string;
+  createdAt: string;
+  images: HistoryImageInput[];
+};
+
 export type ListAppraisalHistoryOptions = {
   limit?: number;
   appointmentId?: string | null;

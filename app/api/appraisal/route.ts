@@ -1,7 +1,10 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { searchListingsByImage } from "@/lib/appraisal/ebay";
 import { AppraisalDebug, AppraisalResult, ListingSummary } from "@/lib/appraisal/types";
-import { saveAppraisalHistory } from "@/lib/history";
+import {
+  createAppraisalHistorySession,
+  saveAppraisalHistoryImages,
+} from "@/lib/history";
 import {
   getClientSessionIdFromRequest,
   getUserAgentFromRequest,
@@ -281,28 +284,72 @@ export async function POST(request: Request) {
       });
     }
 
+    const historyImages = files.map((file, index) => ({
+      file,
+      slotLabel: slotLabels[index] || DEFAULT_SLOT_LABELS[index] || `写真${index + 1}`,
+    }));
+    const historyRawResult = {
+      identification: result.identification,
+      pricing: result.pricing,
+      listings: result.listings,
+      warnings: result.warnings,
+      debug: result.debug,
+    };
+
     try {
-      const savedHistory = await saveAppraisalHistory({
+      const savedHistory = await createAppraisalHistorySession({
         identification: result.identification,
         pricing: result.pricing,
-        images: files.map((file, index) => ({
-          file,
-          slotLabel: slotLabels[index] || DEFAULT_SLOT_LABELS[index] || `写真${index + 1}`,
-        })),
         appointmentId,
         appointmentLabel,
-        rawResult: {
-          identification: result.identification,
-          pricing: result.pricing,
-          listings: result.listings,
-          warnings: result.warnings,
-          debug: result.debug,
-        },
+        rawResult: historyRawResult,
       });
 
       result.savedHistoryId = savedHistory?.id ?? null;
       result.savedHistoryAt = savedHistory?.createdAt ?? null;
       result.savedHistoryItem = savedHistory;
+
+      if (savedHistory && historyImages.length > 0) {
+        const userAgent = getUserAgentFromRequest(request);
+        const clientSessionId = getClientSessionIdFromRequest(request);
+        const requestUrl = request.url;
+        const sessionId = savedHistory.id;
+        const createdAt = savedHistory.createdAt;
+
+        after(async () => {
+          try {
+            await saveAppraisalHistoryImages({
+              sessionId,
+              createdAt,
+              images: historyImages,
+            });
+          } catch (historyImageError) {
+            console.error("History image save error:", historyImageError);
+            await logErrorEvent({
+              requestId,
+              source: "api.appraisal.history-image-save",
+              route: "/api/appraisal",
+              message:
+                historyImageError instanceof Error
+                  ? historyImageError.message
+                  : "査定履歴の画像保存に失敗しました。",
+              errorName:
+                historyImageError instanceof Error ? historyImageError.name : null,
+              stack:
+                historyImageError instanceof Error ? historyImageError.stack : null,
+              metadata: {
+                ...requestMetadata,
+                sessionId,
+                createdAt,
+                imageCount: historyImages.length,
+              },
+              userAgent,
+              clientSessionId,
+              url: requestUrl,
+            });
+          }
+        });
+      }
     } catch (historyError) {
       console.error("History save error:", historyError);
       const historyErrorId = await logErrorEvent({
