@@ -207,6 +207,27 @@
   color: var(--text-muted);
 }
 
+.contractCheckboxLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(134, 239, 172, 0.18);
+  background: rgba(134, 239, 172, 0.08);
+  color: #86efac;
+  font: 800 13px/1 var(--font-body);
+  cursor: pointer;
+}
+
+.contractCheckboxLabel input {
+  width: 18px;
+  height: 18px;
+  accent-color: #86efac;
+}
+
 .saveButton,
 .excludeButton,
 .restoreButton {
@@ -296,7 +317,7 @@
   }
 
   .settlementForm {
-    grid-template-columns: 1fr 1fr auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: end;
   }
 

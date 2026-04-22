@@ -42,6 +42,7 @@ type SessionRow = {
   offer_price: number | null;
   contract_price: number | null;
   is_excluded: boolean | null;
+  is_contracted: boolean | null;
   appraisal_images?: ImageRow[];
 };
 
@@ -80,6 +81,7 @@ const SESSION_SELECT = `
   offer_price,
   contract_price,
   is_excluded,
+  is_contracted,
   appraisal_images (
     slot_label,
     storage_path,
@@ -194,6 +196,7 @@ function mapSessionRowToHistoryItem(row: SessionRow): AppraisalHistoryItem {
     offerPrice: row.offer_price ?? null,
     contractPrice: row.contract_price ?? null,
     isExcluded: Boolean(row.is_excluded),
+    isContracted: Boolean(row.is_contracted),
   };
 }
 
@@ -212,8 +215,9 @@ function buildHistoryItemFromInput(
     identification: input.identification,
     pricing: mapPricing(input.pricing),
     offerPrice: input.offerPrice ?? null,
-    contractPrice: input.contractPrice ?? null,
+    contractPrice: input.contractPrice ?? input.offerPrice ?? null,
     isExcluded: Boolean(input.isExcluded),
+    isContracted: Boolean(input.isContracted),
   };
 }
 
@@ -250,8 +254,9 @@ export async function createAppraisalHistorySessionInSupabase(
     high_price: input.pricing.high,
     listing_count: input.pricing.listingCount,
     offer_price: input.offerPrice ?? null,
-    contract_price: input.contractPrice ?? null,
+    contract_price: input.contractPrice ?? input.offerPrice ?? null,
     is_excluded: Boolean(input.isExcluded),
+    is_contracted: Boolean(input.isContracted),
     raw_result_json: input.rawResult ?? {},
   });
 
@@ -386,6 +391,7 @@ export async function updateAppraisalHistoryItemInSupabase(
 
   if ("offerPrice" in input) {
     updatePayload.offer_price = input.offerPrice ?? null;
+    updatePayload.contract_price = input.offerPrice ?? null;
   }
 
   if ("contractPrice" in input) {
@@ -394,6 +400,10 @@ export async function updateAppraisalHistoryItemInSupabase(
 
   if ("isExcluded" in input && typeof input.isExcluded === "boolean") {
     updatePayload.is_excluded = input.isExcluded;
+  }
+
+  if ("isContracted" in input && typeof input.isContracted === "boolean") {
+    updatePayload.is_contracted = input.isContracted;
   }
 
   if (Object.keys(updatePayload).length === 0) {

@@ -373,12 +373,69 @@ export default function AppointmentDetailPage() {
     }
   }
 
+  async function handleToggleContracted(item: AppraisalHistoryItem) {
+    setUpdatingItemId(item.id);
+    setError(null);
+    setErrorReference(null);
+
+    try {
+      const clientSessionId =
+        clientSessionIdRef.current || getOrCreateClientSessionId();
+      clientSessionIdRef.current = clientSessionId;
+      const response = await fetch("/api/history", {
+        method: "PATCH",
+        headers: {
+          "content-type": "application/json",
+          ...(clientSessionId ? { "x-client-session-id": clientSessionId } : {}),
+        },
+        body: JSON.stringify({
+          itemId: item.id,
+          isContracted: !item.isContracted,
+        }),
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        const message = payload.error || "成約状態の更新に失敗しました";
+        if (typeof payload.errorId === "string") {
+          setErrorReference(payload.errorId);
+        }
+        throw new Error(message);
+      }
+
+      const updatedItem = payload.item as AppraisalHistoryItem;
+      setItems((current) =>
+        current.map((candidate) =>
+          candidate.id === updatedItem.id ? updatedItem : candidate
+        )
+      );
+    } catch (err) {
+      if (err instanceof Error) {
+        void reportClientError({
+          source: "appointment.detail.contract",
+          message: err.message,
+          errorName: err.name,
+          stack: err.stack || null,
+          metadata: {
+            appointmentId,
+            itemId: item.id,
+          },
+        });
+      }
+      setError(err instanceof Error ? err.message : "成約状態の更新に失敗しました");
+    } finally {
+      setUpdatingItemId(null);
+    }
+  }
+
   const itemCount = appointmentGroup?.itemCount || 0;
   const totalItemCount = appointmentGroup?.totalItemCount || 0;
   const excludedItemCount = appointmentGroup?.excludedItemCount || 0;
   const totalSuggestedMaxPrice = appointmentGroup?.totalSuggestedMaxPrice || 0;
   const totalOfferPrice = appointmentGroup?.totalOfferPrice || 0;
-  const totalContractPrice = appointmentGroup?.totalContractPrice || 0;
+  const totalContractedSuggestedMaxPrice =
+    appointmentGroup?.totalContractedSuggestedMaxPrice || 0;
+  const totalContractedOfferPrice = appointmentGroup?.totalContractedOfferPrice || 0;
   const latestAppraisalAt = appointmentGroup?.latestAppraisalAt || null;
 
   return (
@@ -416,9 +473,15 @@ export default function AppointmentDetailPage() {
               </span>
             </div>
             <div className={styles.heroSummary}>
-              <span className={styles.heroSummaryLabel}>成約合計</span>
+              <span className={styles.heroSummaryLabel}>成約Max合計</span>
               <span className={styles.heroSummaryValue}>
-                {formatCurrency(totalContractPrice)}
+                {formatCurrency(totalContractedSuggestedMaxPrice)}
+              </span>
+            </div>
+            <div className={styles.heroSummary}>
+              <span className={styles.heroSummaryLabel}>成約オファー合計</span>
+              <span className={styles.heroSummaryValue}>
+                {formatCurrency(totalContractedOfferPrice)}
               </span>
             </div>
           </div>
@@ -568,7 +631,15 @@ export default function AppointmentDetailPage() {
                     </p>
                     <div className={styles.itemSettlementRow}>
                       <span>オファー {formatCurrency(item.offerPrice)}</span>
-                      <span>成約 {formatCurrency(item.contractPrice)}</span>
+                      <label className={styles.contractCheckboxLabel}>
+                        <input
+                          type="checkbox"
+                          checked={item.isContracted}
+                          onChange={() => void handleToggleContracted(item)}
+                          disabled={updatingItemId === item.id || item.isExcluded}
+                        />
+                        <span>{item.isContracted ? "成約済み" : "未成約"}</span>
+                      </label>
                     </div>
                     <div className={styles.itemActionRow}>
                       <Link href={`/appraisals/${item.id}`} className={styles.detailButton}>

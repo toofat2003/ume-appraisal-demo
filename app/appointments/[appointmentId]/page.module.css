@@ -359,9 +359,33 @@
 .itemSettlementRow {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
   font: 600 12px/1.5 var(--font-body);
   color: var(--text-secondary);
+}
+
+.contractCheckboxLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(134, 239, 172, 0.08);
+  color: #86efac;
+  font: 800 11px/1 var(--font-body);
+  cursor: pointer;
+}
+
+.contractCheckboxLabel input {
+  width: 14px;
+  height: 14px;
+  accent-color: #86efac;
+}
+
+.contractCheckboxLabel:has(input:disabled) {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .itemActionRow {
@@ -426,8 +450,8 @@
   }
 
   .heroSummaryGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    min-width: min(520px, 100%);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-width: min(620px, 100%);
   }
 
   .itemGrid {

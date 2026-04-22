@@ -85,6 +85,7 @@ export async function PATCH(request: Request) {
       offerPrice?: unknown;
       contractPrice?: unknown;
       isExcluded?: unknown;
+      isContracted?: unknown;
     };
     const itemId = typeof payload.itemId === "string" ? payload.itemId.trim() : "";
 
@@ -121,6 +122,7 @@ export async function PATCH(request: Request) {
         offerPrice?: number | null;
         contractPrice?: number | null;
         isExcluded?: boolean;
+        isContracted?: boolean;
       } = { itemId };
 
       if (offerPrice.value !== undefined) {
@@ -133,6 +135,10 @@ export async function PATCH(request: Request) {
 
       if (typeof payload.isExcluded === "boolean") {
         updateInput.isExcluded = payload.isExcluded;
+      }
+
+      if (typeof payload.isContracted === "boolean") {
+        updateInput.isContracted = payload.isContracted;
       }
 
       const updatedItem = await updateAppraisalHistoryItem(updateInput);

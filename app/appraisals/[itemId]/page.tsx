@@ -40,10 +40,10 @@ export default function AppraisalDetailPage() {
   const itemId = decodeURIComponent(params.itemId);
   const [item, setItem] = useState<AppraisalHistoryItem | null>(null);
   const [offerPriceInput, setOfferPriceInput] = useState("");
-  const [contractPriceInput, setContractPriceInput] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isTogglingExcluded, setIsTogglingExcluded] = useState(false);
+  const [isTogglingContracted, setIsTogglingContracted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errorReference, setErrorReference] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -90,7 +90,6 @@ export default function AppraisalDetailPage() {
 
       setItem(nextItem);
       setOfferPriceInput(inputValueFromPrice(nextItem.offerPrice));
-      setContractPriceInput(inputValueFromPrice(nextItem.contractPrice));
     } catch (err) {
       if (err instanceof Error) {
         void reportClientError({
@@ -111,8 +110,8 @@ export default function AppraisalDetailPage() {
 
   async function patchItem(payload: {
     offerPrice?: number | null;
-    contractPrice?: number | null;
     isExcluded?: boolean;
+    isContracted?: boolean;
   }): Promise<AppraisalHistoryItem> {
     const clientSessionId =
       clientSessionIdRef.current || getOrCreateClientSessionId();
@@ -164,12 +163,10 @@ export default function AppraisalDetailPage() {
     try {
       const nextItem = await patchItem({
         offerPrice: parsePriceInput(offerPriceInput),
-        contractPrice: parsePriceInput(contractPriceInput),
       });
       setItem(nextItem);
       setOfferPriceInput(inputValueFromPrice(nextItem.offerPrice));
-      setContractPriceInput(inputValueFromPrice(nextItem.contractPrice));
-      setSuccessMessage("価格を保存しました。");
+      setSuccessMessage("オファー価格を保存しました。");
     } catch (err) {
       if (err instanceof Error) {
         void reportClientError({
@@ -185,6 +182,40 @@ export default function AppraisalDetailPage() {
       setError(err instanceof Error ? err.message : "価格の保存に失敗しました");
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function handleToggleContracted() {
+    if (!item) {
+      return;
+    }
+
+    setIsTogglingContracted(true);
+    setError(null);
+    setErrorReference(null);
+    setSuccessMessage(null);
+
+    try {
+      const nextItem = await patchItem({
+        isContracted: !item.isContracted,
+      });
+      setItem(nextItem);
+      setSuccessMessage(nextItem.isContracted ? "成約済みにしました。" : "未成約に戻しました。");
+    } catch (err) {
+      if (err instanceof Error) {
+        void reportClientError({
+          source: "appraisal.detail.contract",
+          message: err.message,
+          errorName: err.name,
+          stack: err.stack || null,
+          metadata: {
+            itemId,
+          },
+        });
+      }
+      setError(err instanceof Error ? err.message : "成約状態の更新に失敗しました");
+    } finally {
+      setIsTogglingContracted(false);
     }
   }
 
@@ -302,9 +333,9 @@ export default function AppraisalDetailPage() {
             <section className={styles.settlementSection}>
               <div className={styles.sectionHeader}>
                 <div>
-                  <h2 className={styles.sectionTitle}>オファー・成約価格</h2>
+                  <h2 className={styles.sectionTitle}>オファー価格</h2>
                   <p className={styles.sectionCaption}>
-                    現場で提示した金額と、最終的に成約した金額を残します。
+                    現場で提示した金額を保存します。成約時もこの金額を成約金額として扱います。
                   </p>
                 </div>
               </div>
@@ -322,23 +353,19 @@ export default function AppraisalDetailPage() {
                     placeholder="例: 120"
                   />
                 </label>
-                <label className={styles.fieldLabel}>
-                  成約価格 USD
-                  <input
-                    type="number"
-                    min="0"
-                    step="1"
-                    inputMode="decimal"
-                    value={contractPriceInput}
-                    onChange={(event) => setContractPriceInput(event.target.value)}
-                    className={styles.priceInput}
-                    placeholder="例: 100"
-                  />
-                </label>
                 <button type="submit" className={styles.saveButton} disabled={isSaving}>
-                  {isSaving ? "保存中..." : "価格を保存"}
+                  {isSaving ? "保存中..." : "オファー価格を保存"}
                 </button>
               </form>
+              <label className={styles.contractCheckboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={item.isContracted}
+                  onChange={() => void handleToggleContracted()}
+                  disabled={isTogglingContracted}
+                />
+                <span>{isTogglingContracted ? "更新中..." : "成約済み"}</span>
+              </label>
             </section>
 
             <section className={styles.summarySection}>
@@ -356,9 +383,9 @@ export default function AppraisalDetailPage() {
                   <span className={styles.summaryValue}>{formatCurrency(item.offerPrice)}</span>
                 </div>
                 <div className={styles.summaryItem}>
-                  <span className={styles.summaryLabel}>成約価格</span>
+                  <span className={styles.summaryLabel}>成約状態</span>
                   <span className={styles.summaryValue}>
-                    {formatCurrency(item.contractPrice)}
+                    {item.isContracted ? "成約済み" : "未成約"}
                   </span>
                 </div>
               </div>

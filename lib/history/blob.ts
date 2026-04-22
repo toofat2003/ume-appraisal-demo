@@ -76,6 +76,7 @@ async function fetchHistoryRecord(url: string): Promise<AppraisalHistoryItem | n
         ? payload.contractPrice
         : null,
     isExcluded: Boolean(payload.isExcluded),
+    isContracted: Boolean(payload.isContracted),
   };
 }
 
@@ -145,8 +146,9 @@ export async function createAppraisalHistorySessionInBlob(
     identification: input.identification,
     pricing: mapPricing(input.pricing),
     offerPrice: input.offerPrice ?? null,
-    contractPrice: input.contractPrice ?? null,
+    contractPrice: input.contractPrice ?? input.offerPrice ?? null,
     isExcluded: Boolean(input.isExcluded),
+    isContracted: Boolean(input.isContracted),
   };
 
   await putHistoryRecord(item);
@@ -250,11 +252,19 @@ export async function updateAppraisalHistoryItemInBlob(
     ...item,
     offerPrice: "offerPrice" in input ? input.offerPrice ?? null : item.offerPrice,
     contractPrice:
-      "contractPrice" in input ? input.contractPrice ?? null : item.contractPrice,
+      "offerPrice" in input
+        ? input.offerPrice ?? null
+        : "contractPrice" in input
+          ? input.contractPrice ?? null
+          : item.contractPrice,
     isExcluded:
       "isExcluded" in input && typeof input.isExcluded === "boolean"
         ? input.isExcluded
         : item.isExcluded,
+    isContracted:
+      "isContracted" in input && typeof input.isContracted === "boolean"
+        ? input.isContracted
+        : item.isContracted,
   };
 
   await putHistoryRecord(nextItem);

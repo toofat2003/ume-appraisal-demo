@@ -28,6 +28,7 @@ export function groupHistoryItems(items: AppraisalHistoryItem[]): AppraisalAppoi
     const appointmentLabel = item.appointmentLabel?.trim() || "未分類";
     const existing = groups.get(groupKey);
     const isIncluded = !item.isExcluded;
+    const isContracted = isIncluded && item.isContracted;
 
     if (!existing) {
       groups.set(groupKey, {
@@ -40,6 +41,10 @@ export function groupHistoryItems(items: AppraisalHistoryItem[]): AppraisalAppoi
         totalSuggestedMaxPrice: isIncluded ? item.pricing.suggestedMaxPrice : 0,
         totalOfferPrice: isIncluded ? item.offerPrice || 0 : 0,
         totalContractPrice: isIncluded ? item.contractPrice || 0 : 0,
+        totalContractedSuggestedMaxPrice: isContracted
+          ? item.pricing.suggestedMaxPrice
+          : 0,
+        totalContractedOfferPrice: isContracted ? item.offerPrice || 0 : 0,
         items: [item],
       });
       continue;
@@ -52,6 +57,10 @@ export function groupHistoryItems(items: AppraisalHistoryItem[]): AppraisalAppoi
       existing.totalSuggestedMaxPrice += item.pricing.suggestedMaxPrice;
       existing.totalOfferPrice += item.offerPrice || 0;
       existing.totalContractPrice += item.contractPrice || 0;
+      if (item.isContracted) {
+        existing.totalContractedSuggestedMaxPrice += item.pricing.suggestedMaxPrice;
+        existing.totalContractedOfferPrice += item.offerPrice || 0;
+      }
     } else {
       existing.excludedItemCount += 1;
     }

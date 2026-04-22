@@ -70,6 +70,7 @@ export type AppraisalHistoryItem = {
   offerPrice: number | null;
   contractPrice: number | null;
   isExcluded: boolean;
+  isContracted: boolean;
 };
 
 export type AppraisalAppointmentGroup = {
@@ -82,6 +83,8 @@ export type AppraisalAppointmentGroup = {
   totalSuggestedMaxPrice: number;
   totalOfferPrice: number;
   totalContractPrice: number;
+  totalContractedSuggestedMaxPrice: number;
+  totalContractedOfferPrice: number;
   items: AppraisalHistoryItem[];
 };
 

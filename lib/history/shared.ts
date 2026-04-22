@@ -17,6 +17,7 @@ export type SaveAppraisalHistoryInput = {
   offerPrice?: number | null;
   contractPrice?: number | null;
   isExcluded?: boolean;
+  isContracted?: boolean;
   rawResult?: unknown;
 };
 
@@ -48,6 +49,7 @@ export type UpdateAppraisalHistoryItemInput = {
   offerPrice?: number | null;
   contractPrice?: number | null;
   isExcluded?: boolean;
+  isContracted?: boolean;
 };
 
 export function sanitizeSegment(value: string): string {
