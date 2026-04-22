@@ -36,12 +36,11 @@ type SelectedPhoto = {
   slotLabel: string;
 };
 
-type BatchItemStatus = "queued" | "running" | "done" | "error";
+type BatchItemStatus = "draft" | "queued" | "running" | "done" | "error";
 
 type BatchItem = {
   id: string;
-  file: File;
-  url: string;
+  photos: PreviewState[];
   status: BatchItemStatus;
   result: AppraisalResult | null;
   error: string | null;
@@ -80,6 +79,53 @@ const PHOTO_SLOTS = [
     guidance: "傷・角スレ・汚れ・破損をアップで",
   },
 ] as const;
+
+function createEmptyPhotoSlots(): PreviewState[] {
+  return PHOTO_SLOTS.map(() => ({ file: null, url: null }));
+}
+
+function revokeBatchItemUrls(item: BatchItem) {
+  for (const photo of item.photos) {
+    if (photo.url) {
+      URL.revokeObjectURL(photo.url);
+    }
+  }
+}
+
+function hasBatchOverviewPhoto(item: BatchItem): boolean {
+  return Boolean(item.photos[0]?.file);
+}
+
+function canRunBatchItem(item: BatchItem): boolean {
+  return hasBatchOverviewPhoto(item) && item.status !== "done" && item.status !== "running";
+}
+
+function getBatchSelectedPhotos(item: BatchItem): SelectedPhoto[] {
+  return item.photos.flatMap((photo, index) =>
+    photo.file ? [{ file: photo.file, slotLabel: PHOTO_SLOTS[index].label as string }] : []
+  );
+}
+
+function createBatchItem(file?: File): BatchItem {
+  const photos = createEmptyPhotoSlots();
+  if (file) {
+    photos[0] = {
+      file,
+      url: URL.createObjectURL(file),
+    };
+  }
+
+  return {
+    id: crypto.randomUUID(),
+    photos,
+    status: "draft",
+    result: null,
+    error: null,
+    errorId: null,
+    startedAt: null,
+    finishedAt: null,
+  };
+}
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -157,10 +203,11 @@ export default function HomePage() {
   ).length;
   const batchDoneCount = batchItems.filter((item) => item.status === "done").length;
   const batchRunningCount = batchItems.filter((item) => item.status === "running").length;
-  const batchTotalMaxPrice = batchItems.reduce(
-    (sum, item) => sum + (item.result?.pricing.suggestedMaxPrice || 0),
-    0
-  );
+  const batchReadyCount = batchItems.filter((item) => hasBatchOverviewPhoto(item)).length;
+  const batchRunnableCount = batchItems.filter((item) => canRunBatchItem(item)).length;
+  const batchMissingOverviewCount = batchItems.filter(
+    (item) => !hasBatchOverviewPhoto(item)
+  ).length;
 
   useEffect(() => {
     batchItemsRef.current = batchItems;
@@ -185,7 +232,7 @@ export default function HomePage() {
   useEffect(() => {
     return () => {
       for (const item of batchItemsRef.current) {
-        URL.revokeObjectURL(item.url);
+        revokeBatchItemUrls(item);
       }
     };
   }, []);
@@ -524,30 +571,94 @@ export default function HomePage() {
 
   function handleBatchFileChange(event: ChangeEvent<HTMLInputElement>) {
     const selectedFiles = Array.from(event.target.files || []);
-    const nextFiles = selectedFiles.slice(0, MAX_BATCH_ITEMS);
+    if (selectedFiles.length === 0) {
+      return;
+    }
 
     setBatchItems((current) => {
-      for (const item of current) {
-        URL.revokeObjectURL(item.url);
+      const remainingCount = Math.max(MAX_BATCH_ITEMS - current.length, 0);
+      const filesToAdd = selectedFiles.slice(0, remainingCount);
+
+      if (filesToAdd.length === 0) {
+        return current;
       }
 
-      return nextFiles.map((file) => ({
-        id: crypto.randomUUID(),
-        file,
-        url: URL.createObjectURL(file),
-        status: "queued" as const,
-        result: null,
-        error: null,
-        errorId: null,
-        startedAt: null,
-        finishedAt: null,
-      }));
+      return [...current, ...filesToAdd.map((file) => createBatchItem(file))];
     });
+
     setBatchError(
-      selectedFiles.length > MAX_BATCH_ITEMS
-        ? `一括査定は最大${MAX_BATCH_ITEMS}商品までです。先頭${MAX_BATCH_ITEMS}枚だけ追加しました。`
+      batchItems.length + selectedFiles.length > MAX_BATCH_ITEMS
+        ? `一括査定は最大${MAX_BATCH_ITEMS}商品までです。追加できる分だけ商品カードに入れました。`
         : null
     );
+    event.currentTarget.value = "";
+  }
+
+  function addEmptyBatchItem() {
+    if (batchItems.length >= MAX_BATCH_ITEMS) {
+      setBatchError(`一括査定は最大${MAX_BATCH_ITEMS}商品までです。`);
+      return;
+    }
+
+    setBatchError(null);
+    setBatchItems((current) => {
+      if (current.length >= MAX_BATCH_ITEMS) {
+        return current;
+      }
+
+      return [...current, createBatchItem()];
+    });
+  }
+
+  function updateBatchPhoto(
+    itemId: string,
+    slotIndex: number,
+    file: File | null
+  ) {
+    setBatchItems((current) =>
+      current.map((item) => {
+        if (item.id !== itemId || item.status === "running") {
+          return item;
+        }
+
+        const currentPhoto = item.photos[slotIndex];
+        if (currentPhoto?.url) {
+          URL.revokeObjectURL(currentPhoto.url);
+        }
+
+        const nextPhotos = item.photos.map((photo, index) =>
+          index === slotIndex
+            ? file
+              ? { file, url: URL.createObjectURL(file) }
+              : EMPTY_SLOT
+            : photo
+        );
+
+        return {
+          ...item,
+          photos: nextPhotos,
+          status: "draft",
+          result: null,
+          error: null,
+          errorId: null,
+          startedAt: null,
+          finishedAt: null,
+        };
+      })
+    );
+  }
+
+  function handleBatchPhotoChange(
+    itemId: string,
+    slotIndex: number,
+    event: ChangeEvent<HTMLInputElement>
+  ) {
+    updateBatchPhoto(itemId, slotIndex, event.target.files?.[0] || null);
+    event.currentTarget.value = "";
+  }
+
+  function removeBatchPhoto(itemId: string, slotIndex: number) {
+    updateBatchPhoto(itemId, slotIndex, null);
   }
 
   function removeBatchItem(itemId: string) {
@@ -558,7 +669,7 @@ export default function HomePage() {
     setBatchItems((current) => {
       const item = current.find((candidate) => candidate.id === itemId);
       if (item) {
-        URL.revokeObjectURL(item.url);
+        revokeBatchItemUrls(item);
       }
       return current.filter((candidate) => candidate.id !== itemId);
     });
@@ -571,7 +682,7 @@ export default function HomePage() {
 
     setBatchItems((current) => {
       for (const item of current) {
-        URL.revokeObjectURL(item.url);
+        revokeBatchItemUrls(item);
       }
       return [];
     });
@@ -581,14 +692,13 @@ export default function HomePage() {
     }
   }
 
-  function handleBatchSubmit() {
+  function runBatchItems(itemsToRun: BatchItem[]) {
     if (isBatchRunning) {
       return;
     }
 
-    const itemsToRun = batchItems.slice(0, MAX_BATCH_ITEMS);
     if (itemsToRun.length === 0) {
-      setBatchError("一括査定する写真を選択してください");
+      setBatchError("査定できる商品がありません。各商品に全体写真を追加してください。");
       return;
     }
 
@@ -599,12 +709,16 @@ export default function HomePage() {
     setBatchItems((current) =>
       current.map((item) => ({
         ...item,
-        status: "queued",
-        result: null,
-        error: null,
-        errorId: null,
-        startedAt: null,
-        finishedAt: null,
+        ...(itemsToRun.some((target) => target.id === item.id)
+          ? {
+              status: "queued" as const,
+              result: null,
+              error: null,
+              errorId: null,
+              startedAt: null,
+              finishedAt: null,
+            }
+          : {}),
       }))
     );
 
@@ -628,12 +742,12 @@ export default function HomePage() {
         );
 
         try {
+          const selectedPhotos = getBatchSelectedPhotos(item);
           const nextResult = await submitAppraisalRequest(
-            [{ file: item.file, slotLabel: "全体" }],
+            selectedPhotos,
             appointmentAtStart
           );
 
-          setResult(nextResult);
           if (nextResult.savedHistoryItem) {
             addSavedHistoryItem(nextResult.savedHistoryItem, appointmentAtStart);
           }
@@ -665,9 +779,8 @@ export default function HomePage() {
             errorName: err instanceof Error ? err.name : null,
             stack: err instanceof Error ? err.stack || null : null,
             metadata: {
-              fileName: item.file.name,
-              fileSize: item.file.size,
-              fileType: item.file.type || "unknown",
+              photoCount: getBatchSelectedPhotos(item).length,
+              fileNames: getBatchSelectedPhotos(item).map((photo) => photo.file.name),
               appointmentId: appointmentAtStart?.id || null,
               serverErrorId: errorId,
             },
@@ -703,6 +816,29 @@ export default function HomePage() {
         scheduleHistoryRefresh();
       }
     })();
+  }
+
+  function handleBatchSubmit() {
+    const itemsToRun = batchItems.filter((item) => canRunBatchItem(item));
+    if (itemsToRun.length === 0 && batchItems.length > 0) {
+      setBatchError(
+        batchMissingOverviewCount > 0
+          ? "全体写真が入っていない商品があります。全体写真を追加してください。"
+          : "未査定の商品はありません。写真を差し替えると再査定できます。"
+      );
+      return;
+    }
+
+    runBatchItems(itemsToRun);
+  }
+
+  function handleSingleBatchSubmit(item: BatchItem) {
+    if (!hasBatchOverviewPhoto(item)) {
+      setBatchError("この商品に全体写真を追加してください。");
+      return;
+    }
+
+    runBatchItems([item]);
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -1024,18 +1160,26 @@ export default function HomePage() {
                 <div>
                   <p className={styles.batchPanelEyebrow}>一括査定</p>
                   <h2 className={styles.batchPanelTitle}>
-                    最大{MAX_BATCH_ITEMS}商品をまとめて投入
+                    商品カードでまとめて査定
                   </h2>
                   <p className={styles.batchPanelCaption}>
-                    1商品につき全体写真1枚を選択してください。最大{BATCH_CONCURRENCY}
-                    件ずつ並列で査定し、完了した商品から順にMax価格を表示します。
+                    商品ごとにカードを作り、全体写真を必須、識別情報・状態写真を任意で追加します。
+                    最大{BATCH_CONCURRENCY}件ずつ並列で査定し、完了した商品から順に表示します。
                   </p>
                 </div>
               </div>
 
               <div className={styles.batchActions}>
+                <button
+                  type="button"
+                  className={styles.batchAddButton}
+                  onClick={addEmptyBatchItem}
+                  disabled={batchItems.length >= MAX_BATCH_ITEMS}
+                >
+                  商品カードを追加
+                </button>
                 <label className={styles.batchFileButton}>
-                  写真をまとめて選択
+                  全体写真から追加
                   <input
                     ref={batchInputRef}
                     type="file"
@@ -1043,7 +1187,7 @@ export default function HomePage() {
                     multiple
                     className={styles.fileInput}
                     onChange={handleBatchFileChange}
-                    disabled={isBatchRunning}
+                    disabled={batchItems.length >= MAX_BATCH_ITEMS}
                   />
                 </label>
                 {batchItems.length > 0 && (
@@ -1059,40 +1203,177 @@ export default function HomePage() {
               </div>
 
               {batchItems.length > 0 && (
-                <div className={styles.batchQueue}>
+                <div className={styles.batchSummaryStrip}>
+                  <span>{batchItems.length}/{MAX_BATCH_ITEMS}商品</span>
+                  <span>全体写真あり {batchReadyCount}件</span>
+                  <span>未査定 {batchRunnableCount}件</span>
+                  <span>成功 {batchDoneCount}件</span>
+                </div>
+              )}
+
+              {batchItems.length > 0 ? (
+                <div className={styles.batchProductList}>
                   {batchItems.map((item, index) => (
-                    <div key={item.id} className={styles.batchQueueItem}>
-                      <img
-                        src={item.url}
-                        alt={`一括査定 ${index + 1}`}
-                        className={styles.batchQueueImage}
-                      />
-                      <div className={styles.batchQueueBody}>
-                        <span className={styles.batchQueueName}>
-                          {index + 1}. {item.file.name}
-                        </span>
-                        <span className={styles.batchQueueMeta}>
+                    <article key={item.id} className={styles.batchProductCard}>
+                      <div className={styles.batchProductHeader}>
+                        <div>
+                          <p className={styles.batchProductLabel}>商品 {index + 1}</p>
+                          <p className={styles.batchProductTitle}>
+                            {item.result?.identification.itemName || "未査定の商品"}
+                          </p>
+                        </div>
+                        <span
+                          className={`${styles.batchStatusPillInline} ${
+                            item.status === "done"
+                              ? styles.batchStatusDone
+                              : item.status === "running"
+                                ? styles.batchStatusRunning
+                                : item.status === "error"
+                                  ? styles.batchStatusError
+                                  : item.status === "queued"
+                                    ? styles.batchStatusQueued
+                                    : styles.batchStatusDraft
+                          }`}
+                        >
                           {item.status === "done"
-                            ? formatCurrency(item.result?.pricing.suggestedMaxPrice || 0)
+                            ? "完了"
                             : item.status === "running"
                               ? "査定中"
                               : item.status === "error"
                                 ? "失敗"
-                                : "待機中"}
+                                : item.status === "queued"
+                                  ? "待機"
+                                  : "未査定"}
                         </span>
                       </div>
-                      {!isBatchRunning && (
+
+                      <div className={styles.batchPhotoSlots}>
+                        {PHOTO_SLOTS.map((slot, slotIndex) => {
+                          const photo = item.photos[slotIndex] || EMPTY_SLOT;
+                          return (
+                            <div key={slot.id} className={styles.batchPhotoSlotWrap}>
+                              <label
+                                className={`${styles.batchPhotoSlot} ${
+                                  photo.url ? styles.batchPhotoSlotFilled : ""
+                                } ${
+                                  slotIndex === 0 && !photo.file
+                                    ? styles.batchPhotoSlotRequired
+                                    : ""
+                                }`}
+                              >
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  capture="environment"
+                                  className={styles.fileInput}
+                                  onChange={(event) =>
+                                    handleBatchPhotoChange(item.id, slotIndex, event)
+                                  }
+                                  disabled={item.status === "running"}
+                                />
+                                {photo.url ? (
+                                  <img
+                                    src={photo.url}
+                                    alt={`${slot.label} ${index + 1}`}
+                                    className={styles.batchPhotoPreview}
+                                  />
+                                ) : (
+                                  <div className={styles.batchPhotoPlaceholder}>
+                                    <span>{slot.label}</span>
+                                    <small>{slotIndex === 0 ? "必須" : "任意"}</small>
+                                  </div>
+                                )}
+                              </label>
+                              {photo.url && item.status !== "running" && (
+                                <button
+                                  type="button"
+                                  className={styles.batchPhotoRemoveButton}
+                                  onClick={() => removeBatchPhoto(item.id, slotIndex)}
+                                  aria-label={`${slot.label}写真を削除`}
+                                >
+                                  ×
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {item.status === "done" && item.result ? (
+                        <div className={styles.batchProductResult}>
+                          <div>
+                            <span className={styles.batchProductResultLabel}>Max価格</span>
+                            <strong>
+                              {formatCurrency(item.result.pricing.suggestedMaxPrice)}
+                            </strong>
+                          </div>
+                          <p>
+                            {item.result.identification.brand ||
+                              item.result.identification.category}
+                            {" · "}
+                            {item.result.pricing.listingCount}件参照
+                          </p>
+                          {item.result.savedHistoryId && (
+                            <Link
+                              href={`/appraisals/${item.result.savedHistoryId}`}
+                              className={styles.batchResultLink}
+                            >
+                              詳細・価格入力へ
+                            </Link>
+                          )}
+                        </div>
+                      ) : item.status === "error" ? (
+                        <p className={styles.batchProductError}>
+                          {item.error || "時間を置いて再試行してください。"}
+                          {item.errorId ? ` エラーID: ${item.errorId}` : ""}
+                        </p>
+                      ) : item.status === "running" ? (
+                        <p className={styles.batchProductPending}>
+                          商品特定と価格検索を実行しています...
+                        </p>
+                      ) : (
+                        <p className={styles.batchProductPending}>
+                          全体写真を入れると査定できます。識別情報や状態写真は任意です。
+                        </p>
+                      )}
+
+                      <div className={styles.batchProductActions}>
+                        <button
+                          type="button"
+                          className={styles.batchItemRunButton}
+                          onClick={() => handleSingleBatchSubmit(item)}
+                          disabled={
+                            isBatchRunning ||
+                            isPending ||
+                            item.status === "running" ||
+                            !hasBatchOverviewPhoto(item)
+                          }
+                        >
+                          {item.status === "done"
+                            ? "再査定"
+                            : item.status === "error"
+                              ? "再試行"
+                              : "この商品を査定"}
+                        </button>
                         <button
                           type="button"
                           className={styles.batchRemoveButton}
                           onClick={() => removeBatchItem(item.id)}
-                          aria-label={`${item.file.name}を一括査定から外す`}
+                          disabled={isBatchRunning}
+                          aria-label={`商品${index + 1}を一括査定から外す`}
                         >
-                          ×
+                          削除
                         </button>
-                      )}
-                    </div>
+                      </div>
+                    </article>
                   ))}
+                </div>
+              ) : (
+                <div className={styles.batchEmptyState}>
+                  <strong>商品カードを追加してください</strong>
+                  <span>
+                    撮影しながら1商品ずつ追加できます。既に全体写真がある場合は、複数選択で一気にカード化できます。
+                  </span>
                 </div>
               )}
 
@@ -1100,7 +1381,7 @@ export default function HomePage() {
                 type="button"
                 className={styles.batchSubmitButton}
                 onClick={handleBatchSubmit}
-                disabled={batchItems.length === 0 || isBatchRunning || isPending}
+                disabled={batchRunnableCount === 0 || isBatchRunning || isPending}
               >
                 {isBatchRunning ? (
                   <>
@@ -1109,7 +1390,7 @@ export default function HomePage() {
                     {batchItems.length}件完了
                   </>
                 ) : (
-                  `${batchItems.length || 0}件を一括査定`
+                  `${batchRunnableCount || 0}件をまとめて査定`
                 )}
               </button>
 
@@ -1148,106 +1429,6 @@ export default function HomePage() {
 
         {/* Results panel */}
         <section className={styles.main} ref={resultsRef}>
-          {batchItems.length > 0 && (
-            <div className={styles.batchResultsSection}>
-              <div className={styles.batchResultsHeader}>
-                <div>
-                  <h3 className={styles.sectionHeading}>一括査定の進捗</h3>
-                  <p className={styles.batchResultsCaption}>
-                    {batchCompletedCount}/{batchItems.length}件完了 · 成功
-                    {batchDoneCount}件 · 推奨Max合計{" "}
-                    {formatCurrency(batchTotalMaxPrice)}
-                  </p>
-                </div>
-                {isBatchRunning && (
-                  <span className={styles.batchLiveBadge}>
-                    <span className={styles.spinner} />
-                    実行中
-                  </span>
-                )}
-              </div>
-
-              <div className={styles.batchResultGrid}>
-                {batchItems.map((item, index) => (
-                  <article key={item.id} className={styles.batchResultCard}>
-                    <div className={styles.batchResultImageWrap}>
-                      <img
-                        src={item.url}
-                        alt={`一括査定 ${index + 1}`}
-                        className={styles.batchResultImage}
-                      />
-                      <span
-                        className={`${styles.batchStatusPill} ${
-                          item.status === "done"
-                            ? styles.batchStatusDone
-                            : item.status === "running"
-                              ? styles.batchStatusRunning
-                              : item.status === "error"
-                                ? styles.batchStatusError
-                                : styles.batchStatusQueued
-                        }`}
-                      >
-                        {item.status === "done"
-                          ? "完了"
-                          : item.status === "running"
-                            ? "査定中"
-                            : item.status === "error"
-                              ? "失敗"
-                              : "待機"}
-                      </span>
-                    </div>
-
-                    <div className={styles.batchResultBody}>
-                      <div className={styles.batchResultTop}>
-                        <span className={styles.batchResultIndex}>
-                          商品 {index + 1}
-                        </span>
-                        {item.finishedAt && (
-                          <span className={styles.batchResultTime}>
-                            {formatDateTime(new Date(item.finishedAt).toISOString())}
-                          </span>
-                        )}
-                      </div>
-
-                      {item.status === "done" && item.result ? (
-                        <>
-                          <h4 className={styles.batchResultName}>
-                            {item.result.identification.itemName}
-                          </h4>
-                          <div className={styles.batchResultPrice}>
-                            {formatCurrency(item.result.pricing.suggestedMaxPrice)}
-                          </div>
-                          <p className={styles.batchResultMeta}>
-                            {item.result.identification.brand ||
-                              item.result.identification.category}
-                            {" · "}
-                            {item.result.pricing.listingCount}件参照
-                          </p>
-                        </>
-                      ) : item.status === "error" ? (
-                        <>
-                          <h4 className={styles.batchResultName}>査定に失敗</h4>
-                          <p className={styles.batchResultError}>
-                            {item.error || "時間を置いて再試行してください。"}
-                            {item.errorId ? ` エラーID: ${item.errorId}` : ""}
-                          </p>
-                        </>
-                      ) : item.status === "running" ? (
-                        <p className={styles.batchResultPending}>
-                          商品特定と価格検索を実行しています...
-                        </p>
-                      ) : (
-                        <p className={styles.batchResultPending}>
-                          順番待ちです。前の査定が終わると自動で開始します。
-                        </p>
-                      )}
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </div>
-          )}
-
           {result ? (
             <div className={styles.resultFlow}>
               {/* Price hero */}
