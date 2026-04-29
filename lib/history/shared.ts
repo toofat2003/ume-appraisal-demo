@@ -4,7 +4,7 @@ import {
   ProductIdentification,
 } from "@/lib/appraisal/types";
 
-export const DEFAULT_HISTORY_LIMIT = 60;
+export const DEFAULT_HISTORY_LIMIT = 300;
 export const APPOINTMENT_HISTORY_LIMIT = 200;
 
 export type HistoryImageInput = {
@@ -36,6 +36,7 @@ export type SaveAppraisalHistoryImagesInput = {
   sessionId: string;
   createdAt: string;
   images: HistoryImageInput[];
+  startPosition?: number;
 };
 
 export type ListAppraisalHistoryOptions = {
@@ -52,6 +53,7 @@ export type RenameAppointmentResult = {
 
 export type UpdateAppraisalHistoryItemInput = {
   itemId: string;
+  itemName?: string;
   manualMaxPrice?: number | null;
   conditionRank?: AppraisalConditionRank | null;
   offerPrice?: number | null;
@@ -89,6 +91,10 @@ export function getExtension(file: File): string {
     default:
       return "jpg";
   }
+}
+
+export function getUniqueImageStorageStem(slotLabel: string): string {
+  return `${sanitizeSegment(slotLabel)}-${crypto.randomUUID()}`;
 }
 
 export function mapPricing(pricing: PricingSummary) {

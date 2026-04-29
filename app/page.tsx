@@ -62,6 +62,9 @@ const MAX_HISTORY_ITEMS = 60;
 const MAX_BATCH_ITEMS = 10;
 const BATCH_CONCURRENCY = 3;
 const HISTORY_REFRESH_DELAYS_MS = [5000, 15000];
+const USD_TO_JPY_RATE = Number(process.env.NEXT_PUBLIC_USD_TO_JPY_RATE || "155");
+const NET_JAPAN_RATE_URL =
+  "https://www.net-japan.co.jp/_cojp_/precious_metal_user/?_contents_only=true";
 
 const PHOTO_SLOTS = [
   {
@@ -145,6 +148,18 @@ function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
+function formatYenFromUsd(amount: number | null | undefined): string {
+  if (amount === null || amount === undefined || !Number.isFinite(amount)) {
+    return "-";
+  }
+
+  return new Intl.NumberFormat("ja-JP", {
+    style: "currency",
+    currency: "JPY",
+    maximumFractionDigits: 0,
+  }).format(Math.round(amount * USD_TO_JPY_RATE));
+}
+
 function formatDateTime(value: string): string {
   return new Intl.DateTimeFormat("ja-JP", {
     month: "numeric",
@@ -171,10 +186,6 @@ function formatGeminiMode(mode: "primary-only" | "all-images" | undefined): stri
   return mode === "all-images" ? "全画像" : "1枚目のみ";
 }
 
-function isManualHistoryItem(item: AppraisalHistoryItem): boolean {
-  return item.pricing.listingCount === 0 && item.identification.conditionSummary === "手動入力";
-}
-
 export default function HomePage() {
   const [previews, setPreviews] = useState<PreviewState[]>([
     EMPTY_SLOT,
@@ -190,6 +201,7 @@ export default function HomePage() {
   const [appointmentError, setAppointmentError] = useState<string | null>(null);
   const [manualItemName, setManualItemName] = useState("");
   const [manualPriceUsd, setManualPriceUsd] = useState("");
+  const [manualPhoto, setManualPhoto] = useState<PreviewState>(EMPTY_SLOT);
   const [manualError, setManualError] = useState<string | null>(null);
   const [manualSuccess, setManualSuccess] = useState<string | null>(null);
   const [isManualSaving, setIsManualSaving] = useState(false);
@@ -205,6 +217,7 @@ export default function HomePage() {
   const [isBatchRunning, setIsBatchRunning] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([null, null, null]);
   const batchInputRef = useRef<HTMLInputElement | null>(null);
+  const manualPhotoInputRef = useRef<HTMLInputElement | null>(null);
   const batchItemsRef = useRef<BatchItem[]>([]);
   const resultsRef = useRef<HTMLElement>(null);
   const clientSessionIdRef = useRef<string | null>(null);
@@ -248,6 +261,14 @@ export default function HomePage() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (manualPhoto.url) {
+        URL.revokeObjectURL(manualPhoto.url);
+      }
+    };
+  }, [manualPhoto.url]);
 
   useEffect(() => {
     if (!activeAppointment) {
@@ -335,6 +356,12 @@ export default function HomePage() {
           ...appointmentOptions,
         ]
       : appointmentOptions;
+  const activeAppointmentGroup = activeAppointment
+    ? appointmentGroups.find((group) => group.appointmentId === activeAppointment.id)
+    : null;
+  const stickyMaxTotal = activeAppointmentGroup?.totalSuggestedMaxPrice || 0;
+  const stickyOfferTotal = activeAppointmentGroup?.totalOfferPrice || 0;
+  const stickyGrossProfit = stickyMaxTotal - stickyOfferTotal;
 
   function startAppointment() {
     const nextLabel = appointmentLabelInput.trim();
@@ -500,18 +527,20 @@ export default function HomePage() {
       const clientSessionId =
         clientSessionIdRef.current || getOrCreateClientSessionId();
       clientSessionIdRef.current = clientSessionId;
+      const formData = new FormData();
+      formData.append("itemName", itemName);
+      formData.append("priceUsd", String(priceUsd));
+      formData.append("appointmentId", activeAppointment.id);
+      formData.append("appointmentLabel", activeAppointment.label);
+      if (manualPhoto.file) {
+        formData.append("images", manualPhoto.file);
+        formData.append("imageSlotLabels", "手動入力写真");
+      }
+
       const response = await fetch("/api/history", {
         method: "POST",
-        headers: {
-          "content-type": "application/json",
-          ...(clientSessionId ? { "x-client-session-id": clientSessionId } : {}),
-        },
-        body: JSON.stringify({
-          itemName,
-          priceUsd,
-          appointmentId: activeAppointment.id,
-          appointmentLabel: activeAppointment.label,
-        }),
+        headers: clientSessionId ? { "x-client-session-id": clientSessionId } : undefined,
+        body: formData,
       });
       const payload = await response.json();
 
@@ -524,6 +553,13 @@ export default function HomePage() {
       }
       setManualItemName("");
       setManualPriceUsd("");
+      if (manualPhoto.url) {
+        URL.revokeObjectURL(manualPhoto.url);
+      }
+      setManualPhoto(EMPTY_SLOT);
+      if (manualPhotoInputRef.current) {
+        manualPhotoInputRef.current.value = "";
+      }
       setManualSuccess("手動入力を保存しました。");
       void loadHistory({ silent: true });
     } catch (err) {
@@ -544,6 +580,28 @@ export default function HomePage() {
       );
     } finally {
       setIsManualSaving(false);
+    }
+  }
+
+  function handleManualPhotoChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] || null;
+    setManualPhoto((current) => {
+      if (current.url) {
+        URL.revokeObjectURL(current.url);
+      }
+      return file ? { file, url: URL.createObjectURL(file) } : EMPTY_SLOT;
+    });
+  }
+
+  function removeManualPhoto() {
+    setManualPhoto((current) => {
+      if (current.url) {
+        URL.revokeObjectURL(current.url);
+      }
+      return EMPTY_SLOT;
+    });
+    if (manualPhotoInputRef.current) {
+      manualPhotoInputRef.current.value = "";
     }
   }
 
@@ -995,6 +1053,22 @@ export default function HomePage() {
                     >
                       詳細を見る
                     </Link>
+                    <a
+                      href="/history"
+                      target="_blank"
+                      rel="noreferrer"
+                      className={styles.appointmentDetailLink}
+                    >
+                      過去案件
+                    </a>
+                    <a
+                      href={NET_JAPAN_RATE_URL}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={styles.appointmentDetailLink}
+                    >
+                      相場表
+                    </a>
                     <button
                       type="button"
                       className={styles.appointmentClearBtn}
@@ -1073,6 +1147,17 @@ export default function HomePage() {
                     className={styles.manualPriceInput}
                     placeholder="価格 USD"
                   />
+                  <label className={styles.manualPhotoButton}>
+                    写真を追加
+                    <input
+                      ref={manualPhotoInputRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      className={styles.fileInput}
+                      onChange={handleManualPhotoChange}
+                    />
+                  </label>
                   <button
                     type="submit"
                     className={styles.manualSaveButton}
@@ -1081,6 +1166,27 @@ export default function HomePage() {
                     {isManualSaving ? "保存中..." : "手動保存"}
                   </button>
                 </div>
+                {manualPriceUsd && Number.isFinite(Number(manualPriceUsd)) && (
+                  <p className={styles.manualHint}>
+                    円換算目安: {formatYenFromUsd(Number(manualPriceUsd))}（1USD={USD_TO_JPY_RATE}円）
+                  </p>
+                )}
+                {manualPhoto.url && (
+                  <div className={styles.manualPhotoPreviewRow}>
+                    <img
+                      src={manualPhoto.url}
+                      alt="手動入力写真"
+                      className={styles.manualPhotoPreview}
+                    />
+                    <button
+                      type="button"
+                      className={styles.manualPhotoRemoveButton}
+                      onClick={removeManualPhoto}
+                    >
+                      写真を外す
+                    </button>
+                  </div>
+                )}
                 {!activeAppointment && (
                   <p className={styles.manualHint}>手動保存にはアポ選択が必要です。</p>
                 )}
@@ -1807,128 +1913,34 @@ export default function HomePage() {
             ) : historyItems.length === 0 ? (
               <p className={styles.historyStatus}>まだ保存された査定はありません。</p>
             ) : (
-              <div className={styles.historyGroupList}>
-                {appointmentGroups.map((group) => (
-                  <section
-                    key={group.appointmentId || `ungrouped-${group.items[0]?.id || "empty"}`}
-                    className={styles.historyGroupSection}
-                  >
-                    <div className={styles.historyGroupHeader}>
-                      <div className={styles.historyGroupMeta}>
-                        <h4 className={styles.historyGroupTitle}>
-                          {group.appointmentLabel}
-                        </h4>
-                        <p className={styles.historyGroupCaption}>
-                          {formatDateTime(group.latestAppraisalAt)}
-                          {" · "}
-                          {group.itemCount}件
-                        </p>
-                        {group.appointmentId && (
-                          <Link
-                            href={`/appointments/${group.appointmentId}`}
-                            className={styles.historyGroupLink}
-                          >
-                            アポ詳細を見る
-                          </Link>
-                        )}
-                      </div>
-                      <div className={styles.historyGroupSummary}>
-                        <span className={styles.historyGroupSummaryLabel}>
-                          推奨Max合計
-                        </span>
-                        <span className={styles.historyGroupSummaryValue}>
-                          {formatCurrency(group.totalSuggestedMaxPrice)}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className={styles.historyGrid}>
-                      {group.items.map((item) => (
-                        <article
-                          key={item.id}
-                          className={`${styles.historyCard} ${
-                            item.isExcluded ? styles.historyCardExcluded : ""
-                          }`}
-                        >
-                          <div className={styles.historyImages}>
-                            {item.images.length > 0 ? (
-                              item.images.map((image) => (
-                                <a
-                                  key={image.pathname}
-                                  href={image.url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className={styles.historyImageLink}
-                                >
-                                  <img
-                                    src={image.url}
-                                    alt={image.slotLabel}
-                                    className={`${styles.historyImage} ${
-                                      item.isExcluded ? styles.historyImageExcluded : ""
-                                    }`}
-                                  />
-                                  <span className={styles.historyImageBadge}>
-                                    {image.slotLabel}
-                                  </span>
-                                </a>
-                              ))
-                            ) : (
-                              <div className={styles.historyManualPlaceholder}>
-                                {isManualHistoryItem(item) ? "手動入力" : "画像保存中"}
-                              </div>
-                            )}
-                          </div>
-
-                          <div className={styles.historyBody}>
-                            <div className={styles.historyCardTop}>
-                              <h4 className={styles.historyItemName}>
-                                {item.identification.itemName}
-                              </h4>
-                              <span className={styles.historyItemPrice}>
-                                {formatCurrency(item.pricing.suggestedMaxPrice)}
-                              </span>
-                            </div>
-
-                            <p className={styles.historyMeta}>
-                              {formatDateTime(item.createdAt)}
-                              {" · "}
-                              {item.isExcluded
-                                ? "除外中"
-                                : isManualHistoryItem(item)
-                                ? "手動入力"
-                                : item.identification.brand || item.identification.category}
-                            </p>
-
-                            <div className={styles.historyPriceRow}>
-                              {isManualHistoryItem(item) ? (
-                                <span>手動入力価格</span>
-                              ) : (
-                                <>
-                                  <span>
-                                    買取目安{" "}
-                                    {formatCurrency(item.pricing.buyPriceRangeLow)}
-                                    {" – "}
-                                    {formatCurrency(item.pricing.buyPriceRangeHigh)}
-                                  </span>
-                                  <span>{item.pricing.listingCount}件参照</span>
-                                </>
-                              )}
-                            </div>
-                            {item.isExcluded && (
-                              <p className={styles.historyExcludedNote}>
-                                この品物はアポ合計から除外中です。
-                              </p>
-                            )}
-                          </div>
-                        </article>
-                      ))}
-                    </div>
-                  </section>
-                ))}
+              <div className={styles.historyStatus}>
+                <p>過去案件は査定画面と分けました。</p>
+                <a
+                  href="/history"
+                  target="_blank"
+                  rel="noreferrer"
+                  className={styles.historyGroupLink}
+                >
+                  過去案件詳細を開く
+                </a>
               </div>
             )}
           </div>
         </section>
+      </div>
+      <div className={styles.fixedTotalsBar}>
+        <div>
+          <span>MAX</span>
+          <strong>{formatCurrency(stickyMaxTotal)}</strong>
+        </div>
+        <div>
+          <span>オファー</span>
+          <strong>{formatCurrency(stickyOfferTotal)}</strong>
+        </div>
+        <div>
+          <span>総粗利</span>
+          <strong>{formatCurrency(stickyGrossProfit)}</strong>
+        </div>
       </div>
     </div>
   );

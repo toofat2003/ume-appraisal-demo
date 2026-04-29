@@ -42,6 +42,7 @@
 
 .hero,
 .imageSection,
+.itemNameSection,
 .maxPriceSection,
 .settlementSection,
 .summarySection,
@@ -207,6 +208,46 @@
   background: var(--bg-elevated);
   color: var(--text-primary);
   font: 700 16px/1 var(--font-mono);
+}
+
+.textInput {
+  width: 100%;
+  min-width: 0;
+  padding: 13px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font: 700 15px/1.2 var(--font-body);
+}
+
+.fileInput {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.addImageButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  margin-top: 12px;
+  padding: 0 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(212, 148, 58, 0.3);
+  background: rgba(212, 148, 58, 0.1);
+  color: var(--accent);
+  font: 800 12px/1 var(--font-body);
+  cursor: pointer;
+}
+
+.yenHint {
+  margin: 10px 0 0;
+  color: var(--text-muted);
+  font: 700 12px/1.5 var(--font-body);
 }
 
 .priceInput::placeholder {

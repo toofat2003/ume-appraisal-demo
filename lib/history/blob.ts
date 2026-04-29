@@ -9,6 +9,7 @@ import {
   ListAppraisalHistoryOptions,
   RenameAppointmentResult,
   getExtension,
+  getUniqueImageStorageStem,
   mapPricing,
   SaveAppraisalHistoryImagesInput,
   SaveAppraisalHistoryInput,
@@ -104,13 +105,16 @@ async function putHistoryRecord(item: AppraisalHistoryItem): Promise<void> {
 
 async function uploadHistoryImages(
   id: string,
-  images: SaveAppraisalHistoryInput["images"]
+  images: SaveAppraisalHistoryInput["images"],
+  startPosition = 0
 ): Promise<AppraisalHistoryImage[]> {
   return Promise.all(
     images.map(async ({ file, slotLabel }, index) => {
-      const pathname = `${getHistoryImagePrefix()}${id}/${String(index + 1).padStart(2, "0")}-${sanitizeSegment(
-        slotLabel
-      )}.${getExtension(file)}`;
+      const position = startPosition + index;
+      const pathname = `${getHistoryImagePrefix()}${id}/${String(position + 1).padStart(
+        2,
+        "0"
+      )}-${getUniqueImageStorageStem(slotLabel)}.${getExtension(file)}`;
       const blob = await put(pathname, file, {
         access: "public",
         addRandomSuffix: false,
@@ -184,10 +188,14 @@ export async function saveAppraisalHistoryImagesInBlob(
     throw new Error("Blob history record was not found for image save");
   }
 
-  const images = await uploadHistoryImages(input.sessionId, input.images);
+  const images = await uploadHistoryImages(
+    input.sessionId,
+    input.images,
+    input.startPosition ?? item.images.length
+  );
   await putHistoryRecord({
     ...item,
-    images,
+    images: [...item.images, ...images],
   });
 
   return images;
@@ -219,6 +227,11 @@ export async function listAppraisalHistory(
 ): Promise<AppraisalHistoryItem[]> {
   if (!isBlobConfigured()) {
     return [];
+  }
+
+  if (options.itemId) {
+    const item = await findHistoryRecordById(options.itemId);
+    return item ? [item] : [];
   }
 
   const limit = options.limit ?? DEFAULT_HISTORY_LIMIT;
@@ -265,6 +278,14 @@ export async function updateAppraisalHistoryItemInBlob(
 
   const nextItem: AppraisalHistoryItem = {
     ...item,
+    identification:
+      "itemName" in input && typeof input.itemName === "string"
+        ? {
+            ...item.identification,
+            itemName: input.itemName,
+            searchQuery: input.itemName,
+          }
+        : item.identification,
     manualMaxPrice:
       "manualMaxPrice" in input ? input.manualMaxPrice ?? null : item.manualMaxPrice,
     conditionRank:

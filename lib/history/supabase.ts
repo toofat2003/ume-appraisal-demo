@@ -9,6 +9,7 @@ import {
   ListAppraisalHistoryOptions,
   RenameAppointmentResult,
   getExtension,
+  getUniqueImageStorageStem,
   mapPricing,
   SaveAppraisalHistoryImagesInput,
   SaveAppraisalHistoryInput,
@@ -295,11 +296,14 @@ export async function saveAppraisalHistoryImagesToSupabase(
   await ensureBucket();
 
   const client = getClient();
+  const startPosition = Math.max(0, input.startPosition ?? 0);
   const uploadedImages: UploadedImageRow[] = await Promise.all(
     input.images.map(async ({ file, slotLabel }, index) => {
-      const storagePath = `${input.sessionId}/${String(index + 1).padStart(2, "0")}-${sanitizeSegment(
-        slotLabel
-      )}.${getExtension(file)}`;
+      const position = startPosition + index;
+      const storagePath = `${input.sessionId}/${String(position + 1).padStart(
+        2,
+        "0"
+      )}-${getUniqueImageStorageStem(slotLabel)}.${getExtension(file)}`;
 
       const { data: uploadData, error: uploadError } = await client.storage
         .from(SUPABASE_BUCKET)
@@ -321,7 +325,7 @@ export async function saveAppraisalHistoryImagesToSupabase(
         slot_label: slotLabel,
         storage_path: uploadData.path,
         public_url: publicData.publicUrl,
-        position: index,
+        position,
         mime_type: file.type || "image/jpeg",
       };
     })
@@ -406,6 +410,11 @@ export async function updateAppraisalHistoryItemInSupabase(
   }
 
   const updatePayload: Record<string, number | boolean | string | null> = {};
+
+  if ("itemName" in input && typeof input.itemName === "string") {
+    updatePayload.item_name = input.itemName;
+    updatePayload.search_query = input.itemName;
+  }
 
   if ("manualMaxPrice" in input) {
     updatePayload.manual_max_price = input.manualMaxPrice ?? null;

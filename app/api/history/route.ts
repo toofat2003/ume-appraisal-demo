@@ -5,6 +5,7 @@ import {
   listAppraisalHistory,
   renameAppointment,
   saveAppraisalHistory,
+  saveAppraisalHistoryImages,
   updateAppraisalHistoryItem,
 } from "@/lib/history";
 import { APPOINTMENT_HISTORY_LIMIT, DEFAULT_HISTORY_LIMIT } from "@/lib/history/shared";
@@ -17,6 +18,48 @@ import {
 import type { AppraisalConditionRank } from "@/lib/appraisal/types";
 
 export const dynamic = "force-dynamic";
+
+const MAX_HISTORY_IMAGE_COUNT = 6;
+const MAX_HISTORY_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+const HISTORY_IMAGE_ALLOWED_MIME_TYPES = new Set([
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+]);
+
+function getHistoryImageFiles(formData: FormData): File[] {
+  return formData
+    .getAll("images")
+    .filter((entry): entry is File => entry instanceof File && entry.size > 0)
+    .slice(0, MAX_HISTORY_IMAGE_COUNT);
+}
+
+function getHistoryImageSlotLabels(formData: FormData, files: File[]): string[] {
+  const labels = formData
+    .getAll("imageSlotLabels")
+    .filter((entry): entry is string => typeof entry === "string")
+    .slice(0, files.length);
+
+  return files.map((_, index) => labels[index]?.trim() || `追加写真${index + 1}`);
+}
+
+function validateHistoryImageFiles(files: File[]): string | null {
+  for (const file of files) {
+    if (file.size > MAX_HISTORY_IMAGE_SIZE_BYTES) {
+      return `画像は1枚あたり5MB以下にしてください: ${file.name}`;
+    }
+
+    const fileType = (file.type || "").toLowerCase();
+    if (!HISTORY_IMAGE_ALLOWED_MIME_TYPES.has(fileType)) {
+      return `画像ファイルのみアップロードできます: ${file.name}`;
+    }
+  }
+
+  return null;
+}
 
 export async function GET(request: Request) {
   try {
@@ -83,6 +126,7 @@ export async function PATCH(request: Request) {
       appointmentId?: unknown;
       appointmentLabel?: unknown;
       itemId?: unknown;
+      itemName?: unknown;
       manualMaxPrice?: unknown;
       conditionRank?: unknown;
       offerPrice?: unknown;
@@ -147,6 +191,7 @@ export async function PATCH(request: Request) {
 
       const updateInput: {
         itemId: string;
+        itemName?: string;
         manualMaxPrice?: number | null;
         conditionRank?: AppraisalConditionRank | null;
         offerPrice?: number | null;
@@ -154,6 +199,19 @@ export async function PATCH(request: Request) {
         isExcluded?: boolean;
         isContracted?: boolean;
       } = { itemId };
+
+      if (typeof payload.itemName === "string") {
+        const itemName = payload.itemName.trim().slice(0, 180);
+        if (!itemName) {
+          return NextResponse.json(
+            {
+              error: "品目名を入力してください。",
+            },
+            { status: 400 }
+          );
+        }
+        updateInput.itemName = itemName;
+      }
 
       if (manualMaxPrice.value !== undefined) {
         updateInput.manualMaxPrice = manualMaxPrice.value;
@@ -254,6 +312,149 @@ export async function POST(request: Request) {
   const requestId = crypto.randomUUID();
 
   try {
+    const contentType = request.headers.get("content-type") || "";
+
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await request.formData();
+      const itemId =
+        typeof formData.get("itemId") === "string"
+          ? (formData.get("itemId") as string).trim()
+          : "";
+      const itemName =
+        typeof formData.get("itemName") === "string"
+          ? (formData.get("itemName") as string).trim().slice(0, 180)
+          : "";
+      const priceUsd = Number(formData.get("priceUsd"));
+      const appointmentId =
+        typeof formData.get("appointmentId") === "string"
+          ? (formData.get("appointmentId") as string).trim()
+          : "";
+      const appointmentLabel =
+        typeof formData.get("appointmentLabel") === "string"
+          ? (formData.get("appointmentLabel") as string).trim().slice(0, 120)
+          : "";
+      const files = getHistoryImageFiles(formData);
+      const fileError = validateHistoryImageFiles(files);
+
+      if (fileError) {
+        return NextResponse.json({ error: fileError }, { status: 400 });
+      }
+
+      if (itemId) {
+        if (files.length === 0) {
+          return NextResponse.json(
+            {
+              error: "追加する写真を選択してください。",
+            },
+            { status: 400 }
+          );
+        }
+
+        const [existingItem] = await listAppraisalHistory({
+          itemId,
+          limit: 1,
+        });
+
+        if (!existingItem) {
+          return NextResponse.json(
+            {
+              error: "対象の査定履歴が見つかりません。",
+            },
+            { status: 404 }
+          );
+        }
+
+        await saveAppraisalHistoryImages({
+          sessionId: existingItem.id,
+          createdAt: existingItem.createdAt,
+          images: files.map((file, index) => ({
+            file,
+            slotLabel: getHistoryImageSlotLabels(formData, files)[index],
+          })),
+          startPosition: existingItem.images.length,
+        });
+
+        const [updatedItem] = await listAppraisalHistory({
+          itemId,
+          limit: 1,
+        });
+
+        return NextResponse.json({
+          item: updatedItem || existingItem,
+        });
+      }
+
+      if (!itemName) {
+        return NextResponse.json(
+          {
+            error: "品目名を入力してください。",
+          },
+          { status: 400 }
+        );
+      }
+
+      if (!Number.isFinite(priceUsd) || priceUsd <= 0) {
+        return NextResponse.json(
+          {
+            error: "価格は1ドル以上の数値で入力してください。",
+          },
+          { status: 400 }
+        );
+      }
+
+      const roundedPrice = Math.round(priceUsd);
+      const savedItem = await saveAppraisalHistory({
+        images: files.map((file, index) => ({
+          file,
+          slotLabel: getHistoryImageSlotLabels(formData, files)[index],
+        })),
+        appointmentId: appointmentId || null,
+        appointmentLabel: appointmentLabel || null,
+        identification: {
+          itemName,
+          brand: "",
+          model: "",
+          category: "手動入力",
+          categoryGroup: "other",
+          conditionSummary: "手動入力",
+          confidence: 1,
+          searchQuery: itemName,
+          reasoning: "自動査定を使わず、現場で品目と価格を手動入力したレコードです。",
+        },
+        pricing: {
+          suggestedMaxPrice: roundedPrice,
+          buyPriceRangeLow: roundedPrice,
+          buyPriceRangeHigh: roundedPrice,
+          low: roundedPrice,
+          median: roundedPrice,
+          high: roundedPrice,
+          listingCount: 0,
+          categoryRatio: 1,
+          confidenceAdjustment: 1,
+          formula: "手動入力価格をそのまま保存",
+        },
+        rawResult: {
+          entrySource: "manual",
+          itemName,
+          priceUsd: roundedPrice,
+          imageCount: files.length,
+        },
+      });
+
+      if (!savedItem) {
+        return NextResponse.json(
+          {
+            error: "履歴保存ストレージが未設定のため、手動入力を保存できません。",
+          },
+          { status: 503 }
+        );
+      }
+
+      return NextResponse.json({
+        item: savedItem,
+      });
+    }
+
     const payload = (await request.json()) as {
       itemName?: unknown;
       priceUsd?: unknown;

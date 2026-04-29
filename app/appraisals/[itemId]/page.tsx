@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import styles from "./page.module.css";
 import type { AppraisalConditionRank, AppraisalHistoryItem } from "@/lib/appraisal/types";
 import {
@@ -26,6 +26,20 @@ function formatCurrency(amount: number | null | undefined): string {
   }).format(amount);
 }
 
+const USD_TO_JPY_RATE = Number(process.env.NEXT_PUBLIC_USD_TO_JPY_RATE || "155");
+
+function formatYenFromUsd(amount: number | null | undefined): string {
+  if (amount === null || amount === undefined || !Number.isFinite(amount)) {
+    return "-";
+  }
+
+  return new Intl.NumberFormat("ja-JP", {
+    style: "currency",
+    currency: "JPY",
+    maximumFractionDigits: 0,
+  }).format(Math.round(amount * USD_TO_JPY_RATE));
+}
+
 function formatDateTime(value: string): string {
   return new Intl.DateTimeFormat("ja-JP", {
     month: "numeric",
@@ -43,11 +57,14 @@ export default function AppraisalDetailPage() {
   const params = useParams<{ itemId: string }>();
   const itemId = decodeURIComponent(params.itemId);
   const [item, setItem] = useState<AppraisalHistoryItem | null>(null);
+  const [itemNameInput, setItemNameInput] = useState("");
   const [manualMaxPriceInput, setManualMaxPriceInput] = useState("");
   const [offerPriceInput, setOfferPriceInput] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isSavingMaxPrice, setIsSavingMaxPrice] = useState(false);
+  const [isSavingItemName, setIsSavingItemName] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isTogglingExcluded, setIsTogglingExcluded] = useState(false);
   const [isTogglingContracted, setIsTogglingContracted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -95,6 +112,7 @@ export default function AppraisalDetailPage() {
       }
 
       setItem(nextItem);
+      setItemNameInput(nextItem.identification.itemName);
       setManualMaxPriceInput(inputValueFromPrice(nextItem.manualMaxPrice));
       setOfferPriceInput(inputValueFromPrice(nextItem.offerPrice));
     } catch (err) {
@@ -116,6 +134,7 @@ export default function AppraisalDetailPage() {
   }
 
   async function patchItem(payload: {
+    itemName?: string;
     manualMaxPrice?: number | null;
     conditionRank?: AppraisalConditionRank | null;
     offerPrice?: number | null;
@@ -146,6 +165,99 @@ export default function AppraisalDetailPage() {
     }
 
     return responsePayload.item as AppraisalHistoryItem;
+  }
+
+  async function handleItemNameSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const itemName = itemNameInput.trim();
+    if (!itemName) {
+      setError("品目名を入力してください");
+      return;
+    }
+
+    setIsSavingItemName(true);
+    setError(null);
+    setErrorReference(null);
+    setSuccessMessage(null);
+
+    try {
+      const nextItem = await patchItem({ itemName });
+      setItem(nextItem);
+      setItemNameInput(nextItem.identification.itemName);
+      setSuccessMessage("品名を保存しました。");
+    } catch (err) {
+      if (err instanceof Error) {
+        void reportClientError({
+          source: "appraisal.detail.item_name",
+          message: err.message,
+          errorName: err.name,
+          stack: err.stack || null,
+          metadata: {
+            itemId,
+          },
+        });
+      }
+      setError(err instanceof Error ? err.message : "品名の保存に失敗しました");
+    } finally {
+      setIsSavingItemName(false);
+    }
+  }
+
+  async function handleAppendImage(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files || []);
+    event.currentTarget.value = "";
+    if (files.length === 0 || !item) {
+      return;
+    }
+
+    setIsUploadingImage(true);
+    setError(null);
+    setErrorReference(null);
+    setSuccessMessage(null);
+
+    try {
+      const clientSessionId =
+        clientSessionIdRef.current || getOrCreateClientSessionId();
+      clientSessionIdRef.current = clientSessionId;
+      const formData = new FormData();
+      formData.append("itemId", item.id);
+      files.forEach((file, index) => {
+        formData.append("images", file);
+        formData.append("imageSlotLabels", `追加写真${item.images.length + index + 1}`);
+      });
+      const response = await fetch("/api/history", {
+        method: "POST",
+        headers: clientSessionId ? { "x-client-session-id": clientSessionId } : undefined,
+        body: formData,
+      });
+      const responsePayload = await response.json();
+
+      if (!response.ok) {
+        if (typeof responsePayload.errorId === "string") {
+          setErrorReference(responsePayload.errorId);
+        }
+        throw new Error(responsePayload.error || "写真の追加に失敗しました");
+      }
+
+      const nextItem = responsePayload.item as AppraisalHistoryItem;
+      setItem(nextItem);
+      setSuccessMessage("写真を追加しました。");
+    } catch (err) {
+      if (err instanceof Error) {
+        void reportClientError({
+          source: "appraisal.detail.image_append",
+          message: err.message,
+          errorName: err.name,
+          stack: err.stack || null,
+          metadata: {
+            itemId,
+          },
+        });
+      }
+      setError(err instanceof Error ? err.message : "写真の追加に失敗しました");
+    } finally {
+      setIsUploadingImage(false);
+    }
   }
 
   function parsePriceInput(value: string): number | null {
@@ -386,6 +498,47 @@ export default function AppraisalDetailPage() {
               ) : (
                 <div className={styles.imagePlaceholder}>画像なし</div>
               )}
+              <label className={styles.addImageButton}>
+                {isUploadingImage ? "写真追加中..." : "この明細に写真を追加"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  capture="environment"
+                  className={styles.fileInput}
+                  onChange={handleAppendImage}
+                  disabled={isUploadingImage}
+                />
+              </label>
+            </section>
+
+            <section className={styles.itemNameSection}>
+              <div className={styles.sectionHeader}>
+                <div>
+                  <h2 className={styles.sectionTitle}>品名</h2>
+                  <p className={styles.sectionCaption}>
+                    商品特定がズレている場合は、ここで現場の表記に直せます。
+                  </p>
+                </div>
+              </div>
+              <form className={styles.settlementForm} onSubmit={handleItemNameSubmit}>
+                <label className={styles.fieldLabel}>
+                  品名
+                  <input
+                    type="text"
+                    value={itemNameInput}
+                    onChange={(event) => setItemNameInput(event.target.value)}
+                    className={styles.textInput}
+                  />
+                </label>
+                <button
+                  type="submit"
+                  className={styles.saveButton}
+                  disabled={isSavingItemName}
+                >
+                  {isSavingItemName ? "保存中..." : "品名を保存"}
+                </button>
+              </form>
             </section>
 
             <section className={styles.maxPriceSection}>
@@ -436,6 +589,9 @@ export default function AppraisalDetailPage() {
                   現在は {formatCurrency(item.manualMaxPrice)} を集計に採用しています。
                 </p>
               )}
+              <p className={styles.yenHint}>
+                円換算目安: {formatYenFromUsd(effectiveMaxPrice)}（1USD={USD_TO_JPY_RATE}円）
+              </p>
             </section>
 
             <section className={styles.settlementSection}>
@@ -474,6 +630,9 @@ export default function AppraisalDetailPage() {
                 />
                 <span>{isTogglingContracted ? "更新中..." : "成約済み"}</span>
               </label>
+              <p className={styles.yenHint}>
+                オファー円換算目安: {formatYenFromUsd(item.offerPrice)}
+              </p>
             </section>
 
             <section className={styles.summarySection}>

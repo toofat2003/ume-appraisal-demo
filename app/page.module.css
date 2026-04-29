@@ -315,6 +315,46 @@
   cursor: pointer;
 }
 
+.manualPhotoButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(212, 148, 58, 0.28);
+  background: rgba(212, 148, 58, 0.1);
+  color: var(--accent);
+  font: 800 12px/1 var(--font-body);
+  cursor: pointer;
+}
+
+.manualPhotoPreviewRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.manualPhotoPreview {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  object-fit: cover;
+}
+
+.manualPhotoRemoveButton {
+  min-height: 34px;
+  padding: 0 10px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: rgba(248, 113, 113, 0.16);
+  color: #fca5a5;
+  font: 800 11px/1 var(--font-body);
+  cursor: pointer;
+}
+
 .manualSaveButton:disabled {
   opacity: 0.55;
   cursor: not-allowed;
@@ -324,6 +364,40 @@
   margin: 0;
   font: 500 12px/1.4 var(--font-body);
   color: #86efac;
+}
+
+.fixedTotalsBar {
+  position: fixed;
+  left: 10px;
+  right: 10px;
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  z-index: 40;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(212, 148, 58, 0.22);
+  background: rgba(18, 16, 13, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.fixedTotalsBar div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fixedTotalsBar span {
+  color: var(--text-muted);
+  font: 800 10px/1 var(--font-body);
+}
+
+.fixedTotalsBar strong {
+  color: var(--accent);
+  font: 900 16px/1 var(--font-mono);
 }
 
 /* === Batch Appraisal === */
@@ -965,7 +1039,7 @@
 .main {
   flex: 1;
   padding: 20px;
-  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
 }
 
 .resultFlow {
@@ -1658,7 +1732,7 @@
   }
 
   .manualFields {
-    grid-template-columns: minmax(0, 1.4fr) minmax(96px, 0.7fr);
+    grid-template-columns: minmax(0, 1.4fr) minmax(96px, 0.7fr) auto;
   }
 
   .manualSaveButton {

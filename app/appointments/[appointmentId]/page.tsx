@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./page.module.css";
 import type { AppraisalHistoryItem } from "@/lib/appraisal/types";
 import {
@@ -36,6 +36,20 @@ function formatCurrency(amount: number | null | undefined): string {
   }).format(amount);
 }
 
+const USD_TO_JPY_RATE = Number(process.env.NEXT_PUBLIC_USD_TO_JPY_RATE || "155");
+
+function formatYenFromUsd(amount: number | null | undefined): string {
+  if (amount === null || amount === undefined || !Number.isFinite(amount)) {
+    return "-";
+  }
+
+  return new Intl.NumberFormat("ja-JP", {
+    style: "currency",
+    currency: "JPY",
+    maximumFractionDigits: 0,
+  }).format(Math.round(amount * USD_TO_JPY_RATE));
+}
+
 function formatDateTime(value: string): string {
   return new Intl.DateTimeFormat("ja-JP", {
     month: "numeric",
@@ -58,6 +72,11 @@ export default function AppointmentDetailPage() {
   const [renameValue, setRenameValue] = useState("");
   const [manualItemName, setManualItemName] = useState("");
   const [manualPriceUsd, setManualPriceUsd] = useState("");
+  const [manualPhoto, setManualPhoto] = useState<{ file: File; url: string } | null>(null);
+  const [inlineEditValues, setInlineEditValues] = useState<
+    Record<string, { itemName: string; manualMaxPrice: string; offerPrice: string }>
+  >({});
+  const [imageUploadingItemId, setImageUploadingItemId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isManualSaving, setIsManualSaving] = useState(false);
@@ -67,7 +86,9 @@ export default function AppointmentDetailPage() {
   const [renameError, setRenameError] = useState<string | null>(null);
   const [manualError, setManualError] = useState<string | null>(null);
   const [manualSuccess, setManualSuccess] = useState<string | null>(null);
+  const [itemFilter, setItemFilter] = useState<"all" | "contracted" | "open">("all");
   const clientSessionIdRef = useRef<string | null>(null);
+  const manualPhotoInputRef = useRef<HTMLInputElement | null>(null);
 
   const appointmentGroup = useMemo(() => {
     return (
@@ -89,6 +110,14 @@ export default function AppointmentDetailPage() {
   useEffect(() => {
     void loadAppointment();
   }, [appointmentId]);
+
+  useEffect(() => {
+    return () => {
+      if (manualPhoto?.url) {
+        URL.revokeObjectURL(manualPhoto.url);
+      }
+    };
+  }, [manualPhoto?.url]);
 
   async function loadAppointment(options?: { silent?: boolean }) {
     try {
@@ -121,6 +150,19 @@ export default function AppointmentDetailPage() {
 
       const nextItems = Array.isArray(payload.items) ? payload.items : [];
       setItems(nextItems);
+      setInlineEditValues(
+        Object.fromEntries(
+          (nextItems as AppraisalHistoryItem[]).map((item) => [
+            item.id,
+            {
+              itemName: item.identification.itemName,
+              manualMaxPrice:
+                item.manualMaxPrice === null ? "" : String(item.manualMaxPrice),
+              offerPrice: item.offerPrice === null ? "" : String(item.offerPrice),
+            },
+          ])
+        )
+      );
       setStoredAppointments((current) => {
         const next = mergeStoredAppointmentsWithHistory(current, nextItems);
         persistStoredAppointments(next);
@@ -259,18 +301,20 @@ export default function AppointmentDetailPage() {
       const clientSessionId =
         clientSessionIdRef.current || getOrCreateClientSessionId();
       clientSessionIdRef.current = clientSessionId;
+      const formData = new FormData();
+      formData.append("itemName", itemName);
+      formData.append("priceUsd", String(priceUsd));
+      formData.append("appointmentId", appointmentId);
+      formData.append("appointmentLabel", appointmentLabel);
+      if (manualPhoto) {
+        formData.append("images", manualPhoto.file);
+        formData.append("imageSlotLabels", "手動入力写真");
+      }
+
       const response = await fetch("/api/history", {
         method: "POST",
-        headers: {
-          "content-type": "application/json",
-          ...(clientSessionId ? { "x-client-session-id": clientSessionId } : {}),
-        },
-        body: JSON.stringify({
-          itemName,
-          priceUsd,
-          appointmentId,
-          appointmentLabel,
-        }),
+        headers: clientSessionId ? { "x-client-session-id": clientSessionId } : undefined,
+        body: formData,
       });
       const payload = await response.json();
 
@@ -297,6 +341,13 @@ export default function AppointmentDetailPage() {
 
       setManualItemName("");
       setManualPriceUsd("");
+      if (manualPhoto?.url) {
+        URL.revokeObjectURL(manualPhoto.url);
+      }
+      setManualPhoto(null);
+      if (manualPhotoInputRef.current) {
+        manualPhotoInputRef.current.value = "";
+      }
       setManualSuccess("手動入力を保存しました。");
       void loadAppointment({ silent: true });
     } catch (err) {
@@ -317,6 +368,28 @@ export default function AppointmentDetailPage() {
       );
     } finally {
       setIsManualSaving(false);
+    }
+  }
+
+  function handleManualPhotoChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] || null;
+    setManualPhoto((current) => {
+      if (current?.url) {
+        URL.revokeObjectURL(current.url);
+      }
+      return file ? { file, url: URL.createObjectURL(file) } : null;
+    });
+  }
+
+  function removeManualPhoto() {
+    setManualPhoto((current) => {
+      if (current?.url) {
+        URL.revokeObjectURL(current.url);
+      }
+      return null;
+    });
+    if (manualPhotoInputRef.current) {
+      manualPhotoInputRef.current.value = "";
     }
   }
 
@@ -430,6 +503,185 @@ export default function AppointmentDetailPage() {
     }
   }
 
+  function updateInlineEditValue(
+    item: AppraisalHistoryItem,
+    field: "itemName" | "manualMaxPrice" | "offerPrice",
+    value: string
+  ) {
+    setInlineEditValues((current) => {
+      const existing = current[item.id] || {
+        itemName: item.identification.itemName,
+        manualMaxPrice: item.manualMaxPrice === null ? "" : String(item.manualMaxPrice),
+        offerPrice: item.offerPrice === null ? "" : String(item.offerPrice),
+      };
+
+      return {
+        ...current,
+        [item.id]: {
+          ...existing,
+          [field]: value,
+        },
+      };
+    });
+  }
+
+  function parseOptionalPrice(value: string): number | null {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return null;
+    }
+
+    const numericValue = Number(trimmed);
+    if (!Number.isFinite(numericValue) || numericValue < 0) {
+      throw new Error("価格は0以上の数値で入力してください");
+    }
+
+    return Math.round(numericValue);
+  }
+
+  async function handleInlineSave(item: AppraisalHistoryItem) {
+    const values = inlineEditValues[item.id] || {
+      itemName: item.identification.itemName,
+      manualMaxPrice: item.manualMaxPrice === null ? "" : String(item.manualMaxPrice),
+      offerPrice: item.offerPrice === null ? "" : String(item.offerPrice),
+    };
+    const itemName = values.itemName.trim();
+
+    if (!itemName) {
+      setError("品目名を入力してください");
+      return;
+    }
+
+    setUpdatingItemId(item.id);
+    setError(null);
+    setErrorReference(null);
+
+    try {
+      const clientSessionId =
+        clientSessionIdRef.current || getOrCreateClientSessionId();
+      clientSessionIdRef.current = clientSessionId;
+      const response = await fetch("/api/history", {
+        method: "PATCH",
+        headers: {
+          "content-type": "application/json",
+          ...(clientSessionId ? { "x-client-session-id": clientSessionId } : {}),
+        },
+        body: JSON.stringify({
+          itemId: item.id,
+          itemName,
+          manualMaxPrice: parseOptionalPrice(values.manualMaxPrice),
+          offerPrice: parseOptionalPrice(values.offerPrice),
+        }),
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        const message = payload.error || "明細の保存に失敗しました";
+        if (typeof payload.errorId === "string") {
+          setErrorReference(payload.errorId);
+        }
+        throw new Error(message);
+      }
+
+      const updatedItem = payload.item as AppraisalHistoryItem;
+      setItems((current) =>
+        current.map((candidate) =>
+          candidate.id === updatedItem.id ? updatedItem : candidate
+        )
+      );
+      setInlineEditValues((current) => ({
+        ...current,
+        [updatedItem.id]: {
+          itemName: updatedItem.identification.itemName,
+          manualMaxPrice:
+            updatedItem.manualMaxPrice === null ? "" : String(updatedItem.manualMaxPrice),
+          offerPrice: updatedItem.offerPrice === null ? "" : String(updatedItem.offerPrice),
+        },
+      }));
+    } catch (err) {
+      if (err instanceof Error) {
+        void reportClientError({
+          source: "appointment.detail.inline_save",
+          message: err.message,
+          errorName: err.name,
+          stack: err.stack || null,
+          metadata: {
+            appointmentId,
+            itemId: item.id,
+          },
+        });
+      }
+      setError(err instanceof Error ? err.message : "明細の保存に失敗しました");
+    } finally {
+      setUpdatingItemId(null);
+    }
+  }
+
+  async function handleAppendItemImage(
+    item: AppraisalHistoryItem,
+    event: ChangeEvent<HTMLInputElement>
+  ) {
+    const files = Array.from(event.target.files || []);
+    event.currentTarget.value = "";
+    if (files.length === 0) {
+      return;
+    }
+
+    setImageUploadingItemId(item.id);
+    setError(null);
+    setErrorReference(null);
+
+    try {
+      const clientSessionId =
+        clientSessionIdRef.current || getOrCreateClientSessionId();
+      clientSessionIdRef.current = clientSessionId;
+      const formData = new FormData();
+      formData.append("itemId", item.id);
+      files.forEach((file, index) => {
+        formData.append("images", file);
+        formData.append("imageSlotLabels", `追加写真${item.images.length + index + 1}`);
+      });
+
+      const response = await fetch("/api/history", {
+        method: "POST",
+        headers: clientSessionId ? { "x-client-session-id": clientSessionId } : undefined,
+        body: formData,
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        const message = payload.error || "写真の追加に失敗しました";
+        if (typeof payload.errorId === "string") {
+          setErrorReference(payload.errorId);
+        }
+        throw new Error(message);
+      }
+
+      const updatedItem = payload.item as AppraisalHistoryItem;
+      setItems((current) =>
+        current.map((candidate) =>
+          candidate.id === updatedItem.id ? updatedItem : candidate
+        )
+      );
+    } catch (err) {
+      if (err instanceof Error) {
+        void reportClientError({
+          source: "appointment.detail.image_append",
+          message: err.message,
+          errorName: err.name,
+          stack: err.stack || null,
+          metadata: {
+            appointmentId,
+            itemId: item.id,
+          },
+        });
+      }
+      setError(err instanceof Error ? err.message : "写真の追加に失敗しました");
+    } finally {
+      setImageUploadingItemId(null);
+    }
+  }
+
   const itemCount = appointmentGroup?.itemCount || 0;
   const totalItemCount = appointmentGroup?.totalItemCount || 0;
   const excludedItemCount = appointmentGroup?.excludedItemCount || 0;
@@ -440,6 +692,15 @@ export default function AppointmentDetailPage() {
   const totalContractedOfferPrice = appointmentGroup?.totalContractedOfferPrice || 0;
   const totalContractedGrossProfit = appointmentGroup?.totalContractedGrossProfit || 0;
   const latestAppraisalAt = appointmentGroup?.latestAppraisalAt || null;
+  const displayedItems = items.filter((item) => {
+    if (itemFilter === "contracted") {
+      return item.isContracted;
+    }
+    if (itemFilter === "open") {
+      return !item.isContracted;
+    }
+    return true;
+  });
 
   return (
     <div className={styles.page}>
@@ -542,6 +803,17 @@ export default function AppointmentDetailPage() {
               className={styles.manualPriceInput}
               placeholder="価格 USD"
             />
+            <label className={styles.manualPhotoButton}>
+              写真を追加
+              <input
+                ref={manualPhotoInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className={styles.fileInput}
+                onChange={handleManualPhotoChange}
+              />
+            </label>
             <button
               type="submit"
               className={styles.manualButton}
@@ -550,6 +822,27 @@ export default function AppointmentDetailPage() {
               {isManualSaving ? "保存中..." : "手動保存"}
             </button>
           </form>
+          {manualPriceUsd && Number.isFinite(Number(manualPriceUsd)) && (
+            <p className={styles.manualHelp}>
+              円換算目安: {formatYenFromUsd(Number(manualPriceUsd))}（1USD={USD_TO_JPY_RATE}円）
+            </p>
+          )}
+          {manualPhoto && (
+            <div className={styles.manualPhotoPreviewRow}>
+              <img
+                src={manualPhoto.url}
+                alt="手動入力写真"
+                className={styles.manualPhotoPreview}
+              />
+              <button
+                type="button"
+                className={styles.manualPhotoRemoveButton}
+                onClick={removeManualPhoto}
+              >
+                写真を外す
+              </button>
+            </div>
+          )}
           {manualError && <p className={styles.messageError}>{manualError}</p>}
           {manualSuccess && <p className={styles.messageSuccess}>{manualSuccess}</p>}
         </section>
@@ -570,6 +863,31 @@ export default function AppointmentDetailPage() {
               対象{itemCount}件 / 全{totalItemCount}件
             </span>
           </div>
+          <div className={styles.filterTabs}>
+            <button
+              type="button"
+              className={itemFilter === "all" ? styles.filterTabActive : styles.filterTab}
+              onClick={() => setItemFilter("all")}
+            >
+              すべて
+            </button>
+            <button
+              type="button"
+              className={
+                itemFilter === "contracted" ? styles.filterTabActive : styles.filterTab
+              }
+              onClick={() => setItemFilter("contracted")}
+            >
+              成約済み
+            </button>
+            <button
+              type="button"
+              className={itemFilter === "open" ? styles.filterTabActive : styles.filterTab}
+              onClick={() => setItemFilter("open")}
+            >
+              未成約
+            </button>
+          </div>
 
           {isLoading ? (
             <p className={styles.messageMuted}>読み込んでいます...</p>
@@ -579,7 +897,15 @@ export default function AppointmentDetailPage() {
             </p>
           ) : (
             <div className={styles.itemGrid}>
-              {items.map((item) => (
+              {displayedItems.map((item) => {
+                const editValues = inlineEditValues[item.id] || {
+                  itemName: item.identification.itemName,
+                  manualMaxPrice:
+                    item.manualMaxPrice === null ? "" : String(item.manualMaxPrice),
+                  offerPrice: item.offerPrice === null ? "" : String(item.offerPrice),
+                };
+
+                return (
                 <article
                   key={item.id}
                   className={`${styles.itemCard} ${
@@ -636,6 +962,53 @@ export default function AppointmentDetailPage() {
                         )}
                       </div>
                     </div>
+                    <div className={styles.inlineEditGrid}>
+                      <label>
+                        品名
+                        <input
+                          type="text"
+                          value={editValues.itemName}
+                          onChange={(event) =>
+                            updateInlineEditValue(item, "itemName", event.target.value)
+                          }
+                        />
+                      </label>
+                      <label>
+                        MAX USD
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          inputMode="decimal"
+                          value={editValues.manualMaxPrice}
+                          onChange={(event) =>
+                            updateInlineEditValue(
+                              item,
+                              "manualMaxPrice",
+                              event.target.value
+                            )
+                          }
+                          placeholder={String(getEffectiveMaxPrice(item))}
+                        />
+                      </label>
+                      <label>
+                        オファー USD
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          inputMode="decimal"
+                          value={editValues.offerPrice}
+                          onChange={(event) =>
+                            updateInlineEditValue(item, "offerPrice", event.target.value)
+                          }
+                        />
+                      </label>
+                    </div>
+                    <p className={styles.yenHint}>
+                      MAX円換算 {formatYenFromUsd(getEffectiveMaxPrice(item))} / オファー円換算{" "}
+                      {formatYenFromUsd(item.offerPrice)}
+                    </p>
                     <p className={styles.itemMeta}>
                       {formatDateTime(item.createdAt)}
                       {" · "}
@@ -668,6 +1041,26 @@ export default function AppointmentDetailPage() {
                       </label>
                     </div>
                     <div className={styles.itemActionRow}>
+                      <button
+                        type="button"
+                        className={styles.saveInlineButton}
+                        onClick={() => void handleInlineSave(item)}
+                        disabled={updatingItemId === item.id}
+                      >
+                        {updatingItemId === item.id ? "保存中..." : "明細保存"}
+                      </button>
+                      <label className={styles.addImageButton}>
+                        {imageUploadingItemId === item.id ? "追加中..." : "写真追加"}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          capture="environment"
+                          className={styles.fileInput}
+                          onChange={(event) => void handleAppendItemImage(item, event)}
+                          disabled={imageUploadingItemId === item.id}
+                        />
+                      </label>
                       <Link href={`/appraisals/${item.id}`} className={styles.detailButton}>
                         詳細・価格入力
                       </Link>
@@ -689,7 +1082,8 @@ export default function AppointmentDetailPage() {
                     )}
                   </div>
                 </article>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>

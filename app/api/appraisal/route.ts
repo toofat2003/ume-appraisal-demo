@@ -25,6 +25,12 @@ const MAX_IMAGE_COUNT = 3;
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 const DEFAULT_SLOT_LABELS = ["全体", "識別情報", "状態情報"] as const;
 const MAX_APPOINTMENT_LABEL_LENGTH = 120;
+const ANALYSIS_SUPPORTED_IMAGE_TYPES = new Set([
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+]);
 
 function roundCurrency(value: number): number {
   return Math.round(value);
@@ -108,6 +114,11 @@ async function fileToBase64(file: File): Promise<{ contentType: string; data: st
   };
 }
 
+function isSupportedAnalysisImage(file: File): boolean {
+  const contentType = (file.type || "image/jpeg").toLowerCase();
+  return ANALYSIS_SUPPORTED_IMAGE_TYPES.has(contentType);
+}
+
 function getImageAnalysisErrors(debug: AppraisalDebug): string[] {
   return Array.from(
     new Set(
@@ -165,12 +176,25 @@ export async function POST(request: Request) {
       }
     }
 
-    const images = await Promise.all(files.map((file) => fileToBase64(file)));
+    const analysisFiles = files.filter((file) => isSupportedAnalysisImage(file));
+
+    if (analysisFiles.length === 0) {
+      return NextResponse.json(
+        {
+          error:
+            "査定に使える画像形式がありません。JPEG/PNG/WebPで撮影するか、iPhoneのカメラ設定を「互換性優先」にしてください。",
+        },
+        { status: 400 }
+      );
+    }
+
+    const images = await Promise.all(analysisFiles.map((file) => fileToBase64(file)));
     const { identification, listings, accessoryFilteredCount, debug } = await searchListingsByImage(
       images
     );
     const requestMetadata = {
       imageCount: files.length,
+      analysisImageCount: analysisFiles.length,
       imageNames: files.map((file) => file.name),
       imageTypes: files.map((file) => file.type || "unknown"),
       imageSizes: files.map((file) => file.size),

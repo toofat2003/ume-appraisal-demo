@@ -1,0 +1,293 @@
+【B. 成約チェックに関わらず全件】
+条件: Houston時間 2026/04/22 00:00〜2026/04/25 23:59 / 除外フラグONは除外 / テスト用 Price Pair Benchmark は除外
+合計: 14アポ / 131品目 / MAX $35,896 / オファー $9,931
+
+■ Katy（9品目｜04/22, 09:41-04/22, 09:51 Houston｜MAX $180｜オファー $50）
+1. □ Polo Ralph Lauren Performance Polo Shirt
+   MAX $11 / オファー - / 04/22, 09:41 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/90e97703-2b92-4abb-a0b3-0a29b5f707d1/01-file.jpg|写真1>
+2. □ Polo Ralph Lauren Light Blue Piqué Polo Shirt with Pink Pony
+   MAX $9 / オファー - / 04/22, 09:43 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/54e89301-65fb-4ff6-b64b-400c8952eeb8/01-file.jpg|写真1>
+3. □ TravisMathew Striped Polo Shirt
+   MAX $11 / オファー - / 04/22, 09:45 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/64b66a55-e9a1-41c0-a26e-b2704316fb67/01-file.jpg|写真1>
+4. □ Coach Black Pebbled Leather Crossbody Bag with Turnlock Front Pocket
+   MAX $23 / オファー - / 04/22, 09:46 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/9d70f373-eaaa-4cc2-be5f-d1710b4c9d06/01-file.jpg|写真1>
+5. □ Nike Golf Dri-FIT Black Polo Shirt
+   MAX $12 / オファー - / 04/22, 09:46 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/d040df7d-afd2-43de-a4e4-2c6551485c47/01-file.jpg|写真1>
+6. □ Longchamp Le Pliage Large Shoulder Bag Red
+   MAX $40 / オファー - / 04/22, 09:48 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/0b037469-f3ea-47fd-92fd-7535b8c9843c/01-file.jpg|写真1>
+7. □ Polo Ralph Lauren Performance Polo Shirt
+   MAX $9 / オファー - / 04/22, 09:48 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/18e6ac23-59f7-40c8-a725-4b40b8f9b35e/01-file.jpg|写真1>
+8. □ Tory Burch Amanda Logo Hobo Bag
+   MAX $52 / オファー $40 / 04/22, 09:49 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/d440205a-8d99-4f23-ad7d-c569d58ef675/01-file.jpg|写真1>
+9. □ Coach Signature Canvas Wristlet
+   MAX $13 / オファー $10 / 04/22, 09:51 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/adf3cc79-15d5-49f3-b40a-eb1223bf8a6c/01-file.jpg|写真1>
+
+■ 042203（17品目｜04/22, 13:01-04/22, 13:38 Houston｜MAX $2,371｜オファー $570）
+1. □ Gucci Guccissima Interlocking G Zip Around Wallet
+   MAX $98 / オファー - / 04/22, 13:01 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/c98e9077-5c5f-4b30-b497-799d21e1f6b6/01-file.jpg|写真1>
+2. □ Louis Vuitton Epi Riviera Handbag
+   MAX $112 / オファー - / 04/22, 13:03 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/d0e92622-2554-4279-a8cd-6ca7e85ff074/01-file.jpg|写真1>
+3. □ Gucci GG Supreme Arabesque Zip Around Wallet
+   MAX $100 / オファー - / 04/22, 13:04 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/da6ab182-c635-4ace-b848-acf17390af83/01-file.jpg|写真1>
+4. □ Celine Vintage Tan Leather Long Wallet
+   MAX $38 / オファー - / 04/22, 13:05 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/74828e62-086c-4bcf-80bb-6b74bccf1e62/01-file.jpg|写真1>
+5. □ Louis Vuitton Neverfull MM Damier Azur
+   MAX $267 / オファー - / 04/22, 13:08 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/c84d87b9-0cee-420c-b921-9360f3a9313d/01-file.jpg|写真1>
+6. ✅ Louis Vuitton Monogram Saint Cloud Red Leather Crossbody Bag
+   MAX $600 / オファー $445 / 04/22, 13:09 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/6a9961ea-3fcf-4615-b83e-1103317531bf/01-file.jpg|写真1>
+7. □ Jimmy Choo Hawaii White Leather Low Top Sneakers
+   MAX $40 / オファー - / 04/22, 13:10 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/3c2a9517-57b8-4057-b118-162d2c3b6a6b/01-file.jpg|写真1>
+8. □ Black Leather Harness Boots
+   MAX $44 / オファー - / 04/22, 13:11 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/eada7aff-e5d2-46fe-b874-383c077e2f01/01-file.jpg|写真1>
+9. □ Balenciaga Speed Trainer Black White
+   MAX $140 / オファー $125 / 04/22, 13:11 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/b04c611e-38c7-4079-9faf-165bc8d42fa8/01-file.jpg|写真1>
+10. □ Burberry Black Patent Leather Square Toe Bow Loafers
+   MAX $180 / オファー - / 04/22, 13:12 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/722bef1a-8a68-4232-8088-4a033b0f5306/01-file.jpg|写真1>
+11. □ Givenchy Signature Logo Sweater
+   MAX $45 / オファー - / 04/22, 13:12 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/60246faf-ad27-4752-b044-b870cb6c7d9c/01-file.jpg|写真1>
+12. □ Alexander Wang x H&M Mesh Sleeve Hooded Anorak
+   MAX $25 / オファー - / 04/22, 13:13 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/26e701a9-a104-4e4f-8cad-acbeb8a318e0/01-file.jpg|写真1>
+13. □ Celine Triomphe Logo Ringer Tank Top
+   MAX $33 / オファー - / 04/22, 13:13 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/8301ffa9-2717-4b87-8a1a-ad66ef29b349/01-file.jpg|写真1>
+14. □ Golden Goose Perfect Golden Edition Sweatshirt
+   MAX $23 / オファー - / 04/22, 13:14 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/68cfa5dd-7a1a-4e83-a60a-a8f0d77ed11e/01-file.jpg|写真1>
+15. □ Gucci Neo Vintage GG Supreme Belt Bag
+   MAX $375 / オファー - / 04/22, 13:19 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/f8244f28-1003-4e46-8a22-49d1bb500035/01-file.jpg|写真1>
+16. □ Gucci Marmont Double G Thong Sandals
+   MAX $155 / オファー - / 04/22, 13:31 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/ecbfc4e7-cb9e-4cfc-adc6-4c4f0a8dde44/01-file.jpg|写真1>
+17. □ Louis Vuitton Taiga Leather Long Wallet
+   MAX $96 / オファー - / 04/22, 13:38 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/f282ec6d-61f1-402f-a8e5-12fb36d868f5/01-file.jpg|写真1>
+
+■ 042204（6品目｜04/22, 14:31-04/22, 14:50 Houston｜MAX $821｜オファー $599）
+1. ✅ Citizen Eco-Drive WR100 Blue Dial Hexagonal Link Watch
+   MAX $55 / オファー $35 / 04/22, 14:31 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/04fe58d2-3fde-452a-a7e6-8a42f1eeb995/01-file.jpg|写真1>
+2. ✅ Coach Vintage Ergo Zip Hobo Bag
+   MAX $128 / オファー $50 / 04/22, 14:33 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/8bcfe49b-1aca-47ca-86b1-ac6b8d7ff9d4/01-file.jpg|写真1>
+3. ✅ Yellow Gold Textured Link Bracelet
+   MAX $610 / オファー $500 / 04/22, 14:34 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/0e15d60d-18a9-4ae7-bf3c-8e1df94af568/01-file.jpg|写真1>
+4. ✅ EA Sports Active Personal Trainer
+   MAX $5 / オファー $4 / 04/22, 14:36 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/63170458-ff9e-4502-a48a-fd8588f1c148/01-file.jpg|写真1>
+5. ✅ Jos. A. Bank Suit Jacket
+   MAX $9 / オファー $5 / 04/22, 14:38 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/41b30e57-f600-4382-aed7-c7d3351b5d9b/01-file.jpg|写真1> <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/41b30e57-f600-4382-aed7-c7d3351b5d9b/02-file.jpg|写真2>
+6. ✅ Dual Watch Winder with Storage Drawer
+   MAX $14 / オファー $5 / 04/22, 14:50 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/fa95042c-621c-4986-8810-24a75dab1c7c/01-file.jpg|写真1>
+
+■ 042205（12品目｜04/22, 15:43-04/22, 16:27 Houston｜MAX $496｜オファー $93）
+1. □ Fighter Aircraft Colour
+   MAX $11 / オファー - / 04/22, 15:43 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/7ca5b455-96f0-4168-bb0b-af7e9b50f761/01-file.jpg|写真1>
+2. □ Kate Spade Saffiano Leather Flap Crossbody Bag
+   MAX $22 / オファー - / 04/22, 15:44 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/5143f33f-6190-41ca-bee2-d59300f76a21/01-file.jpg|写真1>
+3. ✅ Vintage Porcelain Cherub Candlestick Holder Playing Lute
+   MAX $18 / オファー $15 / 04/22, 15:48 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/f9a563fb-a644-475f-bbaa-d11853391132/01-file.jpg|写真1>
+4. ✅ Dresden Lace Porcelain Figurine Seated Lady Playing Mandolin
+   MAX $45 / オファー $15 / 04/22, 15:49 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/6c4cbb12-f177-4dce-b07d-712a22215c8d/01-file.jpg|写真1>
+5. ✅ Sony Alpha a5000 Mirrorless Digital Camera with 16-50mm Lens
+   MAX $180 / オファー $30 / 04/22, 15:51 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/8fc764f0-57e1-4660-b802-106081c89fad/01-file.jpg|写真1>
+6. ✅ Kodak EasyShare M550 Digital Camera
+   MAX $35 / オファー $10 / 04/22, 15:51 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/c275dd37-fa77-4c85-a6f2-6368d7d4fcd0/01-file.jpg|写真1>
+7. ✅ JBL Flip 6 Portable Bluetooth Speaker in Squad Camo
+   MAX $36 / オファー $5 / 04/22, 15:52 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/75d80cf4-022e-4680-a8b5-758bb3c14419/01-file.jpg|写真1>
+8. ✅ iHome iBT371 Weather Tough Portable Bluetooth Speaker
+   MAX $11 / オファー $5 / 04/22, 15:53 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/60a8ef44-83e3-4b58-a399-ea80e4a7254a/01-file.jpg|写真1>
+9. □ Vintage Lustreware Decorative Plate with Floral Cornucopia
+   MAX $14 / オファー - / 04/22, 15:54 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/915df76c-bd9f-46f9-950d-3a404e8ce39c/01-file.jpg|写真1>
+10. □ Wedgwood Jasperware Pale Blue Trinket Box and Heart Dishes
+   MAX $18 / オファー - / 04/22, 15:55 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/1dd1ee58-48d1-4aab-9994-ea44cbe593e4/01-file.jpg|写真1>
+11. ✅ Vintage Josef Originals March Birthday Girl Figurine and Cherub Busts
+   MAX $100 / オファー $10 / 04/22, 15:56 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/fb2f917c-e5cd-454e-8600-8c78c993e3a4/01-file.jpg|写真1>
+12. ✅ LEGO Star Wars: The Complete Saga (Wii) and 2 Wii Wheels
+   MAX $6 / オファー $3 / 04/22, 16:27 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/d5a28a47-23ee-4799-ae7b-03fbf290c712/01-file.jpg|写真1>
+
+■ せかすとちやん（4品目｜04/22, 17:59-04/22, 18:14 Houston｜MAX $12,185｜オファー $0）
+1. □ Balenciaga Phantom Sneakers Black White Sole
+   MAX $186 / オファー - / 04/22, 17:59 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/55394885-1598-457c-b2d1-0abe8e209ef0/01-file.jpg|写真1>
+2. □ Balenciaga Track Sneaker Yellow Grey White
+   MAX $103 / オファー - / 04/22, 18:00 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/910c77cc-5f1b-48c5-a734-fbe18e7fdadd/01-file.jpg|写真1>
+3. □ Hermès Kelly Retourne Red Togo Leather Gold Hardware
+   MAX $7,006 / オファー - / 04/22, 18:10 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/a26dd52e-8618-4bd1-acf3-6a3d61e36826/01-file.jpg|写真1>
+4. □ Chanel Classic Double Flap Bag Black Caviar Gold Hardware
+   MAX $4,890 / オファー - / 04/22, 18:14 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/a39c959f-31bb-4dec-b2db-d731ce2f7b0c/01-file.jpg|写真1>
+
+■ 042301（22品目｜04/23, 10:10-04/23, 11:31 Houston｜MAX $10,450｜オファー $4,500）
+1. ✅ Skagen Denmark Silver Mesh Watch with Arabic Numerals
+   MAX $21 / オファー $10 / 04/23, 10:10 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/3ccfd5c7-f0c0-43dd-a2ca-fe6a59b087db/01-file.jpg|写真1>
+2. □ Vintage Ladies Cocktail Watch with Ornate Bracelet
+   MAX $25 / オファー - / 04/23, 10:11 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/86aafdd6-0e75-4324-bf83-98a16d8bd86d/01-file.jpg|写真1>
+3. ✅ Coach Shay Crossbody in Pebbled Leather
+   MAX $59 / オファー $30 / 04/23, 10:16 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/d6eaea45-f9cf-4df1-a7be-c36abfe3e94c/01-file.jpg|写真1>
+4. □ Paul Benally Navajo Sterling Silver Ribbed Cuff Bracelet
+   MAX $240 / オファー - / 04/23, 10:26 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/4d0b2328-391e-4308-9fb7-d2c6e44641f0/01-file.jpg|写真1>
+5. □ 金ネックレス　10k
+   MAX $1,277 / オファー $500 / 04/23, 10:28 / 写真なし
+6. □ Navajo Sterling Silver Red Coral Stamped Cuff Bracelet
+   MAX $158 / オファー - / 04/23, 10:28 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/81eacb24-fb49-4c5a-945e-5f4866400ce1/01-file.jpg|写真1> <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/81eacb24-fb49-4c5a-945e-5f4866400ce1/02-file.jpg|写真2>
+7. □ Vintage Navajo Style 4-Row Turquoise Sterling Silver Cuff Bracelet
+   MAX $177 / オファー - / 04/23, 10:30 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/8c7e83bb-c835-42ba-bba3-00f5d55189a9/01-file.jpg|写真1> <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/8c7e83bb-c835-42ba-bba3-00f5d55189a9/02-file.jpg|写真2>
+8. □ Sterling Silver Beaded Cuff Bracelet with Rope Border
+   MAX $51 / オファー - / 04/23, 10:31 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/f634e008-4efb-4f9d-b6da-4ab8c38b706f/01-file.jpg|写真1> <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/f634e008-4efb-4f9d-b6da-4ab8c38b706f/02-file.jpg|写真2>
+9. □ Native American Sterling Silver Black Onyx Cuff Bracelet
+   MAX $81 / オファー - / 04/23, 10:33 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/fd9f2f0b-395f-4292-87cf-8e32f6c9aaec/01-file.jpg|写真1> <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/fd9f2f0b-395f-4292-87cf-8e32f6c9aaec/02-file.jpg|写真2>
+10. □ Navajo Sterling Silver Turquoise Cuff Bracelet
+   MAX $113 / オファー - / 04/23, 10:35 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/c013faad-fca8-4bc3-ab7f-587a44856bb6/01-file.jpg|写真1> <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/c013faad-fca8-4bc3-ab7f-587a44856bb6/02-file.jpg|写真2>
+11. □ Vintage Native American Turquoise Split Shank Cuff Bracelet
+   MAX $98 / オファー - / 04/23, 10:37 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/fdb9be03-f9c5-4d98-9e9a-ad756ca56acb/01-file.jpg|写真1>
+12. □ Vintage Zuni Sterling Silver Turquoise Geometric Inlay Link Bracelet
+   MAX $167 / オファー - / 04/23, 10:39 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/084299ba-1b50-4aad-9b47-19b10fc43cc7/01-file.jpg|写真1> <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/084299ba-1b50-4aad-9b47-19b10fc43cc7/02-file.jpg|写真2>
+13. □ Geneve Ladies 14k Gold Quartz Watch with Mesh Band
+   MAX $916 / オファー $700 / 04/23, 10:40 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/c37a3340-b6a1-429e-aac7-7fc0a0d16211/01-file.jpg|写真1>
+14. □ ring×3 red stone
+   MAX $30 / オファー - / 04/23, 10:40 / 写真なし
+15. □ bracelet turquoise
+   MAX $70 / オファー - / 04/23, 10:51 / 写真なし
+16. ✅ Assorted Jewelry Lot with Pearl Studs, Clear Stone Studs, and Textured Gold-Tone Pendant
+   MAX $778 / オファー $350 / 04/23, 11:02 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/4641f94b-52ce-4ac4-b3d8-29abb0a10775/01-file.jpg|写真1>
+17. ✅ 14K Gold Rope Chain Necklace
+   MAX $916 / オファー $700 / 04/23, 11:04 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/616c0396-6642-419f-bbae-3344315b481e/01-file.jpg|写真1>
+18. ✅ Silver-toned Omega Chain Necklace
+   MAX $1,551 / オファー $540 / 04/23, 11:06 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/e2781bbe-9be9-483d-b827-355ead7fffc4/01-file.jpg|写真1>
+19. ✅ Mixed Jewelry Lot with Southwestern Style Pieces
+   MAX $1,984 / オファー $900 / 04/23, 11:17 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/e8cb5b5c-f096-4077-8bfb-e6d0e8f5c616/01-file.jpg|写真1>
+20. ✅ Mixed Costume Jewelry Lot
+   MAX $400 / オファー $55 / 04/23, 11:24 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/2edd35ff-d8b7-4c24-a9ea-77053128d55b/01-file.jpg|写真1>
+21. ✅ 1921 Morgan Silver Dollar Coin in Rope Bezel
+   MAX $102 / オファー $75 / 04/23, 11:26 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/0b5d20a6-d8d2-412d-9e6b-467d3962e88e/01-file.jpg|写真1>
+22. ✅ Opal and Diamond Cluster Ring
+   MAX $1,236 / オファー $640 / 04/23, 11:31 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/e743796e-5601-4f60-b719-dfc242e38990/01-file.jpg|写真1>
+
+■ 042302allison（8品目｜04/23, 13:23-04/23, 14:17 Houston｜MAX $728｜オファー $100）
+1. ✅ Pâtes Baroni Pasta Bowl
+   MAX $11 / オファー - / 04/23, 13:23 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/1927bc86-ea16-426f-a497-cf1af0468c7c/01-file.jpg|写真1>
+2. □ Nike Vapen Snowboard Boots
+   MAX $179 / オファー - / 04/23, 13:26 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/7335fb4a-3f64-4262-9547-6e5c7a35001b/01-file.jpg|写真1>
+3. □ ESQ Swiss Professional 200 Meters Two-Tone Diver Watch
+   MAX $59 / オファー - / 04/23, 13:36 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/7a7ccf6c-cb7a-4416-b4a4-7a6deee46cba/01-file.jpg|写真1>
+4. □ Citizen Quartz WR 100 Blue Dial Watch
+   MAX $59 / オファー - / 04/23, 13:36 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/1e540fd8-cb70-4ca6-954b-0495e8905796/01-file.jpg|写真1>
+5. □ Bulova 98T87 Two-Tone Women's Watch
+   MAX $41 / オファー - / 04/23, 13:37 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/34241af1-97a1-47f4-be60-1118e2fb7b82/01-file.jpg|写真1>
+6. ✅ silver rings 7
+   MAX $105 / オファー $50 / 04/23, 14:16 / 写真なし
+7. ✅ silver necklace 1
+   MAX $86 / オファー $50 / 04/23, 14:17 / 写真なし
+8. □ 14k ring
+   MAX $188 / オファー - / 04/23, 14:17 / 写真なし
+
+■ 20260424 2 ファタ（13品目｜04/23, 13:25-04/23, 13:59 Houston｜MAX $1,354｜オファー $0）
+1. □ Plain Silver Band Ring
+   MAX $8 / オファー - / 04/23, 13:25 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/3e1c6ed5-8790-4694-bd57-3056171275dc/01-file.jpg|写真1>
+2. □ ピアス片方
+   MAX $9 / オファー - / 04/23, 13:28 / 写真なし
+3. □ リング925 切
+   MAX $4 / オファー - / 04/23, 13:29 / 写真なし
+4. □ Plain Silver Band Ring
+   MAX $15 / オファー - / 04/23, 13:30 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/4bba8012-8712-4a6a-a017-228688d8f5bb/01-file.jpg|写真1>
+5. □ 14k 切　リング
+   MAX $329 / オファー - / 04/23, 13:35 / 写真なし
+6. □ ハートトップ
+   MAX $63 / オファー - / 04/23, 13:36 / 写真なし
+7. □ 14k ネックレス切
+   MAX $804 / オファー - / 04/23, 13:37 / 写真なし
+8. □ 片方丸ピアス
+   MAX $36 / オファー - / 04/23, 13:38 / 写真なし
+9. □ 925 ブレスレット
+   MAX $35 / オファー - / 04/23, 13:49 / 写真なし
+10. □ 円ピアスセット　925
+   MAX $35 / オファー - / 04/23, 13:50 / 写真なし
+11. □ シルバーリング　大
+   MAX $6 / オファー - / 04/23, 13:58 / 写真なし
+12. □ ネックレス　トップサンダル
+   MAX $8 / オファー - / 04/23, 13:58 / 写真なし
+13. □ 銀リング　極細
+   MAX $2 / オファー - / 04/23, 13:59 / 写真なし
+
+■ 0422-2件目（14品目｜04/23, 15:05-04/23, 16:15 Houston｜MAX $1,362｜オファー $960）
+1. ✅ Fendi FF Logo Flat Sandals
+   MAX $159 / オファー $150 / 04/23, 15:05 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/befa88c3-2963-4fbb-91eb-98da11e038e1/01-file.jpg|写真1>
+2. ✅ Braided Double Strap Slide Sandals in Metallic Silver Snakeskin
+   MAX $17 / オファー $5 / 04/23, 15:06 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/0546b5ca-4b38-4881-94b7-40acced8d301/01-file.jpg|写真1>
+3. ✅ Tory Burch Chelsea Suede Block Heel Pumps
+   MAX $59 / オファー $50 / 04/23, 15:07 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/bde244c1-703c-4b34-8bf1-878db41cddc2/01-file.jpg|写真1>
+4. ✅ Steve Madden Gaye Snakeskin Espadrille Sandals
+   MAX $15 / オファー $5 / 04/23, 15:08 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/b01a7da0-6a1b-4494-9dc0-cfe4c9d86c81/01-file.jpg|写真1>
+5. ✅ Tan Suede Chelsea Boots
+   MAX $51 / オファー $30 / 04/23, 15:08 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/579a6495-48c9-4542-8b97-7d9936f51dd5/01-file.jpg|写真1>
+6. ✅ Suede Chelsea Boots
+   MAX $36 / オファー $20 / 04/23, 15:09 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/776315dd-3078-4863-b26f-adb4943bf46d/01-file.jpg|写真1>
+7. ✅ Gucci Vintage Web Stripe Shoulder Bag
+   MAX $176 / オファー $100 / 04/23, 15:10 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/85895880-ec51-4b3e-b3d8-a6e2622b7f5a/01-file.jpg|写真1> <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/85895880-ec51-4b3e-b3d8-a6e2622b7f5a/02-file.jpg|写真2>
+8. ✅ Furla Babylon Saffiano Leather Card Case
+   MAX $33 / オファー $20 / 04/23, 15:11 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/3578c594-0939-4be4-af38-27d30ec0da55/01-file.jpg|写真1>
+9. ✅ Kate Spade Navy and White Striped Cosmetic Bag with Red Trim
+   MAX $14 / オファー $10 / 04/23, 15:11 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/e04dd4d6-64fd-4b78-942a-383f1ee64a28/01-file.jpg|写真1>
+10. ✅ Columbia Men's Steens Mountain Full Zip Fleece Jacket
+   MAX $15 / オファー $10 / 04/23, 15:12 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/bce35fd7-5fa6-4099-9c97-99b88f441cbb/01-file.jpg|写真1>
+11. ✅ Lacoste Classic Crew Neck Sweatshirt Burgundy
+   MAX $29 / オファー $20 / 04/23, 15:14 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/83fdf3d5-8f73-4ee0-b892-2a479f3c68e5/01-file.jpg|写真1>
+12. □ Christian Dior Oblique Canvas and Leather Tote Bag
+   MAX $677 / オファー $500 / 04/23, 15:16 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/36b701bd-be97-4b49-a2fc-34709c5366e1/01-file.jpg|写真1>
+13. □ Louis Vuitton Sarah Wallet Damier Ebene
+   MAX $41 / オファー - / 04/23, 15:19 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/c179ab2b-a5c0-4085-9944-5ea15896cc63/01-file.jpg|写真1>
+14. ✅ clothes×7
+   MAX $40 / オファー $40 / 04/23, 16:15 / 写真なし
+
+■ 20260424 mk時計（7品目｜04/23, 15:21-04/23, 16:15 Houston｜MAX $1,614｜オファー $1,090）
+1. □ ピン　14k
+   MAX $182 / オファー $60 / 04/23, 15:21 / 写真なし
+2. □ リング丸　赤ルビー
+   MAX $429 / オファー $300 / 04/23, 15:23 / 写真なし
+3. □ 銀貨SV1000×7
+   MAX $552 / オファー $500 / 04/23, 15:35 / 写真なし
+4. □ トリーバーチ
+   MAX $60 / オファー $30 / 04/23, 15:39 / 写真なし
+5. □ コインセット×8
+   MAX $200 / オファー $100 / 04/23, 15:41 / 写真なし
+6. □ トップパールネックレス
+   MAX $91 / オファー $50 / 04/23, 16:05 / 写真なし
+7. □ mk時計×5
+   MAX $100 / オファー $50 / 04/23, 16:15 / 写真なし
+
+■ 0424-1（1品目｜04/24, 12:49-04/24, 12:49 Houston｜MAX $63｜オファー $0）
+1. □ Seiko Two-Tone Ana-Digi Quartz Watch
+   MAX $63 / オファー - / 04/24, 12:49 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/dba8904d-7bce-4fbc-8822-f595a14f09d3/01-file.jpg|写真1>
+
+■ 0425/1（4品目｜04/25, 10:53-04/25, 11:16 Houston｜MAX $2,694｜オファー $1,724）
+1. ✅ ring 14k silver color
+   MAX $641 / オファー $448 / 04/25, 10:53 / 写真なし
+2. ✅ 14k gold pierces
+   MAX $524 / オファー $366 / 04/25, 11:00 / 写真なし
+3. ✅ watches 14K
+   MAX $1,374 / オファー $800 / 04/25, 11:11 / 写真なし
+4. ✅ 14K gold ピアス1 トップ2 ブレス1
+   MAX $155 / オファー $110 / 04/25, 11:16 / 写真なし
+
+■ 0425/2（1品目｜04/25, 14:00-04/25, 14:00 Houston｜MAX $778｜オファー $0）
+1. □ Saint Laurent Loulou Medium Shoulder Bag in Quilted Leather
+   MAX $778 / オファー - / 04/25, 14:00 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/8cee360f-6a39-4c92-aece-0ce9cdcf5ea8/01-file.jpg|写真1>
+
+■ 0425/3（13品目｜04/25, 15:48-04/25, 16:25 Houston｜MAX $800｜オファー $245）
+1. ✅ silver necklace×2 pierce×1 ring×1
+   MAX $31 / オファー $5 / 04/25, 15:48 / 写真なし
+2. □ pierce×1 14k blue stone
+   MAX $18 / オファー - / 04/25, 15:49 / 写真なし
+3. ✅ clothes×30
+   MAX $50 / オファー $20 / 04/25, 15:56 / 写真なし
+4. ✅ ケートスペード財布
+   MAX $24 / オファー $9 / 04/25, 15:56 / 写真なし
+5. ✅ Tiffanyがまぐち
+   MAX $18 / オファー $3 / 04/25, 15:56 / 写真なし
+6. ✅ マイケルコース青
+   MAX $93 / オファー $65 / 04/25, 15:57 / 写真なし
+7. ✅ マッドウェル茶
+   MAX $48 / オファー $20 / 04/25, 15:57 / 写真なし
+8. ✅ ケートスペード
+   MAX $11 / オファー $8 / 04/25, 15:57 / 写真なし
+9. ✅ ふおっしる
+   MAX $18 / オファー $10 / 04/25, 15:58 / 写真なし
+10. ✅ 14k necklace×2
+   MAX $201 / オファー $70 / 04/25, 16:14 / 写真なし
+11. ✅ シルバーブレスレット　ピアスセット
+   MAX $32 / オファー $5 / 04/25, 16:16 / 写真なし
+12. ✅ costume jewelry×14
+   MAX $200 / オファー $20 / 04/25, 16:18 / 写真なし
+13. ✅ Canon PowerShot SD1400 IS DIGITAL ELPH 14.1MP Digital Camera
+   MAX $56 / オファー $10 / 04/25, 16:25 / <https://sifipuxejeanblizauhu.supabase.co/storage/v1/object/public/appraisal-images/2b46600b-aee2-49b1-b199-936ef5e78f40/01-file.jpg|写真1>
